@@ -8,7 +8,8 @@ The product must keep **former business, legal entity, parcel, building, present
 
 ## What runs today
 
-- A manually reviewed dossier with eight evidence entries; source type, observation date, source date, collection method, and limitations travel with every claim.
+- A manually reviewed dossier with eleven evidence entries; source type, observation date, source date, collection method, and limitations travel with every claim.
+- Three contributor-supplied Google Maps / Street View screenshots are viewable in the Evidence tab, at full resolution, with original annotations and attribution intact. Each image has a source link, submission date, original filename, dimensions, and SHA-256 integrity record. Their observations are distinct from official records.
 - Two real county parcel polygons, retrieved from the service linked by the official assessor's parcel map. The pin is their combined bounding-box center. It is not the former field's verified location or an entrance.
 - A bounded Node fetcher for those two accounts. It saves a candidate snapshot outside the published dataset. It does not overwrite reviewed claims or publish changes automatically.
 - A static GitHub Pages application with browser-local notes and Markdown export. No paid backend, registry scraper, scheduled scan, or general discovery engine is running.
@@ -72,5 +73,15 @@ For scaling, use stable source IDs, claim IDs, parcel IDs, entity IDs, record ID
 2. Search relevant occupancy/fire/code files and dated venue material to establish closure history and current-use evidence. Keep cause unknown until records support it.
 3. Add two or three comparably researched former industrial/commercial venues, using the same evidence requirements. Reject active landmarks as filler.
 4. Generalize the bounded county adapter and add a source-permission-aware review queue. Choose automation per source; do not assume every registry has a free API.
+
+## Contributor image update · November 13, 2026
+
+The contributor provided `EvidenceOne.png`, `Evidence2.png`, and `Screenshot 2026-11-13 114030.png` and explicitly requested public viewing on the website. These three originals are copied byte-for-byte to `public/evidence/stockyard-airsoft/`, displayed without cropping, and linked to their own claims and sources. This is a bounded, manually submitted evidence set, not a Google imagery ingestion pipeline. Google attribution remains visible in the originals and in captions; the files are not represented as openly licensed map data.
+
+- **Building identification:** The contributor, who recalls playing at the venue, circles the large western building north/northeast of WEOKIE and west of the Google pin. The annotation also surrounds smaller structures. This narrows the research target; it does not independently georeference the building or resolve its county account. The map pin remains the existing parcel-area reference.
+- **Reported missing road:** A red outline marks a north–south corridor from SW 15th beside WEOKIE, toward the western building. The contributor reports a road missing from the displayed Google map. Public/private classification, current condition, mapping completeness/scale, and any closure or removal remain unresolved. No route or public-access permission is inferred.
+- **Street View context:** The original screenshot's place panel says 2701 while its panorama card says 2801 SW 15th St and October 2026. October is the imagery label, not the screenshot date. The screenshot was supplied November 13. The panorama has not been confirmed as a view of the circled building.
+
+The viewer supports fit/actual-size inspection, keyboard navigation, original-image links, PNG downloads, and mobile scrolling. Dossier exports include image URLs, captions, attribution, and integrity hashes. The original MapQuest screenshot remains a text-only source from the earlier review.
 
 No competitor allegation is published. There is no verified source supporting a cause of closure in this dossier.

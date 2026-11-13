@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { places, filterPlaces, getPlace, reviewed } from '../src/data.ts';
 import { architecture } from '../src/art.ts';
 const parcels = JSON.parse(readFileSync(new URL('../src/research/stockyard-parcels.json', import.meta.url), 'utf8'));
@@ -73,4 +74,37 @@ test('repeated research illustrations have no duplicate SVG IDs', () => {
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
   assert.equal(new Set(ids).size,ids.length);
   assert.ok(html.includes('not a depiction of the actual site'));
+});
+
+test('submitted images retain their original bytes and valid source/claim links', () => {
+  for (const place of places) {
+    const images = new Map(place.images.map(image => [image.id, image]));
+    assert.equal(images.size, place.images.length);
+    for (const image of place.images) {
+      assert.match(image.src, /^evidence\/[a-z0-9/-]+\.png$/);
+      const bytes = readFileSync(new URL(`../public/${image.src}`, import.meta.url));
+      assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+      assert.equal(bytes.readUInt32BE(16), image.width);
+      assert.equal(bytes.readUInt32BE(20), image.height);
+      assert.equal(createHash('sha256').update(bytes).digest('hex'), image.sha256);
+      assert.equal(place.sources[image.source].kind, 'Submitted screenshot');
+      assert.ok(image.alt && image.caption && image.attribution && image.originalFilename);
+      assert.ok(!Number.isNaN(Date.parse(image.submitted)));
+      assert.ok(place.evidence.some(claim => claim.images?.includes(image.id)));
+    }
+    for (const claim of place.evidence) for (const id of claim.images ?? []) {
+      assert.ok(images.has(id), `Missing image ${id}`);
+      assert.ok(claim.sources.includes(images.get(id)!.source), `Image/source mismatch for ${id}`);
+    }
+  }
+});
+
+test('building and road annotations stay attributed observations', () => {
+  const place = getPlace('stockyard-airsoft');
+  assert.equal(place.findings.find(f => f.label === 'Building match')!.state, 'lead');
+  assert.equal(place.findings.find(f => f.label === 'Mapping discrepancy')!.state, 'lead');
+  assert.ok(place.evidence.find(e => e.id === 'street-view-context')!.detail.includes('2701'));
+  assert.ok(place.evidence.find(e => e.id === 'street-view-context')!.detail.includes('2801'));
+  assert.ok(place.locationNote.includes('not been georeferenced'));
+  assert.ok(place.unknowns.some(text => text.includes('public/private')));
 });

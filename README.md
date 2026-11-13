@@ -51,7 +51,8 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 ## Working features
 
 - One real research case: the former Stockyard Airsoft address, replacing the three landmark examples.
-- Eight evidence entries with source type, source date, review date, method, and explicit limitations.
+- Eleven evidence entries with source type, source date, review date, method, and explicit limitations.
+- Three original submitted screenshots with captions, source metadata, a fit/actual-size image viewer, keyboard navigation, and original PNG download links.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
 - Two real, address-matched county parcel polygons; no invented building blocks or heights.
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
@@ -64,7 +65,7 @@ Read [DATA_PIPELINE.md](DATA_PIPELINE.md) for the source plan, matching rules, r
 
 `src/data.ts` is the manually reviewed dossier. `src/research/stockyard-parcels.json` is a dated snapshot from the county's public parcel service. The map pin represents the combined parcel area, not a verified venue building or entrance. Parcel boundaries are reference geometry, not a legal survey. The decorative research illustration is not a site photograph or building reconstruction.
 
-The county lists MID STATES PROPERTIES LLC for both address-matched parcels and names MID-STATES WHOLESALE LUMBER as occupant. The former venue's exact building, present use, vacancy, closure cause, and access remain unresolved. The entity name match has not been joined to the venue by a lease or detailed filing.
+The county lists MID STATES PROPERTIES LLC for both address-matched parcels and names MID-STATES WHOLESALE LUMBER as occupant. The contributor identifies the western building in an annotated screenshot; its official building/parcel match, present use, vacancy, closure cause, and access remain unresolved. A reported missing road and conflicting 2701/2801 labels are recorded as observations. The entity name match has not been joined to the venue by a lease or detailed filing.
 
 Fetch a review candidate without changing the published data:
 
@@ -95,7 +96,7 @@ node --test tests/data.test.ts
 npm run build
 ```
 
-The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired location fragments, and illustration integrity. Browser checks cover map rendering, evidence navigation, filters, saved places/notes, export, flat/tilt views, phone layout, and the map-failure path.
+The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired location fragments, illustration integrity, and original evidence-image hashes/dimensions/source links. Browser checks cover map rendering, evidence navigation, the image viewer and zoom, filters, saved places/notes, export, flat/tilt views, phone layout, and the map-failure path.
 
 For a development-only styled-map failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. The 2D map should automatically load, with both parcels and the dossier available. Remove the query parameter to load the styled map. Also check `/?map=2d`, switching both ways, zero-result searches, zoom/fit, marker selection, and phone layout. LibreWolf's actual WebGL-disabled configuration was reproduced and the fallback verified on November 13, 2026, without changing browser privacy settings.
 
@@ -107,6 +108,8 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `DATA_PIPELINE.md`: source plan, matching rules, research log, and next milestones.
 - `src/main.ts`: application interactions, map lifecycle, local persistence, export.
 - `src/compat-map.ts`: image/SVG map for browsers that block WebGL.
+- `src/evidence-images.ts`: submitted-image gallery, accessible full-resolution viewer, and export metadata.
+- `public/evidence/stockyard-airsoft/`: three unmodified contributor-supplied screenshots, preserving Google attribution and annotations.
 - `src/art.ts`: original icons and schematic pixel architectural illustrations.
 - `src/tabletop.css`: the card-table visual system and responsive layouts.
 - `public/styles/board.json`: custom geographic map styling derived from OpenFreeMap Liberty.

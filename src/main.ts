@@ -8,6 +8,7 @@ import type { FeatureCollection } from 'geojson';
 import { icon, architecture } from './art';
 import { mapInk, placeColor } from './map-palette';
 import type { CompatMap, MapBounds } from './compat-map';
+import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
 
 setWorkerUrl(workerUrl);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -127,10 +128,11 @@ function renderDossier() {
   if(tab === 'overview') content.innerHTML = `
     <div class="case-status"><span class="live-dot"></span> RESEARCH IN PROGRESS <strong>Vacancy unverified</strong></div>
     <p class="dossier-summary">${p.summary}</p>
+    <button id="view-submitted-images" class="image-callout">${icon('eye')} View ${p.images.length} submitted images ${icon('arrow')}</button>
     <div class="findings">${p.findings.map(f=>`<article class="finding finding-${f.state}"><span class="section-label">${f.label}</span><h3>${f.value}</h3><p>${f.detail}</p>${f.evidence.length ? `<button class="finding-evidence" data-evidence="${f.evidence[0]}">View evidence ${icon('arrow')}</button>` : ''}</article>`).join('')}</div>
     <div class="interest"><span class="eyebrow">THE QUESTION</span><p>${p.interest}</p></div>
     <button id="focus-place" class="primary-button">${icon('crosshair')} Show candidate parcels ${icon('arrow')}</button>`;
-  else if(tab === 'evidence') content.innerHTML = `<p class="evidence-intro">A source can establish a record without settling the whole case. Dates, source types, and unresolved matches stay attached to each claim.</p>${p.evidence.map((e,i)=>`<article class="evidence-item" id="evidence-${e.id}" tabindex="-1"><span class="evidence-number">${String(i+1).padStart(2,'0')}</span><div><span class="evidence-badge">${icon(e.sources.some(n=>p.sources[n].kind==='Official record')?'book':'info')} ${p.sources[e.sources[0]].kind}</span><h3>${e.title}</h3><p>${e.detail}</p>${e.sources.map(n=>sourceMarkup(p.sources[n])).join('')}</div></article>`).join('')}
+  else if(tab === 'evidence') content.innerHTML = `${imageGallery(p.images)}<p class="evidence-intro">A source can establish a record without settling the whole case. Dates, source types, and unresolved matches stay attached to each claim.</p>${p.evidence.map((e,i)=>`<article class="evidence-item" id="evidence-${e.id}" tabindex="-1"><span class="evidence-number">${String(i+1).padStart(2,'0')}</span><div><span class="evidence-badge">${icon(e.sources.some(n=>p.sources[n].kind==='Official record')?'book':'info')} ${p.sources[e.sources[0]].kind}</span><h3>${e.title}</h3><p>${e.detail}</p>${imageAttachments(p,e.images)}${e.sources.map(n=>sourceMarkup(p.sources[n])).join('')}</div></article>`).join('')}
     <div class="unknown-block">${icon('info')}<div><strong>Still unknown</strong>${p.unknowns.map(u=>`<p>${u}</p>`).join('')}<p>${p.locationNote}</p></div></div>
     <section class="next-steps"><span class="section-label">NEXT RECORDS TO CHECK</span>${p.nextSteps.map(s=>`<article><h3>${s.title}</h3><p>${s.detail}</p><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${s.label} ${icon('external')}</a></article>`).join('')}</section>`;
   else {
@@ -141,6 +143,7 @@ function renderDossier() {
     $('#save-note').addEventListener('click',()=> {if(storeValue(`itf:note:${p.id}`,$<HTMLTextAreaElement>('#field-note').value)) toast('Field note saved on this browser.');});
   }
   $('#dossier-save').addEventListener('click',()=>toggleSave(p.id));
+  $('#view-submitted-images')?.addEventListener('click',()=>{tab='evidence';renderDossier();$('#tab-evidence').focus();});
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady) {focusMap(p,16); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
   document.querySelectorAll<HTMLButtonElement>('[data-evidence]').forEach(button=>button.addEventListener('click',()=>{
     const id=button.dataset.evidence!;tab='evidence';renderDossier();
@@ -157,7 +160,7 @@ function renderDossier() {
 }
 function exportDossier(p: Place) {
   const note = readStorage<unknown>(`itf:note:${p.id}`,'');
-  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified public permalink.'}\nMethod: ${s.method}`;}).join('\n\n')}`),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Field notes',typeof note === 'string' ? note : ''].join('\n');
+  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified source-page permalink. See submitted images below when available.'}\nMethod: ${s.method}`;}).join('\n\n')}`),...exportImageEvidence(p.images),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Field notes',typeof note === 'string' ? note : ''].join('\n');
   const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`into-the-facade-${p.id}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Dossier exported with sources and saved notes.');
 }
 function resetFilters() {query='';category='All';savedOnly=false;$<HTMLInputElement>('#search').value='';updateFilters();renderList();fitMap();}
@@ -285,7 +288,8 @@ $('#about-button').addEventListener('click',()=>showDialog('about'));$('#sources
 $('#close-dialog').addEventListener('click',()=> $<HTMLDialogElement>('#info-dialog').close());$('#info-dialog').addEventListener('click',event=>{if(event.target===$('#info-dialog')){const rect=$('#info-dialog').getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$<HTMLDialogElement>('#info-dialog').close();}});
 $('#mobile-index').addEventListener('click',()=>$('.discovery').scrollIntoView({behavior:reducedMotion?'instant':'smooth'}));
 window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(places.some(p=>p.id===id))selectPlace(id,false);});
-window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open){e.preventDefault();$('#search').focus();}});
+window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open && !$<HTMLDialogElement>('#evidence-dialog').open){e.preventDefault();$('#search').focus();}});
+initEvidenceViewer(()=>selected);
 renderList();renderDossier();updateMapSelection();
 if(new URLSearchParams(location.search).get('map')==='2d'||readStorage<string>('itf:map-renderer','styled')==='2d')void initCompatMap();
 else initMap();
