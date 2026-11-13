@@ -19,8 +19,10 @@ export function createCompatMap(options: {
 }) {
   const map = L.map(options.container, {
     zoomControl: false, preferCanvas: false, renderer: L.svg(),
-    zoomAnimation: !options.reducedMotion, fadeAnimation: !options.reducedMotion,
-    markerZoomAnimation: !options.reducedMotion, maxZoom: 19,
+    // Leaflet's CSS zoom transition can outlive map.remove() during a switch.
+    // Instant zoom avoids that race and works consistently on restricted GPUs.
+    zoomAnimation: false, fadeAnimation: !options.reducedMotion,
+    markerZoomAnimation: false, maxZoom: 19,
   }).setView(latLng(options.center), 15);
   map.attributionControl.setPrefix(false);
   map.attributionControl.addAttribution('<a href="https://assessor.oklahomacounty.org/" target="_blank" rel="noopener noreferrer">Parcels: Oklahoma County Assessor</a>');
@@ -77,7 +79,7 @@ export function createCompatMap(options: {
     focus(point: [number, number], zoom: number) { map.setView(latLng(point), zoom, { animate: !options.reducedMotion }); },
     fit(bounds: MapBounds) { map.fitBounds([latLng(bounds[0]), latLng(bounds[1])], { paddingTopLeft: [50, 130], paddingBottomRight: [60, 100], maxZoom: 16, animate: !options.reducedMotion }); },
     zoom(delta: number) { map.setZoom(map.getZoom() + delta, { animate: !options.reducedMotion }); },
-    remove() { clearTimeout(tileTimer); resize.disconnect(); tiles.off(); map.remove(); },
+    remove() { clearTimeout(tileTimer); resize.disconnect(); tiles.off(); map.stop(); map.remove(); },
   };
 }
 
