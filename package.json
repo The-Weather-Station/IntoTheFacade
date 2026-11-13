@@ -1,0 +1,14 @@
+{
+  "name": "into-the-facade",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.13.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": { "maplibre-gl": "6.18.0" },
+  "devDependencies": { "typescript": "7.0.2", "vite": "8.3.8" }
+}
