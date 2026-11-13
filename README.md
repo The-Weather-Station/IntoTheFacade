@@ -18,9 +18,13 @@ npm run build
 npm run preview
 ```
 
-Build output is `dist/`. The demo is live at [Into The Facade on GitHub Pages](https://the-weather-station.github.io/IntoTheFacade/). Deployment, production map rendering, dossier selection, and evidence tabs were verified on November 12, 2026 (America/Chicago), with no browser console errors. The original demo was deployed owner-private on Sites; `.openai/hosting.json` records that identity and is not used by GitHub Pages.
+Build output is `dist/`. The demo is published by GitHub Pages. The [original project URL](https://the-weather-station.github.io/IntoTheFacade/) now redirects to the configured custom domain, `intothefacade.com`. The initial Pages deployment, production map rendering, dossier selection, and evidence tabs were verified on November 12, 2026 (America/Chicago), with no browser console errors. The original demo was deployed owner-private on Sites; `.openai/hosting.json` records that identity and is not used by GitHub Pages.
 
 ## GitHub Pages
+
+The custom domain is `intothefacade.com`. Namecheap DNS uses GitHub Pages' four documented apex A records and a `www` CNAME pointing to `the-weather-station.github.io`. After setting the custom domain, rebuild the site so scripts, CSS, the favicon, and map styles use root-relative paths. GitHub provisions the HTTPS certificate; enable **Enforce HTTPS** in Pages settings when available. DNS caches and certificate provisioning may take up to 24 hours.
+
+Build attempts have distinct artifact names, and the deploy job uses the name returned by its build job. This prevents duplicate-artifact errors when rerunning a build.
 
 The application lives at the root of [The-Weather-Station/IntoTheFacade](https://github.com/The-Weather-Station/IntoTheFacade). The local project keeps it in `web/`; upload that directory's contents, not the parent folder. The workflow assumes `package.json`, `src/`, and `.github/` are at the repository root.
 
