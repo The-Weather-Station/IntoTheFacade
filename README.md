@@ -18,27 +18,29 @@ npm run build
 npm run preview
 ```
 
-Build output is `dist/`. The original demo was deployed owner-private on Sites. GitHub Pages deployment support is prepared in `.github/workflows/pages.yml`; a successful workflow run and live URL are required to confirm the migration. `.openai/hosting.json` records the original Sites identity and is not used by GitHub Pages.
+Build output is `dist/`. The demo is live at [Into The Facade on GitHub Pages](https://the-weather-station.github.io/IntoTheFacade/). Deployment, production map rendering, dossier selection, and evidence tabs were verified on November 12, 2026 (America/Chicago), with no browser console errors. The original demo was deployed owner-private on Sites; `.openai/hosting.json` records that identity and is not used by GitHub Pages.
 
 ## GitHub Pages
 
-Use the contents of this `web` directory as the GitHub repository root. The workflow assumes `package.json`, `src/`, and `.github/` are at that root.
+The application lives at the root of [The-Weather-Station/IntoTheFacade](https://github.com/The-Weather-Station/IntoTheFacade). The local project keeps it in `web/`; upload that directory's contents, not the parent folder. The workflow assumes `package.json`, `src/`, and `.github/` are at the repository root.
+
+Pushes to `main` automatically test, build, and publish the app through `.github/workflows/pages.yml`. The following setup is already complete for this repository:
 
 1. Make the application repository available to the connected GitHub integration. Free GitHub Pages hosting uses a public repository.
 2. In the repository, choose **Settings > Pages > Build and deployment > Source: GitHub Actions**.
 3. Push the application to `main`, or run **Deploy to GitHub Pages** from the Actions tab after enabling Pages.
 4. The workflow installs locked dependencies, runs the data checks and TypeScript build, then deploys `dist/`. Read the deployed URL from the completed deployment.
 
-The build reads GitHub's configured site base path, so a project URL such as `/into-the-facade/` works without hard-coding the owner or repository name. It also supports the root path used by a user site or a configured custom domain. After changing a Pages custom-domain setting, rerun the workflow to rebuild against the new path.
+The build reads GitHub's configured site base path, so a project URL such as `/IntoTheFacade/` works without hard-coding the owner or repository name. It also supports the root path used by a user site or a configured custom domain. After changing a Pages custom-domain setting, rerun the workflow to rebuild against the new path.
 
 To check a project-path production build locally:
 
 ```sh
-npm run build -- --base /into-the-facade/
-npm run preview -- --base /into-the-facade/
+npm run build -- --base /IntoTheFacade/
+npm run preview -- --base /IntoTheFacade/
 ```
 
-Open the preview server at `/into-the-facade/`. The map style, favicon, map worker, scripts, and CSS must load from the correct base path. External basemap services still need internet access. Saved places and field notes belong to the browser origin; moving to a new host does not transfer old browser storage. Export any notes you want to retain before switching hosts.
+Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker, scripts, and CSS must load from the correct base path. External basemap services still need internet access. Saved places and field notes belong to the browser origin; moving to a new host does not transfer old browser storage. Export any notes you want to retain before switching hosts.
 
 ## Working features
 
