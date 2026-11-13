@@ -445,6 +445,11 @@ dialog::backdrop { background: #161020d9; }
 .next-steps a { font-size:11px; color:#824730; text-decoration:underline; text-underline-offset:3px; }
 .next-steps a .icon { width:13px; height:13px; }
 .map-key .key-square { background:transparent; border:2px dashed var(--ink); }
+.map-marker .marker-name { position:absolute; left:50%; bottom:45px; transform:translateX(-50%); border-left:2px solid var(--ink); }
+@media (min-width:951px) and (max-width:1100px) {
+  .table-charms { display:none; }
+  .region-button { margin-left:auto; }
+}
 @media (max-width:580px) {
   .finding h3 { font-size:25px; }
   .finding p { font-size:12px; }

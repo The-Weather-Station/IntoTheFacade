@@ -137,7 +137,13 @@ function renderDossier() {
   }
   $('#dossier-save').addEventListener('click',()=>toggleSave(p.id));
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady && map) {map.flyTo({center:p.coordinates,zoom:16,pitch:is3d?52:0,duration:reducedMotion?0:900}); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
-  document.querySelectorAll<HTMLButtonElement>('[data-evidence]').forEach(button=>button.addEventListener('click',()=>{const id=button.dataset.evidence!;tab='evidence';renderDossier();$(`#evidence-${id}`).focus();}));
+  document.querySelectorAll<HTMLButtonElement>('[data-evidence]').forEach(button=>button.addEventListener('click',()=>{
+    const id=button.dataset.evidence!;tab='evidence';renderDossier();
+    const target=$(`#evidence-${id}`), panel=$('#dossier-content');
+    target.focus({preventScroll:true});
+    if(panel.scrollHeight>panel.clientHeight) panel.scrollTop+=target.getBoundingClientRect().top-panel.getBoundingClientRect().top-12;
+    else target.scrollIntoView({block:'start',behavior:reducedMotion?'instant':'smooth'});
+  }));
   document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(button=>{
     button.addEventListener('click',()=>{tab=button.dataset.tab!;renderDossier();$(`#tab-${tab}`).focus();});
     button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();const tabs=['overview','evidence','notes'];tab=tabs[(tabs.indexOf(tab)+(event.key==='ArrowRight'?1:2))%3];renderDossier();$(`#tab-${tab}`).focus();}});
