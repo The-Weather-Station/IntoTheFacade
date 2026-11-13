@@ -1,6 +1,6 @@
 # Into The Facade
 
-An initial Oklahoma City field atlas built with Vite, TypeScript, and MapLibre GL JS.
+An initial Oklahoma City field atlas built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
 The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers, selected November 13, 2026. See [DESIGN.md](DESIGN.md) for the approved direction, palette, card treatments, and responsive behavior. The research motif and decorative Halloween icons are original SVG artwork.
 
@@ -74,7 +74,15 @@ node scripts/fetch-stockyard-parcels.mjs
 
 The candidate is written to ignored `research-candidates/`. Review it against original records before promoting it into `src/research/`. Do not publish changed ownership or occupancy conclusions automatically.
 
-The basemap uses a local board-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). OpenStreetMap/OpenMapTiles attribution is preserved. County parcel attribution is added. Tiles and fonts require network access; the reviewed dossier and parcel snapshot are bundled with the app. Google Fonts supplies Pixelify Sans and IBM Plex, with system fallbacks.
+The styled basemap uses a local board-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). OpenStreetMap/OpenMapTiles attribution is preserved. County parcel attribution is added. Tiles and fonts require network access; the reviewed dossier and parcel snapshot are bundled with the app. Google Fonts supplies Pixelify Sans and IBM Plex, with system fallbacks.
+
+### LibreWolf and browsers without WebGL
+
+LibreWolf disables WebGL by default to reduce fingerprinting. The app automatically switches to a 2D Leaflet map when WebGL initialization fails, the graphics context is lost, or styled-map startup exceeds 16 seconds. This uses ordinary image tiles and SVG parcel overlays, with no canvas or WebGL permission. Pan, zoom, parcel filtering, markers, and dossier selection remain available; tilt is disabled in 2D mode.
+
+The **Use 2D map / Try styled map** control switches renderers. Only explicit choices are saved in `itf:map-renderer`; an automatic fallback does not permanently save a failed renderer. `?map=2d` opens the fallback directly. Generation checks and cleanup prevent late imports or callbacks from restoring a discarded map.
+
+The 2D basemap uses `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and keeps visible OSM and county attribution. It follows the [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/): native browser caching/referrers, no bulk downloads, no offline prefetch, no cache-busting. This best-effort public tile service is suitable for the small demo; choose a suitable tile provider before substantial traffic growth. Configure a replacement in `src/compat-map.ts`. If street tiles fail, the bundled parcel outlines remain interactive and a notice explains the missing imagery. The 2D street colors come from OSM; the surrounding card table, markers, and parcel styling remain custom.
 
 Google Maps and MapQuest are proprietary public-facing services, not open datasets. ChamberofCommerce.org is an explanatory guide, not the state filing registry. No live registry, Google, Overture, USGS, or EPA ingestion is running. Source-specific reuse rights need review before expanding automated collection.
 
@@ -89,7 +97,7 @@ npm run build
 
 The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired location fragments, and illustration integrity. Browser checks cover map rendering, evidence navigation, filters, saved places/notes, export, flat/tilt views, phone layout, and the map-failure path.
 
-For a development-only map-failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. All dossiers should remain usable. Remove the query parameter to load the live map.
+For a development-only styled-map failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. The 2D map should automatically load, with both parcels and the dossier available. Remove the query parameter to load the styled map. Also check `/?map=2d`, switching both ways, zero-result searches, zoom/fit, marker selection, and phone layout. LibreWolf's actual WebGL-disabled configuration was reproduced and the fallback verified on November 13, 2026, without changing browser privacy settings.
 
 ## Main files
 
@@ -98,6 +106,7 @@ For a development-only map-failure check, visit `/?test-map-failure`. This test 
 - `scripts/fetch-stockyard-parcels.mjs`: bounded county query that produces a review candidate.
 - `DATA_PIPELINE.md`: source plan, matching rules, research log, and next milestones.
 - `src/main.ts`: application interactions, map lifecycle, local persistence, export.
+- `src/compat-map.ts`: image/SVG map for browsers that block WebGL.
 - `src/art.ts`: original icons and schematic pixel architectural illustrations.
 - `src/tabletop.css`: the card-table visual system and responsive layouts.
 - `public/styles/board.json`: custom geographic map styling derived from OpenFreeMap Liberty.

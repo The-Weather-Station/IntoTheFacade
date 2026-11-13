@@ -9,6 +9,13 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
-  "dependencies": { "maplibre-gl": "6.18.0" },
-  "devDependencies": { "typescript": "7.0.2", "vite": "8.3.8" }
+  "dependencies": {
+    "leaflet": "1.9.4",
+    "maplibre-gl": "6.18.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "1.9.22",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
 }
