@@ -9,6 +9,8 @@ import { icon } from './art';
 import { artUrl, buildingArt, mysteryCard } from './generated-art';
 import roadSnapshot from './research/osm-road-corridor.json';
 import './generated-theme.css';
+import './card-motion.css';
+import { createCardMotion } from './card-motion';
 import { mapInk, placeColor } from './map-palette';
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
@@ -33,11 +35,11 @@ const claimCount = places.reduce((sum,p)=>sum+p.evidence.length,0);
 $('#app').innerHTML = `
   <a class="skip-link" href="#places">Skip to places</a>
   <header class="masthead">
-    <a class="brand" href="#${places[0].id}" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">PROPERTY RECORDS. BAD OMENS.</span></span></a>
+    <a class="brand" href="#${places[0].id}" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 003</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
-  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">STOCKYARD AIRSOFT / CASE 01</p><h1>Check the <em>damn map.</em></h1></div><p class="intro-copy">Google leaves it blank.<br>OSM marks a service road.</p><div class="table-charms" aria-hidden="true"><img class="raster-charm" src="${artUrl('occult-card-back')}" alt=""><img class="raster-charm" src="${artUrl('occult-card-back')}" alt=""><img class="raster-charm" src="${artUrl('missing-road-card')}" alt=""></div><button class="region-button" id="region-button">${icon('pin')}<span><small>THE STOCKYARDS / OKC</small><strong>Oklahoma City, OK</strong></span>${icon('chevron')}</button></section>
+  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">STOCKYARD AIRSOFT / CASE 01</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Google leaves it blank.<br>OSM marks a service road.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>THE STOCKYARDS / OKC</small><strong>Oklahoma City, OK</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
       <div class="panel-heading"><div><p class="eyebrow">CASE FILES</p><h2 id="discovery-title">Open cases.</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
@@ -64,6 +66,7 @@ $('#app').innerHTML = `
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">INTO THE FACADE / FIELD GUIDE</span><button id="close-dialog" class="icon-button" aria-label="Close dialog">${icon('close')}</button></div><div id="dialog-content"></div></dialog>
 `;
+const cardMotion = createCardMotion();
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
@@ -73,21 +76,48 @@ function storeValue(key: string, value: unknown): boolean {
   try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { toast('Browser storage is unavailable. Changes stay in this session.'); return false; }
 }
 function visiblePlaces() { return filterPlaces(query, category, savedOnly, saved); }
+function renderDeck(markup: string) {
+  const deck=$('#places'), template=document.createElement('template');
+  template.innerHTML=markup;
+  const existing=new globalThis.Map([...deck.querySelectorAll<HTMLElement>(':scope > [data-card-key]')].map(card=>[card.dataset.cardKey!,card]));
+  deck.querySelector(':scope > .empty-state')?.remove();
+  let cursor=deck.firstElementChild;
+  [...template.content.children].forEach((fresh,index)=>{
+    const incoming=fresh as HTMLElement, key=incoming.dataset.cardKey;
+    const card=(key&&existing.get(key))||incoming;
+    if(key) {
+      existing.delete(key);
+      card.classList.toggle('selected',incoming.classList.contains('selected'));
+      // Keep the actual card and focused buttons alive across map/search/save
+      // updates. Only selection/bookmark state changes on an existing card.
+      if(card!==incoming) {
+        incoming.querySelectorAll<HTMLButtonElement>('[data-select],[data-save]').forEach(button=>{
+          const live=card.querySelector<HTMLButtonElement>(button.hasAttribute('data-save')?'[data-save]':'[data-select]')!;
+          live.className=button.className;
+          for(const name of ['aria-pressed','aria-label'])live.setAttribute(name,button.getAttribute(name)!);
+        });
+        const meta=card.querySelector('.card-meta>span:last-child');
+        if(meta)meta.textContent=incoming.querySelector('.card-meta>span:last-child')!.textContent;
+      }
+    }
+    if(card===cursor)cursor=cursor.nextElementSibling;
+    else deck.insertBefore(card,cursor);
+    if(key)cardMotion.mount(card,'left',index);
+  });
+  existing.forEach(card=>cardMotion.leave(card));
+}
 function renderList() {
   const visible = visiblePlaces();
   if(!visible.some(p=>p.id==='stockyard-airsoft')) { pendingRoadFocus=false; stopRoadPulse(); }
   $('#results-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'PLACE' : 'PLACES'}${savedOnly ? ' SAVED' : ' FOUND'}`;
   $('#map-region-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'CASE' : 'CASES'}`;
   $('#saved-count').textContent = String(saved.length);
-  $('#places').innerHTML = visible.length ? (visible.some(p=>p.id==='stockyard-airsoft') ? mysteryCard() : '') + visible.map(p => `
-    <article class="place-card ${p.id === selected.id ? 'selected' : ''}" data-place="${p.id}" style="--card-color:${placeColor(p.id)}">
+  const deckMarkup = visible.length ? (visible.some(p=>p.id==='stockyard-airsoft') ? mysteryCard() : '') + visible.map(p => `
+    <article class="place-card ${p.id === selected.id ? 'selected' : ''}" data-card-key="${p.id}" data-place="${p.id}" style="--card-color:${placeColor(p.id)}">
       <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-heading"><span class="card-number">${p.number}</span><span class="card-category">${p.category}</span></div><div class="card-art">${buildingArt()}<span class="card-year">${p.year}</span></div><div class="card-copy"><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} evidence entries</span><span>${p.id === selected.id ? 'ON THE TABLE' : 'OPEN DOSSIER'}</span></div></div></button>
       <button class="card-save ${saved.includes(p.id) ? 'is-saved' : ''}" data-save="${p.id}" aria-pressed="${saved.includes(p.id)}" aria-label="${saved.includes(p.id) ? 'Unsave' : 'Save'} ${p.name}">${icon('bookmark')}</button>
     </article>`).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
-  document.querySelectorAll<HTMLButtonElement>('[data-select]').forEach(button => button.addEventListener('click', () => selectPlace(button.dataset.select!, true)));
-  document.querySelectorAll<HTMLButtonElement>('[data-save]').forEach(button => button.addEventListener('click', () => toggleSave(button.dataset.save!)));
-  $('#reset-filters')?.addEventListener('click', resetFilters);
-  $('[data-investigate-road]')?.addEventListener('click',()=>{showEvidence('osm-road',false);traceRoad();});
+  renderDeck(deckMarkup);
   markers.forEach((marker, id) => {
     marker.getElement().style.display = visible.some(p => p.id === id) ? '' : 'none';
     marker.getElement().classList.toggle('selected', id === selected.id);
@@ -159,6 +189,7 @@ function renderDossier() {
     button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();const tabs=['overview','evidence','notes'];tab=tabs[(tabs.indexOf(tab)+(event.key==='ArrowRight'?1:2))%3];renderDossier();$(`#tab-${tab}`).focus();}});
   });
   $('#export-dossier').addEventListener('click',()=>exportDossier(p));
+  cardMotion.revealDossier($('#dossier'),content,`${p.id}:${tab}`);
 }
 function showEvidence(id: string, reveal = true) {
   tab='evidence'; renderDossier();
@@ -332,6 +363,14 @@ function showDialog(kind: 'about'|'sources'|'region') {
     <p class="dialog-footnote">The styled basemap uses OpenFreeMap / OpenStreetMap; the 2D map uses OpenStreetMap image tiles. Both include attribution. Parcel overlays are county reference boundaries, not building outlines or a legal survey. The marker represents the candidate area. The highlighted service-road network is a reviewed OpenStreetMap snapshot, including a parking loop. A private tag belongs to one segment only. Generated card artwork is decorative; original source photographs are in Evidence. No live Overture, USGS, EPA, Google, or business-registry ingestion is running.</p>`;
   $<HTMLDialogElement>('#info-dialog').showModal();$('#choose-region')?.addEventListener('click',()=>{$<HTMLDialogElement>('#info-dialog').close();resetFilters();});
 }
+$('#places').addEventListener('click',event=>{
+  const button=(event.target as HTMLElement).closest<HTMLButtonElement>('button');
+  if(!button||button.closest('.is-leaving'))return;
+  if(button.dataset.select)selectPlace(button.dataset.select,true);
+  else if(button.dataset.save)toggleSave(button.dataset.save);
+  else if(button.hasAttribute('data-investigate-road')){showEvidence('osm-road',false);traceRoad();}
+  else if(button.id==='reset-filters')resetFilters();
+});
 $('#search').addEventListener('input',()=>{query=$<HTMLInputElement>('#search').value;renderList();});
 document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category!;updateFilters();renderList();fitMap();}));
 $('#explore-nav').addEventListener('click',()=>{savedOnly=false;updateFilters();renderList();fitMap();});

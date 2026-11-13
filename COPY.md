@@ -6,8 +6,8 @@ Revision requested November 13, 2026: remove the cheerful discovery language. Th
 
 | Placement | Copy |
 | --- | --- |
-| Brand line | PROPERTY RECORDS. BAD OMENS. |
-| Main headline | Check the damn map. |
+| Brand line | Every building has baggage. |
+| Main headline | Dead business. Live paperwork |
 | Supporting text | Google leaves it blank. / OSM marks a service road. |
 | Deck eyebrow / heading | CASE FILES / Open cases. |
 | Road-card action | Locate the road ↗ |
@@ -19,8 +19,8 @@ Revision requested November 13, 2026: remove the cheerful discovery language. Th
 
 | Placement | Alternatives |
 | --- | --- |
-| Brand line | Every building has baggage. / Deeds, dust & dead ends. / Property records from the crypt. |
-| Main headline | Dead business. Live paperwork. / A blank spot with an address. / The map doesn't match. |
+| Brand line | Deeds, dust & dead ends. / Property records from the crypt. |
+| Main headline | A blank spot with an address. / The map doesn't match. |
 | Supporting text | Same ground. Different maps. / One warehouse. Two parcels. Three road segments. / A road in OSM. A blank in the submitted Google map. |
 | Deck heading | Unfinished business. / Loose ends. / The case stack. |
 

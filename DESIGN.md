@@ -40,3 +40,11 @@ The revised voice and alternatives are in [COPY.md](COPY.md). Use terse case-fil
 Evidence images show direct publisher-source links in the gallery, claim attachments and viewer. “Open saved image” opens the hosted copy; “View publisher source” opens the exact source endpoint. Contributor uploads without a supplied source-page URL say so instead of linking to a guessed map location. Export retains both the hosted image and publisher URL.
 
 Selecting the missing-road card opens its evidence, fits the road on the map and pulses a narrow gold halo for 5.4 seconds. Both MapLibre and the 2D Leaflet renderer preserve the base road and private-tag dashes. Reduced-motion users get a steady highlight. Filtering out the case or switching renderers cancels the animation; a selection made before map load is applied when ready. On phones the map is brought into view.
+
+## Card motion · November 13 revision
+
+The headline is **Dead business. Live paperwork** and the brand line is **Every building has baggage.** The decorative three-card fan in the header has been removed; the small brand mark remains.
+
+The real cards use a Balatro-inspired physical feel: staggered 660ms deals with translation, rotation and a small overshoot; slow, independent 6.8–8.4s bob/sway cycles; pointer-following perspective tilt and lift; a short press/release; and 190ms exits. Dossier tab changes use a small re-settle plus a 260ms content slide. No new animation dependency, canvas or WebGL is involved.
+
+`src/card-motion.ts` manages visibility, entrances, exits, hover and tab-change motion. `src/card-motion.css` handles idle drift and composition. Stable deck keys preserve DOM nodes and focus through map startup, searches and bookmark changes, so unchanged cards are not redealt. Rapid filter reversals cancel an exit and return the same card smoothly. Offscreen drift pauses. The dossier pauses its idle motion while being read/hovered; long phone dossiers remain level and stationary after their entrance. Reduced-motion preferences disable drift, tilt and deal effects, including preference changes while the page is open.

@@ -1,0 +1,44 @@
+/* The decorative header fan is gone; give the actual headline room to wrap. */
+.intro>div:first-child { min-width:0; }
+.intro h1 { white-space:normal; max-width:780px; line-height:1.02; }
+.intro h1 em { display:inline-block; }
+.intro-copy,.region-button { flex-shrink:0; }
+#app { overflow-x:clip; }
+
+.card-motion {
+  --card-rx:0deg; --card-ry:0deg; --card-lift:0px; --card-scale:1;
+  --float-height:3px; --float-angle:.45deg;
+  transform:perspective(1100px) translate3d(0,var(--card-lift),0) rotateX(var(--card-rx)) rotateY(var(--card-ry)) scale(var(--card-scale));
+  transform-origin:50% 45%;
+  transition:transform .48s cubic-bezier(.18,1.35,.35,1);
+  animation:card-drift 6.8s ease-in-out infinite;
+  animation-delay:var(--float-phase,0s);
+  animation-play-state:paused;
+}
+.card-motion[data-in-view=true] { animation-play-state:running; }
+.card-motion.awaiting-deal { opacity:0; }
+.card-motion.is-leaving { pointer-events:none; }
+.card-motion.is-dealing { transition:none; }
+.place-card.card-motion,.place-card.card-motion:hover { rotate:0deg; translate:0 0; }
+.mystery-feature.card-motion .mystery-card:hover { transform:none; }
+.dossier.card-motion { --float-height:1.8px; --float-angle:.16deg; animation-duration:8.4s; }
+.dossier.card-motion:hover,.dossier.card-motion:focus-within { animation-play-state:paused; }
+.places { padding-top:13px; padding-left:8px; padding-right:14px; }
+@keyframes card-drift {
+  0%,100% { translate:0 calc(-1 * var(--float-height)); rotate:calc(-1 * var(--float-angle)); }
+  50% { translate:0 var(--float-height); rotate:var(--float-angle); }
+}
+@media(max-width:1200px) { .intro h1 { font-size:36px; } }
+@media(max-width:950px) { .intro h1 { font-size:32px; } .dossier.card-motion { --float-angle:0deg; } }
+@media(max-width:580px) {
+  .intro h1 { font-size:34px; }
+  .places { padding-top:14px; padding-bottom:20px; }
+  /* Keep multi-screen evidence text stationary while retaining its entrance. */
+  .dossier.card-motion { animation:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .card-motion,.card-motion:hover,.place-card.card-motion,.place-card.card-motion:hover {
+    animation:none; transform:none; translate:none; rotate:none; transition:none;
+  }
+  .card-motion.awaiting-deal { opacity:1; }
+}

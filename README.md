@@ -59,6 +59,7 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
 - Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
 - Responsive layouts, keyboard-operable controls, shareable `#stockyard-airsoft` fragment, and usable dossiers when the map cannot connect.
+- Staggered card entrances, gentle floating, pointer tilt and smooth exits; stable cards persist through map/filter updates. Dossier changes settle into place. Reduced-motion preferences and offscreen pausing are respected.
 
 ## Data and representations
 
@@ -114,6 +115,7 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
 - `public/art/`: five optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
+- `src/card-motion.ts` and `src/card-motion.css`: dealt-card transitions, idle float, pointer response and visibility-aware cleanup.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
 - `src/tabletop.css`: underlying card-table layout and responsive behavior.
 - `ARTWORK.md` and `art-prompts.json`: artwork provenance, exact prompts, reference roles and delivery settings.
