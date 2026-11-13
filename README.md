@@ -52,8 +52,8 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 
 - One real research case: the former Stockyard Airsoft address, replacing the three landmark examples.
 - Fifteen evidence entries with source type, source date, review date, method, and explicit limitations.
-- Five original evidence images: three submitted screenshots, a county building photograph and a county sketch. Captions, source metadata, a fit/actual-size viewer, keyboard navigation, and original-image downloads are included.
-- A prominent generated missing-road card opens the OSM comparison; three original OSM service-road ways can be traced on either map renderer.
+- Five original evidence images: three submitted screenshots, a county building photograph and a county sketch. Direct publisher links appear in the gallery, attached evidence, viewer and export; saved image copies are labeled separately. Contributor uploads without a supplied source-page URL are identified explicitly.
+- The missing-road card opens the OSM comparison, fits the road and pulses a gold halo for 5.4 seconds on either map renderer. Reduced-motion users get steady emphasis. On phones, selection brings the map into view. Filtering out the case and renderer changes cancel the pulse.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
 - Two real, address-matched county parcel polygons; no invented building blocks or heights.
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
@@ -117,6 +117,7 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
 - `src/tabletop.css`: underlying card-table layout and responsive behavior.
 - `ARTWORK.md` and `art-prompts.json`: artwork provenance, exact prompts, reference roles and delivery settings.
+- `COPY.md`: applied brand copy and alternative wording for the next revision.
 - `public/styles/board.json`: custom geographic map styling derived from OpenFreeMap Liberty.
 - `src/map-palette.ts`: shared decorative place accents for cards and map markers.
 - `DESIGN.md`: the approved reference and implementation guide for future changes.

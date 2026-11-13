@@ -32,3 +32,11 @@ Desktop: discovery deck / map / selected dossier, with internal reading scroll. 
 - `public/styles/board.json`: geographic map palette.
 
 Generated art and original evidence must remain distinct in the data model, UI and exports. Do not imply present ruin, abandonment, permission, a removed road, or a cause of closure through illustration. Keep the mystery playful while letting the research answer it.
+
+## Copy and evidence interactions
+
+The revised voice and alternatives are in [COPY.md](COPY.md). Use terse case-file language with occasional dry, abrasive character. Remove cheerful discovery slogans and repeated motivational copy.
+
+Evidence images show direct publisher-source links in the gallery, claim attachments and viewer. “Open saved image” opens the hosted copy; “View publisher source” opens the exact source endpoint. Contributor uploads without a supplied source-page URL say so instead of linking to a guessed map location. Export retains both the hosted image and publisher URL.
+
+Selecting the missing-road card opens its evidence, fits the road on the map and pulses a narrow gold halo for 5.4 seconds. Both MapLibre and the 2D Leaflet renderer preserve the base road and private-tag dashes. Reduced-motion users get a steady highlight. Filtering out the case or switching renderers cancels the animation; a selection made before map load is applied when ready. On phones the map is brought into view.

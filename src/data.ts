@@ -30,7 +30,7 @@ export const deedUrl = 'https://getrecords.oklahomacounty.org/web/web/integratio
 
 export const places: Place[] = [{
   id: 'stockyard-airsoft', number: '01', name: 'Stockyard Airsoft',
-  subtitle: 'A brick warehouse. A road off the map.', category: 'Former business', year: 'BUILT 1963',
+  subtitle: '1963 warehouse. Conflicting maps.', category: 'Former business', year: 'BUILT 1963',
   // Combined county parcel bounds center; not a verified building or entrance pin.
   coordinates: [-97.56117721784465, 35.4512621621602],
   address: '2801 SW 15th St · Oklahoma City, OK 73108',

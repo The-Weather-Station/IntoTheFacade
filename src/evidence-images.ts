@@ -3,20 +3,28 @@ import type { EvidenceImage, Place } from './data';
 const escape = (text: string) => text.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!));
 export const evidenceImageUrl = (image: EvidenceImage) => `${import.meta.env.BASE_URL}${image.src}`;
 
-export function imageGallery(images: EvidenceImage[]) {
+export function imageSourceLink(place: Place, image: EvidenceImage) {
+  const source = place.sources[image.source];
+  return source.url
+    ? `<a class="evidence-source-link" href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">Source: ${escape(source.publisher)} ↗</a>`
+    : '<span class="evidence-source-note">Contributor upload · source-page link not supplied</span>';
+}
+
+export function imageGallery(place: Place) {
+  const images = place.images;
   if (!images.length) return '';
-  return `<section class="evidence-gallery" aria-labelledby="gallery-title"><div class="gallery-heading"><h3 id="gallery-title">Evidence images</h3><span>${images.length} ORIGINALS</span></div><p>County records and contributor screenshots. Inspect the originals and source labels.</p><div class="evidence-thumbnails">${images.map((image, index) => `<button class="evidence-thumbnail" data-image="${escape(image.id)}" aria-label="View image: ${escape(image.title)}"><img src="${evidenceImageUrl(image)}" alt="" width="${image.width}" height="${image.height}" loading="lazy" decoding="async"><span><small>IMAGE ${String(index + 1).padStart(2, '0')}</small><strong>${escape(image.title)}</strong><span>Expand image ↗</span></span></button>`).join('')}</div></section>`;
+  return `<section class="evidence-gallery" aria-labelledby="gallery-title"><div class="gallery-heading"><h3 id="gallery-title">Evidence images</h3><span>${images.length} ORIGINALS</span></div><p>Open an image. Check its source.</p><div class="evidence-thumbnails">${images.map((image, index) => `<article class="evidence-image-card"><button class="evidence-thumbnail" data-image="${escape(image.id)}" aria-label="View image: ${escape(image.title)}"><img src="${evidenceImageUrl(image)}" alt="" width="${image.width}" height="${image.height}" loading="lazy" decoding="async"><span><small>IMAGE ${String(index + 1).padStart(2, '0')}</small><strong>${escape(image.title)}</strong><span>Expand image ↗</span></span></button>${imageSourceLink(place,image)}</article>`).join('')}</div></section>`;
 }
 
 export function imageAttachments(place: Place, ids: string[] = []) {
   return ids.map(id => {
     const image = place.images.find(item => item.id === id);
-    return image ? `<button class="evidence-image-link" data-image="${escape(id)}">View image: ${escape(image.title)} ↗</button>` : '';
+    return image ? `<div class="evidence-attachment"><button class="evidence-image-link" data-image="${escape(id)}">View image: ${escape(image.title)} ↗</button>${imageSourceLink(place,image)}</div>` : '';
   }).join('');
 }
 
-export function exportImageEvidence(images: EvidenceImage[]) {
-  return images.length ? ['','## Evidence images', ...images.map(image => `### ${image.title}\n![${image.alt}](${new URL(evidenceImageUrl(image), location.href).href})\n${image.caption}\nRetrieved / submitted: ${image.submitted}\nOriginal file: ${image.originalFilename}\n${image.attribution}\nSHA-256: ${image.sha256}`)] : [];
+export function exportImageEvidence(place: Place) {
+  return place.images.length ? ['','## Evidence images', ...place.images.map(image => `### ${image.title}\n![${image.alt}](${new URL(evidenceImageUrl(image), location.href).href})\n${image.caption}\nPublisher source: ${place.sources[image.source].url ?? 'Contributor upload; source-page link not supplied'}\nRetrieved / submitted: ${image.submitted}\nOriginal file: ${image.originalFilename}\n${image.attribution}\nSHA-256: ${image.sha256}`)] : [];
 }
 
 export function initEvidenceViewer(getPlace: () => Place) {
@@ -24,9 +32,9 @@ export function initEvidenceViewer(getPlace: () => Place) {
   dialog.id = 'evidence-dialog'; dialog.className = 'image-viewer';
   dialog.setAttribute('aria-labelledby', 'image-title');
   dialog.innerHTML = `<div class="image-viewer-heading"><div><p class="eyebrow">IMAGE EVIDENCE</p><h2 id="image-title"></h2></div><button type="button" class="image-close" aria-label="Close image viewer">Close ×</button></div>
-    <div class="image-toolbar" role="group" aria-label="Image controls"><button type="button" id="image-previous" aria-label="Previous image">← Previous</button><span id="image-counter" role="status"></span><button type="button" id="image-next" aria-label="Next image">Next →</button><button type="button" id="image-zoom" aria-pressed="false">Actual size</button><a id="image-original" target="_blank" rel="noopener noreferrer">Open original ↗</a><a id="image-download" download>Download image ↓</a></div>
+    <div class="image-toolbar" role="group" aria-label="Image controls"><button type="button" id="image-previous" aria-label="Previous image">← Previous</button><span id="image-counter" role="status"></span><button type="button" id="image-next" aria-label="Next image">Next →</button><button type="button" id="image-zoom" aria-pressed="false">Actual size</button><a id="image-publisher" target="_blank" rel="noopener noreferrer">View publisher source ↗</a><a id="image-original" target="_blank" rel="noopener noreferrer">Open saved image ↗</a><a id="image-download" download>Download image ↓</a></div>
     <div class="image-stage" tabindex="0" aria-label="Evidence image; scroll to inspect when at actual size"><img id="evidence-full-image" alt=""><p id="image-error" role="status" hidden>The image could not load. Try opening the original image.</p></div>
-    <div class="image-description"><p id="image-caption"></p><p id="image-source"></p><p id="image-attribution"></p></div>`;
+    <div class="image-description"><p id="image-caption"></p><p id="image-source"></p><p id="image-source-url"></p><p id="image-attribution"></p></div>`;
   document.body.append(dialog);
   const find = <T extends HTMLElement>(selector: string) => dialog.querySelector<T>(selector)!;
   const imageElement = find<HTMLImageElement>('#evidence-full-image');
@@ -48,6 +56,11 @@ export function initEvidenceViewer(getPlace: () => Place) {
     find('#image-caption').textContent = image.caption;
     find('#image-counter').textContent = `${index + 1} / ${place.images.length}`;
     find('#image-source').textContent = `${source.publisher} · ${source.date} · Reviewed ${source.reviewed}`;
+    find('#image-source-url').innerHTML = imageSourceLink(place,image);
+    const publisher = find<HTMLAnchorElement>('#image-publisher');
+    publisher.hidden = !source.url;
+    if (source.url) publisher.href = source.url;
+    else publisher.removeAttribute('href');
     find('#image-attribution').textContent = image.attribution;
     find<HTMLButtonElement>('#image-previous').disabled = index === 0;
     find<HTMLButtonElement>('#image-next').disabled = index === place.images.length - 1;

@@ -46,6 +46,9 @@ export function createCompatMap(options: {
     style: { color: mapInk, weight: 2.5, dashArray: '8 5', fillColor: '#d28a59', fillOpacity: 0.18 },
     interactive: false,
   }).addTo(map);
+  let roadHighlightStrength = 0;
+  const roadHighlightStyle = () => ({color:'#ffe079', weight:10 + 10 * roadHighlightStrength, opacity:.85 * roadHighlightStrength, lineCap:'round' as const});
+  const roadHighlight = L.geoJSON(undefined, { style:roadHighlightStyle, interactive:false }).addTo(map);
   const roads = L.geoJSON(undefined, {
     style: feature => ({color: feature?.properties?.access === 'private' ? '#7e315d' : '#7954a1', weight: 5, opacity: .9, dashArray: feature?.properties?.access === 'private' ? '8 5' : undefined}),
     interactive: false,
@@ -75,6 +78,7 @@ export function createCompatMap(options: {
       const collection: FeatureCollection = { ...options.parcels, features: options.parcels.features.filter(feature => ids.has(feature.properties?.placeId)) };
       parcels.clearLayers().addData(collection);
       const roadCollection: FeatureCollection = { ...options.roads, features: options.roads.features.filter(feature => ids.has(feature.properties?.placeId)) };
+      roadHighlight.clearLayers().addData(roadCollection);
       roads.clearLayers().addData(roadCollection);
       markers.forEach(({ marker, button }, id) => {
         if (ids.has(id)) { if (!map.hasLayer(marker)) marker.addTo(map); }
@@ -83,6 +87,7 @@ export function createCompatMap(options: {
         button.setAttribute('aria-pressed', String(id === selectedId));
       });
     },
+    highlightRoad(strength: number) { roadHighlightStrength=strength; roadHighlight.setStyle(roadHighlightStyle); },
     focus(point: [number, number], zoom: number) { map.setView(latLng(point), zoom, { animate: !options.reducedMotion }); },
     fit(bounds: MapBounds) { map.fitBounds([latLng(bounds[0]), latLng(bounds[1])], { paddingTopLeft: [50, 130], paddingBottomRight: [60, 100], maxZoom: 16, animate: !options.reducedMotion }); },
     zoom(delta: number) { map.setZoom(map.getZoom() + delta, { animate: !options.reducedMotion }); },

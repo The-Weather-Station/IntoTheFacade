@@ -76,6 +76,16 @@
 .remaining-questions p { margin:9px 0; }
 .evidence-gallery { background:#ddd2ae; }
 .evidence-item { box-shadow:3px 3px #b6a080; }
+.evidence-image-card { min-width:0; }
+.evidence-image-card .evidence-thumbnail { width:100%; }
+.evidence-source-link { display:block; color:#623b37; font-size:11px; line-height:1.5; text-decoration:underline; text-underline-offset:2px; overflow-wrap:anywhere; padding:7px 2px; }
+.evidence-source-link:hover { color:#2e1e2b; }
+.evidence-source-note { display:block; padding:6px 2px; font:9px/1.5 var(--mono); color:#72614f; }
+.evidence-attachment { margin:10px 0; }
+.evidence-attachment .evidence-image-link { margin-bottom:0; }
+.image-toolbar #image-publisher { background:#d9bf83; border-width:2px; }
+.image-toolbar #image-publisher[hidden] { display:none; }
+.map-section:focus-visible { outline:3px solid #ffe079; outline-offset:3px; }
 .app-footer { background:#142019cc; border-top:1px solid #6a7050; }
 @media(min-width:1600px) { .workspace { grid-template-columns:305px minmax(300px,1fr) 405px; } .mystery-card>img { max-height:340px; } .dossier-hero { height:204px; } }
 @media(max-width:1200px) { .workspace { grid-template-columns:235px minmax(220px,1fr) 330px; gap:13px; } .intro h1 { font-size:38px; } .dossier { padding:14px; } .dossier-hero { height:158px; } .mystery-card>img { max-height:285px; } .card-art { height:108px; } }
