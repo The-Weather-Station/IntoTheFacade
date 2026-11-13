@@ -1,4 +1,7 @@
 export const icons: Record<string, string> = {
+  eye: '<path d="M2 10h3V7h4V5h6v2h4v3h3v4h-3v3h-4v2H9v-2H5v-3H2z"/><path d="M9 9h6v6H9z" fill="currentColor"/>',
+  moon: '<path d="M10 2h6v3h4v4h2v7h-3v4h-5v2H8v-3H4v-4H2V9h3v7h4v3h6v-3h3v-6h-3V6h-5z" fill="currentColor" stroke="none"/>',
+  pumpkin: '<path d="M11 2h4v4h4v3h3v10h-3v3H5v-3H2V9h3V6h6z"/><path d="M5 10h4v4H5zm10 0h4v4h-4zm-8 7h3v2h4v-2h3v3H7z" fill="currentColor" stroke="none"/>',
   search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
   arrow: '<path d="M5 12h14m-5-5 5 5-5 5"/>',
   external: '<path d="M14 4h6v6m0-6L10 14M10 5H5v14h14v-5"/>',
@@ -18,19 +21,26 @@ export const icons: Record<string, string> = {
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.1M3 12h.1M3 18h.1"/>',
   logo: '<path d="M3 21V6l9-4v19M12 21V10l9-4v15M6 9l3-1M6 14l3-1M6 19l3-1m9-8v3m0 3v3"/>'
 };
-export function icon(name: string, cls = '') { return `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] ?? icons.info}</svg>`; }
+export function icon(name: string, cls = '') { return `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">${icons[name] ?? icons.info}</svg>`; }
 
-let illustrationSequence = 0;
+// Original, schematic landmark drawings on an integer pixel grid.
+// The night palette is decorative; it does not describe current site conditions.
 export function architecture(id: string): string {
-  const uid = `${id}-${++illustrationSequence}`;
-  const windows = (count: number, x: number, y: number, step: number, width = 13, height = 27) => Array.from({length: count}, (_,i)=>`<rect x="${x+i*step}" y="${y}" width="${width}" height="${height}" fill="#141c1a" stroke="#7e8b7f" stroke-width=".65"/><path d="M${x+i*step} ${y+height/2}h${width}" stroke="#7e8b7f" stroke-width=".45"/>`).join('');
-  let building = '';
-  if (id === 'union-station') {
-    building = `<path d="M32 139 60 113h252l33 26" fill="#354239" stroke="#8b9180"/><path d="M42 139h291v62H42z" fill="#3f4940" stroke="#a2a08a"/><path d="M38 139h299v8H38zM46 187h283v6H46z" fill="#6b7160"/><path d="M147 201v-78l39-24 39 24v78" fill="#575d4d" stroke="#b4ad8b"/><path d="M141 124l45-29 45 29" fill="none" stroke="#b3aa84" stroke-width="3"/><path d="M171 201v-43a15 15 0 0 1 30 0v43" fill="#18201c" stroke="#b4ad8b"/><path d="M186 144v57m-15-37h30" stroke="#8f967f"/><circle cx="186" cy="123" r="8" fill="#1d2721" stroke="#acaa8c"/><path d="M186 117v6l4 2" fill="none" stroke="#c1b995"/>${windows(4,54,154,22,13,30)}${windows(4,235,154,22,13,30)}<path d="M33 204h311M155 204h62m-69 5h76" stroke="#969a80"/><path d="M70 113v-16h8v16m216 0V97h8v16" fill="#535e4e" stroke="#959a83"/>`;
-  } else if (id === 'santa-fe-depot') {
-    building = `<path d="M36 146h290v56H36z" fill="#4b5043" stroke="#b0a88b"/><path d="M75 145v-28h218v28" fill="#60614e" stroke="#b0a88b"/><path d="M143 202V94h72v108" fill="#77735a" stroke="#c7bb92"/><path d="M150 94V84h58v10M157 84v-7h44v7" fill="#6c6a53" stroke="#beb18b"/><path d="M156 100v97m10-97v97m25-97v97m10-97v97" stroke="#aaa280" stroke-width="3"/>${windows(3,43,159,29,17,32)}${windows(3,230,159,29,17,32)}<rect x="172" y="149" width="14" height="53" fill="#19221e"/><text x="179" y="134" fill="#e0d2ac" text-anchor="middle" font-size="8" font-family="sans-serif" letter-spacing="1">SANTA FE</text><path d="M29 205h307m-304-53h303" stroke="#93947b"/>`;
+  const dome = id === 'gold-dome';
+  const depot = id === 'santa-fe-depot';
+  const ink = '#302535', cream = '#f1e4cd';
+  const sky = dome ? '#4c3659' : depot ? '#314e50' : '#663b43';
+  const accent = dome ? '#d8b653' : depot ? '#7fae9c' : '#da8c69';
+  const windows = (n: number, x: number, y: number, step: number, h = 10) =>
+    Array.from({length:n},(_,i) => `<path d="M${x+i*step} ${y}h5v${h}h-5z" fill="${ink}"/><path d="M${x+i*step+1} ${y+1}h2v${h-3}h-2z" fill="${accent}"/>`).join('');
+  const skyline = '<path d="M0 69h9V57h8v8h10V46h4v-5h4v5h5v20h10v-9h10v16h15v-9h9V54h10v11h14V53h6v-7h5v7h5v18h14V57h10v10h14V50h9v-6h4v6h8v20h9v26H0z" fill="#211e2c" opacity=".55"/>';
+  let building: string;
+  if (dome) {
+    building = `<path d="M21 71h150v17H21z" fill="${ink}"/><path d="M24 72h144v14H24z" fill="#a49e7e"/>${windows(17,27,76,8,8)}<path d="M25 70v-9h5v-8h9v-8h12v-6h15v-5h17v-3h26v3h17v5h15v6h12v8h9v8h5v9z" fill="${ink}"/><path d="M29 68v-7h5v-7h8v-7h12v-5h14v-5h17v-3h22v3h17v5h14v5h12v7h8v7h5v7z" fill="#c4a556"/><path d="M35 54h122M54 43h84M29 68l25-25 22 25 20-34 20 34 22-25 25 25M42 54l26-17 28 17 28-17 26 17M96 34v34" fill="none" stroke="#725441" stroke-width="2"/>`;
+  } else if (depot) {
+    building = `<path d="M20 61h152v27H20z" fill="${ink}"/><path d="M23 64h146v21H23z" fill="#b9b494"/><path d="M39 52h114v12H39z" fill="${ink}"/><path d="M42 55h108v9H42z" fill="#9d9b7d"/><path d="M78 36h36v52H78zM82 30h28v6H82zM87 26h18v4H87z" fill="${ink}"/><path d="M81 38h30v47H81zM85 32h22v4H85z" fill="#d5c79c"/><path d="M85 40v43m6-43v43m11-43v43m5-43v43" stroke="#9e8d68" stroke-width="2"/>${windows(6,26,68,8,14)}${windows(6,121,68,8,14)}<path d="M93 65h6v22h-6z" fill="${ink}"/><path d="M86 56h20v5H86z" fill="${ink}"/><path d="M89 57h2v3h-2zm5 0h2v3h-2zm5 0h3v3h-3z" fill="${cream}"/>`;
   } else {
-    building = `<path d="M40 177h297v28H40z" fill="#535646" stroke="#a7aa8a"/>${windows(14,48,182,20,14,19)}<path d="M47 177a137 86 0 0 1 274 0Z" fill="#726c46" stroke="#c5ae6d" stroke-width="1.3"/><path d="m47 177 45-40 45 40 47-40 46 40 45-40 46 40M69 137h230M105 113h158m-194 24 36-24 32 24 47-24 46 24 33-24 36 24M137 177l-32-64m125 64 33-64m-79 24V91M92 137l42-39 50 15 50-15 41 39" fill="none" stroke="#c2ad70" stroke-width=".85"/><path d="M26 208h325" stroke="#98977a"/>`;
+    building = `<path d="M19 60h154v28H19z" fill="${ink}"/><path d="M22 63h148v22H22z" fill="#be9776"/><path d="M15 61v-4h6v-4h7v-4h136v4h7v4h6v4z" fill="${ink}"/><path d="M25 56h142v3H25z" fill="#8d654f"/><path d="M75 86V53h6v-5h7v-5h8v-4h4v4h8v5h7v5h5v33z" fill="${ink}"/><path d="M78 84V55h6v-4h6v-5h8v-3h1v3h7v5h6v4h5v29z" fill="#d3af88"/>${windows(6,26,68,8,14)}${windows(6,125,68,8,14)}<path d="M89 87V70h3v-3h10v3h3v17z" fill="${ink}"/><path d="M95 70h2v17h-2z" fill="#d7b690"/><path d="M92 54h10v9H92z" fill="${ink}"/><path d="M96 55v5h4" fill="none" stroke="${cream}"/><path d="M37 48V38h5v10m107 0V38h5v10" stroke="${ink}" stroke-width="3"/>`;
   }
-  return `<svg viewBox="0 0 380 240" class="building-art" role="img" aria-label="Illustrative architectural study; not a photograph"><defs><pattern id="grid-${uid}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#718573" stroke-opacity=".12" stroke-width=".5"/></pattern><linearGradient id="sky-${uid}" x2="0" y2="1"><stop stop-color="#1b2925"/><stop offset="1" stop-color="#334036"/></linearGradient></defs><rect width="380" height="240" fill="url(#sky-${uid})"/><rect width="380" height="240" fill="url(#grid-${uid})"/><circle cx="295" cy="58" r="40" fill="#9a9b70" opacity=".07"/><path d="M0 211h380M20 0v240M360 0v240" stroke="#92a18d" stroke-opacity=".16"/>${building}<path d="M20 220h50m-50-3v6m50-6v6" stroke="#9b9c80" stroke-width=".7"/><text x="80" y="223" font-family="monospace" font-size="6" letter-spacing="1.3" fill="#a0a48c">SCHEMATIC / NOT TO SCALE</text><path d="M345 20v16m-8-8h16" stroke="#9da18b" stroke-width=".7"/></svg>`;
+  return `<svg viewBox="0 0 192 106" class="building-art" role="img" aria-label="Pixel illustration of ${dome?'Gold Dome':depot?'Santa Fe Depot':'Union Station'}; schematic, not a photograph" shape-rendering="crispEdges"><rect width="192" height="106" fill="${sky}"/><path d="M142 15h15v3h5v5h3v13h-3v5h-5v3h-15v-3h-5v-5h-3V23h3v-5h5z" fill="${accent}"/><path d="M148 15h9v3h5v5h3v13h-3v5h-5v3h-6v-4h5v-6h3V23h-4v-5h-7z" fill="${cream}" opacity=".3"/><path d="M21 19h2v2h-2zm34 8h2v2h-2zm65-15h2v2h-2zm60 36h2v2h-2zM73 13h2v6h-2zm-2 2h6v2h-6z" fill="${cream}" opacity=".65"/>${skyline}<path d="M0 86h192v20H0z" fill="${ink}"/>${building}<path d="M14 88h165v3H14z" fill="${accent}"/><path d="M0 95h192M25 100h43m71-1h22" stroke="${accent}" opacity=".3"/><path d="M5 65h3v23H5zm-3 7h9v2H2zm181-7h3v23h-3zm-3 7h9v2h-9z" fill="${ink}"/><path d="M3 65h7v3H3zm178 0h7v3h-7z" fill="${accent}"/></svg>`;
 }

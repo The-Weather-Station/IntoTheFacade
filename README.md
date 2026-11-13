@@ -2,6 +2,8 @@
 
 An initial Oklahoma City field atlas built with Vite, TypeScript, and MapLibre GL JS.
 
+The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers, selected November 13, 2026. See [DESIGN.md](DESIGN.md) for the approved direction, palette, card treatments, and responsive behavior. The landmark illustrations and decorative Halloween icons are original SVG artwork.
+
 ## Run
 
 Use Node.js 24 (the version used for this demo), then:
@@ -60,7 +62,7 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 
 `src/data.ts` is the reviewed dataset. Each evidence claim references a source entry. Source publication dates are separate from the November 11, 2026 review date. A historical claim is not verification of current ownership, access, service, or condition.
 
-The basemap uses a locally hosted, board-game-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). Mint land, cream roads, ink outlines, blue water, and green parks restyle the original geographic features; no fictional streets, prices, ownership, or game rules are added. Place accent colors are decorative. OpenMapTiles/OpenStreetMap attribution is preserved, and live tiles and fonts require network access. Google Fonts supplies Barlow Condensed and IBM Plex fonts; system fallbacks remain available.
+The basemap uses a locally hosted, board-game-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). Sage land, cream roads, ink outlines, teal water, and green parks restyle the original geographic features; no fictional streets, prices, ownership, or game rules are added. Place accent colors are decorative. OpenMapTiles/OpenStreetMap attribution is preserved, and live tiles and fonts require network access. Google Fonts supplies Pixelify Sans and IBM Plex fonts; system fallbacks remain available.
 
 The three highlighted geometry shapes and heights are deliberately schematic. They are not Overture downloads, surveyed footprints, or reconstructed buildings. The architectural SVG illustrations are original schematic drawings, not photographs. Coordinates are approximate location references:
 
@@ -87,9 +89,10 @@ For a development-only map-failure check, visit `/?test-map-failure`. This test 
 
 - `src/data.ts`: place records, evidence, source dates and URLs, filter logic.
 - `src/main.ts`: application interactions, map lifecycle, local persistence, export.
-- `src/art.ts`: icons and schematic architectural illustrations.
-- `src/style.css`: the industrial visual system and responsive layouts.
+- `src/art.ts`: original icons and schematic pixel architectural illustrations.
+- `src/tabletop.css`: the card-table visual system and responsive layouts.
 - `public/styles/board.json`: custom geographic map styling derived from OpenFreeMap Liberty.
-- `src/map-board.css` and `src/map-palette.ts`: printed-board map controls, markers, and decorative place accents.
+- `src/map-palette.ts`: shared decorative place accents for cards and map markers.
+- `DESIGN.md`: the approved reference and implementation guide for future changes.
 
 Next meaningful step: replace schematic geometry with reviewed real footprints for this small region, then add one bounded data adapter while preserving claim-level provenance.

@@ -1,8 +1,7 @@
 import { Map as LibreMap, Marker, AttributionControl, setWorkerUrl } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import './style.css';
-import './map-board.css';
+import './tabletop.css';
 import { places, getPlace, filterPlaces, reviewed, type Place } from './data';
 import { icon, architecture } from './art';
 import { mapInk, placeColor } from './map-palette';
@@ -26,15 +25,15 @@ $('#app').innerHTML = `
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> FIELD EDITION 001</span><button class="text-button" id="about-button">About this atlas ${icon('external')}</button></div>
   </header>
-  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">BEYOND THE FAMILIAR</p><h1>Every place has a <em>past.</em></h1></div><p class="intro-copy">Follow the structures. Trace the evidence.<br>Find the stories hiding in plain sight.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>EXPLORING</small><strong>Oklahoma City, OK</strong></span>${icon('chevron')}</button></section>
+  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">A FEW PLACES. A LOT BENEATH THE SURFACE.</p><h1>Every place has a <em>past.</em></h1></div><p class="intro-copy">Pick a place. Follow the paper trail.<br>See what the city left behind.</p><div class="table-charms" aria-hidden="true"><span class="charm charm-eye">${icon('eye')}</span><span class="charm charm-moon">${icon('moon')}</span><span class="charm charm-pumpkin">${icon('pumpkin')}</span></div><button class="region-button" id="region-button">${icon('pin')}<span><small>FIELD COLLECTION / 001</small><strong>Oklahoma City, OK</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
-      <div class="panel-heading"><div><p class="eyebrow">THE FIELD INDEX</p><h2 id="discovery-title">Places to investigate</h2></div><span class="count-box">03</span></div>
+      <div class="panel-heading"><div><p class="eyebrow">THE LOCATION DECK</p><h2 id="discovery-title">Pick a place.</h2></div><span class="count-box" aria-label="3 locations">03</span></div>
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search this collection…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button><button class="filter" data-category="Rail heritage" aria-pressed="false">Rail heritage</button><button class="filter" data-category="Architecture" aria-pressed="false">Architecture</button></div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>CURATED COLLECTION</span></div>
       <div id="places" class="places" tabindex="-1"></div>
-      <div class="index-footer"><span class="mini-cross">+</span><div><strong>History, with a paper trail.</strong><p>Each dossier connects a place to the records behind its story.</p></div></div>
+      <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>There's more to the story.</strong><p>3 places. 9 sourced facts. Follow your curiosity.</p></div></div>
     </aside>
     <section class="map-section" aria-label="Interactive location map">
       <div id="map" aria-label="Oklahoma City exploration map"></div>
@@ -67,8 +66,8 @@ function renderList() {
   $('#map-region-count').textContent = `${String(visible.length).padStart(2,'0')} SITES`;
   $('#saved-count').textContent = String(saved.length);
   $('#places').innerHTML = visible.length ? visible.map(p => `
-    <article class="place-card ${p.id === selected.id ? 'selected' : ''}">
-      <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-art">${architecture(p.id)}<span class="card-number">${p.number}</span><span class="card-year">EST. ${p.year}</span></div><div class="card-copy"><span class="card-category">${p.category}</span><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} sourced facts</span><span>${p.id === selected.id ? 'SELECTED' : 'VIEW DOSSIER'}</span></div></div></button>
+    <article class="place-card ${p.id === selected.id ? 'selected' : ''}" data-place="${p.id}" style="--card-color:${placeColor(p.id)}">
+      <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-heading"><span class="card-number">${p.number}</span><span class="card-category">${p.category}</span></div><div class="card-art">${architecture(p.id)}<span class="card-year">${p.year}</span></div><div class="card-copy"><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} sourced facts</span><span>${p.id === selected.id ? 'ON THE TABLE' : 'OPEN DOSSIER'}</span></div></div></button>
       <button class="card-save ${saved.includes(p.id) ? 'is-saved' : ''}" data-save="${p.id}" aria-pressed="${saved.includes(p.id)}" aria-label="${saved.includes(p.id) ? 'Unsave' : 'Save'} ${p.name}">${icon('bookmark')}</button>
     </article>`).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Your next discovery awaits.' : 'No places found.'}</h3><p>${savedOnly ? 'Save a place to keep its dossier close at hand.' : 'Try a different name or category in this three-place collection.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-select]').forEach(button => button.addEventListener('click', () => selectPlace(button.dataset.select!, true)));
@@ -106,9 +105,11 @@ function updateMapSelection() {
 }
 function renderDossier() {
   const p = selected, isSaved = saved.includes(p.id);
+  $('#dossier').style.setProperty('--card-color', placeColor(p.id));
+  $('#dossier').dataset.place = p.id;
   $('#dossier').innerHTML = `
     <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span><button id="dossier-save" class="icon-button ${isSaved?'is-saved':''}" aria-label="${isSaved?'Unsave':'Save'} ${p.name}" aria-pressed="${isSaved}">${icon('bookmark')}</button></div>
-    <div class="dossier-hero">${architecture(p.id)}<span class="hero-label">ARCHITECTURAL STUDY · ILLUSTRATIVE</span><span class="hero-corner">${p.number}</span></div>
+    <div class="dossier-hero">${architecture(p.id)}<span class="hero-label">ILLUSTRATIVE · NOT TO SCALE</span><span class="hero-corner">${p.number}</span></div>
     <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${p.name}</h2><p>${icon('pin')} ${p.address}</p></div>
     <div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>
     <div id="dossier-content" class="dossier-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
@@ -147,7 +148,7 @@ function updateFilters() {
   document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>{b.classList.toggle('active',b.dataset.category===category);b.setAttribute('aria-pressed',String(b.dataset.category===category));});
   $('#explore-nav').classList.toggle('active',!savedOnly);$('#saved-nav').classList.toggle('active',savedOnly);
   $('#explore-nav').setAttribute('aria-pressed',String(!savedOnly));$('#saved-nav').setAttribute('aria-pressed',String(savedOnly));
-  $('#discovery-title').textContent = savedOnly?'Your saved places':'Places to investigate';
+  $('#discovery-title').textContent = savedOnly?'Your collection.':'Pick a place.';
 }
 function fitMap() { const shown=visiblePlaces(); if(!mapReady||!map||!shown.length)return;const lngs=shown.map(p=>p.coordinates[0]),lats=shown.map(p=>p.coordinates[1]);map.fitBounds([[Math.min(...lngs),Math.min(...lats)],[Math.max(...lngs),Math.max(...lats)]],{padding:{top:100,bottom:100,left:70,right:85},maxZoom:15.2,pitch:is3d?42:0,bearing:is3d?-12:0,duration:reducedMotion?0:850}); }
 function footprints() {
