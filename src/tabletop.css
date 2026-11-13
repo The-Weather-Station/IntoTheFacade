@@ -410,3 +410,43 @@ dialog::backdrop { background: #161020d9; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none!important; animation: none!important; scroll-behavior: auto!important; }
 }
+
+/* Evidence states describe research quality, never permission or a game value. */
+.dossier[data-tab-view="evidence"] .dossier-hero, .dossier[data-tab-view="notes"] .dossier-hero { display:none; }
+@media (min-width:951px) {
+  .dossier[data-place="stockyard-airsoft"] .dossier-hero { height:100px; }
+  .dossier[data-place="stockyard-airsoft"] .dossier-title { padding-top:12px; padding-bottom:12px; }
+  .dossier[data-place="stockyard-airsoft"] .dossier-title h2 { font-size:31px; }
+}
+.case-status { display:flex; align-items:center; gap:7px; flex-wrap:wrap; padding:10px; margin-bottom:15px; border:2px solid var(--ink); background:#e5cf9f; font:8px var(--mono); }
+.case-status strong { display:block; width:100%; font:20px var(--display); }
+.case-status .live-dot { background:#96633e; }
+.findings { display:grid; gap:12px; margin:18px 0 22px; }
+.finding { border:1px solid #c9b89a; border-left:4px solid #9c7749; padding:10px 12px; background:#f8edd8; }
+.finding-documented { border-left-color:#547b71; }
+.finding .section-label { font-size:8px; color:#675850; }
+.finding h3 { font:500 22px/1.05 var(--display); margin:6px 0; overflow-wrap:anywhere; }
+.finding p { font-size:11px; line-height:1.6; margin-bottom:8px; color:#5a4e50; }
+.finding-evidence { padding:0; font:500 10px var(--mono); color:#824730; display:flex; gap:6px; align-items:center; }
+.finding-evidence .icon { width:13px; height:13px; }
+.source-reference { margin-top:12px; padding-top:10px; border-top:1px dashed #c3ad91; }
+.source-reference a { overflow-wrap:anywhere; }
+.source-reference>strong { font-size:11px; }
+.source-reference small { display:block; font:9px/1.7 var(--mono); color:#675850; margin-top:7px; }
+.source-reference details { margin-top:9px; font-size:10px; line-height:1.7; }
+.source-reference summary { cursor:pointer; color:#76513d; }
+.source-reference details p { font-size:11px; margin:7px 0 0; }
+.evidence-badge { text-transform:uppercase; line-height:1.6; }
+.evidence-item>div { min-width:0; }
+.next-steps { padding-top:22px; }
+.next-steps article { padding:15px 0; border-bottom:1px solid #c9b89a; }
+.next-steps h3 { font-size:23px; margin-bottom:7px; }
+.next-steps p { font-size:12px; line-height:1.7; }
+.next-steps a { font-size:11px; color:#824730; text-decoration:underline; text-underline-offset:3px; }
+.next-steps a .icon { width:13px; height:13px; }
+.map-key .key-square { background:transparent; border:2px dashed var(--ink); }
+@media (max-width:580px) {
+  .finding h3 { font-size:25px; }
+  .finding p { font-size:12px; }
+  .source-reference small { font-size:9px; }
+}

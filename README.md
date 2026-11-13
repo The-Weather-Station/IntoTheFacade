@@ -2,7 +2,7 @@
 
 An initial Oklahoma City field atlas built with Vite, TypeScript, and MapLibre GL JS.
 
-The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers, selected November 13, 2026. See [DESIGN.md](DESIGN.md) for the approved direction, palette, card treatments, and responsive behavior. The landmark illustrations and decorative Halloween icons are original SVG artwork.
+The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers, selected November 13, 2026. See [DESIGN.md](DESIGN.md) for the approved direction, palette, card treatments, and responsive behavior. The research motif and decorative Halloween icons are original SVG artwork.
 
 ## Run
 
@@ -24,7 +24,7 @@ Build output is `dist/`. The demo is published by GitHub Pages. The [original pr
 
 ## GitHub Pages
 
-The custom domain is `intothefacade.com`. Namecheap DNS uses GitHub Pages' four documented apex A records and a `www` CNAME pointing to `the-weather-station.github.io`. After setting the custom domain, rebuild the site so scripts, CSS, the favicon, and map styles use root-relative paths. GitHub provisions the HTTPS certificate; enable **Enforce HTTPS** in Pages settings when available. DNS caches and certificate provisioning may take up to 24 hours.
+The custom domain is `intothefacade.com`. Namecheap DNS uses GitHub Pages' four documented apex A records and a `www` CNAME pointing to `the-weather-station.github.io`. HTTPS is enabled and was verified on November 13, 2026. After changing the custom domain, rebuild so scripts, CSS, the favicon, and map styles use the configured base path.
 
 Build attempts have distinct artifact names, and the deploy job uses the name returned by its build job. This prevents duplicate-artifact errors when rerunning a build.
 
@@ -50,27 +50,33 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 
 ## Working features
 
-- Three curated Oklahoma City locations with nine historical claims and original source links.
-- Map/list/dossier selection, search, category filters, 2D/3D view, zoom, and fit-to-results.
-- Saved places and field notes persisted in this browser's local storage.
-- Markdown export of a dossier, its source links, unknowns, and saved note.
-- Responsive phone, tablet, and desktop layouts; keyboard-operable main controls and tabs.
-- A usable location index and dossier if the external map or WebGL cannot initialize.
-- Shareable location fragments, such as `#gold-dome`.
+- One real research case: the former Stockyard Airsoft address, replacing the three landmark examples.
+- Eight evidence entries with source type, source date, review date, method, and explicit limitations.
+- Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
+- Two real, address-matched county parcel polygons; no invented building blocks or heights.
+- Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
+- Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
+- Responsive layouts, keyboard-operable controls, shareable `#stockyard-airsoft` fragment, and usable dossiers when the map cannot connect.
 
 ## Data and representations
 
-`src/data.ts` is the reviewed dataset. Each evidence claim references a source entry. Source publication dates are separate from the November 11, 2026 review date. A historical claim is not verification of current ownership, access, service, or condition.
+Read [DATA_PIPELINE.md](DATA_PIPELINE.md) for the source plan, matching rules, research log, unresolved dependencies, and next milestones.
 
-The basemap uses a locally hosted, board-game-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). Sage land, cream roads, ink outlines, teal water, and green parks restyle the original geographic features; no fictional streets, prices, ownership, or game rules are added. Place accent colors are decorative. OpenMapTiles/OpenStreetMap attribution is preserved, and live tiles and fonts require network access. Google Fonts supplies Pixelify Sans and IBM Plex fonts; system fallbacks remain available.
+`src/data.ts` is the manually reviewed dossier. `src/research/stockyard-parcels.json` is a dated snapshot from the county's public parcel service. The map pin represents the combined parcel area, not a verified venue building or entrance. Parcel boundaries are reference geometry, not a legal survey. The decorative research illustration is not a site photograph or building reconstruction.
 
-The three highlighted geometry shapes and heights are deliberately schematic. They are not Overture downloads, surveyed footprints, or reconstructed buildings. The architectural SVG illustrations are original schematic drawings, not photographs. Coordinates are approximate location references:
+The county lists MID STATES PROPERTIES LLC for both address-matched parcels and names MID-STATES WHOLESALE LUMBER as occupant. The former venue's exact building, present use, vacancy, closure cause, and access remain unresolved. The entity name match has not been joined to the venue by a lease or detailed filing.
 
-- Union Station: public geographic references around 35.45728, -97.51865 ([reference](https://www.anyplaceamerica.com/directory/ok/oklahoma-county-40109/locales/union-station-1099175/)).
-- Santa Fe Depot: 35.465341, -97.512821 ([National Register registration map](https://npgallery.nps.gov/GetAsset/3c991bee-7759-419c-ab54-ed691ff97ba3)).
-- Gold Dome: rounded to 35.49294, -97.53117 ([location reference](https://tripomatic.com/en/poi/gold-dome-poi:15648)).
+Fetch a review candidate without changing the published data:
 
-Historical sources are listed per place in the app. Overture, USGS, and EPA are not queried live in this version. A bounded Overpass research query was attempted during development but did not return usable data; the app does not depend on it.
+```sh
+node scripts/fetch-stockyard-parcels.mjs
+```
+
+The candidate is written to ignored `research-candidates/`. Review it against original records before promoting it into `src/research/`. Do not publish changed ownership or occupancy conclusions automatically.
+
+The basemap uses a local board-inspired adaptation of [OpenFreeMap's Liberty style](https://tiles.openfreemap.org/styles/liberty). OpenStreetMap/OpenMapTiles attribution is preserved. County parcel attribution is added. Tiles and fonts require network access; the reviewed dossier and parcel snapshot are bundled with the app. Google Fonts supplies Pixelify Sans and IBM Plex, with system fallbacks.
+
+Google Maps and MapQuest are proprietary public-facing services, not open datasets. ChamberofCommerce.org is an explanatory guide, not the state filing registry. No live registry, Google, Overture, USGS, or EPA ingestion is running. Source-specific reuse rights need review before expanding automated collection.
 
 Saved records and notes are local browser conveniences. There is no login, database, cross-device sync, or offline application cache. They can be lost if browser data is cleared. Export makes a separate copy.
 
@@ -81,13 +87,16 @@ node --test tests/data.test.ts
 npm run build
 ```
 
-The tests cover claim/source integrity, region bounds, combined filters, invalid location IDs, and unique illustration IDs. Browser verification covers selection, evidence, search, category filtering, saved places and note persistence, Markdown export, 2D/3D switching, phone layout, and the map-failure path.
+The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired location fragments, and illustration integrity. Browser checks cover map rendering, evidence navigation, filters, saved places/notes, export, flat/tilt views, phone layout, and the map-failure path.
 
 For a development-only map-failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. All dossiers should remain usable. Remove the query parameter to load the live map.
 
 ## Main files
 
-- `src/data.ts`: place records, evidence, source dates and URLs, filter logic.
+- `src/data.ts`: reviewed case, separate findings, evidence, source metadata, and filters.
+- `src/research/stockyard-parcels.json`: reviewed county reference geometry and retrieval provenance.
+- `scripts/fetch-stockyard-parcels.mjs`: bounded county query that produces a review candidate.
+- `DATA_PIPELINE.md`: source plan, matching rules, research log, and next milestones.
 - `src/main.ts`: application interactions, map lifecycle, local persistence, export.
 - `src/art.ts`: original icons and schematic pixel architectural illustrations.
 - `src/tabletop.css`: the card-table visual system and responsive layouts.
@@ -95,4 +104,4 @@ For a development-only map-failure check, visit `/?test-map-failure`. This test 
 - `src/map-palette.ts`: shared decorative place accents for cards and map markers.
 - `DESIGN.md`: the approved reference and implementation guide for future changes.
 
-Next meaningful step: replace schematic geometry with reviewed real footprints for this small region, then add one bounded data adapter while preserving claim-level provenance.
+Next meaningful step: match the former venue to a specific building, review the deed and subsequent instruments, and resolve current use and closure history through relevant records.

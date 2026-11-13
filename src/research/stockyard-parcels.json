@@ -1,0 +1,228 @@
+{
+  "type": "FeatureCollection",
+  "provenance": {
+    "publisher": "Oklahoma County Assessor",
+    "layer": "https://services8.arcgis.com/euhkr1dAJeQBIjV0/arcgis/rest/services/TaxParcelsPublics_view/FeatureServer/0",
+    "queryUrl": "https://services8.arcgis.com/euhkr1dAJeQBIjV0/arcgis/rest/services/TaxParcelsPublics_view/FeatureServer/0/query?where=accountno+IN+%28%27R261068000%27%2C%27R261068040%27%29&outFields=accountno%2Cname1%2Clocation%2Cacres%2Cpin%2Cpropertyid&returnGeometry=true&outSR=4326&f=geojson",
+    "retrievedAt": "2026-11-13T17:20:44.972Z",
+    "coordinateSystem": "EPSG:4326",
+    "interpretation": "Address-matched tax parcels; exact venue/building match unresolved. Reference geometry, not a legal survey.",
+    "reuseNote": "Public Query/Extract service. Item metadata supplies no explicit open-data license; review terms before bulk reuse."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "placeId": "stockyard-airsoft",
+        "account": "R261068000",
+        "owner": "MID STATES PROPERTIES LLC",
+        "address": "2801 SW 15TH ST UNINCORPORATED",
+        "acres": 10.6306,
+        "pin": "1623-26-106-8000",
+        "assessorUrl": "https://docs.oklahomacounty.org/AssessorWP5/AN-R.asp?PropertyID=43455"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -97.5599499093809,
+              35.4503679744881
+            ],
+            [
+              -97.5596526537966,
+              35.4501977553115
+            ],
+            [
+              -97.5593417242581,
+              35.4501989641599
+            ],
+            [
+              -97.5593423505512,
+              35.4497713117585
+            ],
+            [
+              -97.5618479694153,
+              35.449773641149
+            ],
+            [
+              -97.5618502449928,
+              35.4501888590139
+            ],
+            [
+              -97.5609600655369,
+              35.4501918595097
+            ],
+            [
+              -97.5609574422563,
+              35.4503384668553
+            ],
+            [
+              -97.5610551423365,
+              35.4504414626187
+            ],
+            [
+              -97.5610554727594,
+              35.4505214068724
+            ],
+            [
+              -97.5611206758542,
+              35.4506850230875
+            ],
+            [
+              -97.5611737593387,
+              35.4507766485423
+            ],
+            [
+              -97.5612343179293,
+              35.4508651158212
+            ],
+            [
+              -97.5613020725542,
+              35.450950017205
+            ],
+            [
+              -97.5613767109742,
+              35.4510309614073
+            ],
+            [
+              -97.5613763867228,
+              35.4523604866887
+            ],
+            [
+              -97.5616177283927,
+              35.4523647296655
+            ],
+            [
+              -97.5616195909684,
+              35.4523922912392
+            ],
+            [
+              -97.5619046195754,
+              35.4523954043639
+            ],
+            [
+              -97.5619044579406,
+              35.4527472903065
+            ],
+            [
+              -97.5617552782642,
+              35.452748826827
+            ],
+            [
+              -97.5601987460621,
+              35.4527530125619
+            ],
+            [
+              -97.5601939546262,
+              35.4505558532431
+            ],
+            [
+              -97.5599499093809,
+              35.4503679744881
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "placeId": "stockyard-airsoft",
+        "account": "R261068040",
+        "owner": "MID STATES PROPERTIES LLC",
+        "address": "2801 SW 15TH ST UNINCORPORATED",
+        "acres": 12.1284,
+        "pin": "1623-26-106-8040",
+        "assessorUrl": "https://docs.oklahomacounty.org/AssessorWP5/AN-R.asp?PropertyID=43457"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -97.5618479694153,
+              35.449773641149
+            ],
+            [
+              -97.5629879430418,
+              35.4497742465235
+            ],
+            [
+              -97.5629949101119,
+              35.4506071903903
+            ],
+            [
+              -97.5630127114312,
+              35.4527359656621
+            ],
+            [
+              -97.5619044579406,
+              35.4527472903065
+            ],
+            [
+              -97.5619046195754,
+              35.4523954043639
+            ],
+            [
+              -97.5616195909684,
+              35.4523922912392
+            ],
+            [
+              -97.5616177283927,
+              35.4523647296655
+            ],
+            [
+              -97.5613763867228,
+              35.4523604866887
+            ],
+            [
+              -97.5613767109742,
+              35.4510309614073
+            ],
+            [
+              -97.5613020725542,
+              35.450950017205
+            ],
+            [
+              -97.5612343179293,
+              35.4508651158212
+            ],
+            [
+              -97.5611737593387,
+              35.4507766485423
+            ],
+            [
+              -97.5611206758542,
+              35.4506850230875
+            ],
+            [
+              -97.5610554727594,
+              35.4505214068724
+            ],
+            [
+              -97.5610551423365,
+              35.4504414626187
+            ],
+            [
+              -97.5609574422563,
+              35.4503384668553
+            ],
+            [
+              -97.5609600655369,
+              35.4501918595097
+            ],
+            [
+              -97.5618502449928,
+              35.4501888590139
+            ],
+            [
+              -97.5618479694153,
+              35.449773641149
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

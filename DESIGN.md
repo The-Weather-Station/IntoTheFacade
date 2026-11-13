@@ -11,12 +11,12 @@ outlines, and playful strangeness. The site uses original graphics and content.
 - A dark plum and brown tabletop holds the existing geographic board, a location
   deck, and the selected dossier card.
 - Locations are cream cards with decorative colored headers, integer-grid pixel
-  landmark illustrations, corner numbers, dates, and short sourced-fact counts.
+  research illustrations, corner numbers, review dates, and evidence-entry counts.
 - Evidence uses paper cards with publisher links and source dates. Notes use a
   ruled paper surface. The site remains a research tool; no invented gameplay,
   prices, ownership, access status, or historic claims are introduced.
 - Small original eye, moon, and pumpkin cards carry the Halloween influence.
-  Landmark drawings remain explicitly illustrative and not to scale. Their night
+  Research drawings remain explicitly illustrative and not site depictions. Their night
   palette does not represent present conditions.
 
 ## Visual vocabulary
@@ -38,13 +38,18 @@ Desktop: location deck / board / selected card. Tablet: board above deck and
 dossier. Phone: board, horizontally scrollable location cards, full dossier.
 Keep search, category filters, saved places, evidence links, notes, export,
 location deep links, and map controls operational. Preserve keyboard focus,
-tab navigation, and reduced-motion preferences. Historical data lives separately
-in `src/data.ts` and is not changed by the art direction.
+tab navigation, and reduced-motion preferences. Reviewed evidence lives separately
+in `src/data.ts`; the visual treatment must never imply a research conclusion.
+
+The November 13 public-record edition uses county parcel boundaries with dashed
+outlines, and an area-center marker. These are candidate matches, not claimed
+building footprints. Dossiers distinguish directory leads, official records,
+and unresolved findings. Evidence and notes tabs prioritize reading space.
 
 ## Implementation
 
 - `src/tabletop.css`: complete visual system and responsive layouts.
-- `src/art.ts`: original icons and schematic pixel landmark drawings.
+- `src/art.ts`: original icons and pixel research motifs; not site photographs.
 - `src/main.ts`: card markup and application interactions.
 - `src/map-palette.ts`: shared decorative location colors.
 - `public/styles/board.json`: geographic board palette.
