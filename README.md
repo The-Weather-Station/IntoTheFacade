@@ -2,7 +2,7 @@
 
 An initial Oklahoma City field atlas built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
-The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers, selected November 13, 2026. See [DESIGN.md](DESIGN.md) for the approved direction, palette, card treatments, and responsive behavior. The research motif and decorative Halloween icons are original SVG artwork.
+The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Five original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
 
 ## Run
 
@@ -51,8 +51,9 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 ## Working features
 
 - One real research case: the former Stockyard Airsoft address, replacing the three landmark examples.
-- Eleven evidence entries with source type, source date, review date, method, and explicit limitations.
-- Three original submitted screenshots with captions, source metadata, a fit/actual-size image viewer, keyboard navigation, and original PNG download links.
+- Fifteen evidence entries with source type, source date, review date, method, and explicit limitations.
+- Five original evidence images: three submitted screenshots, a county building photograph and a county sketch. Captions, source metadata, a fit/actual-size viewer, keyboard navigation, and original-image downloads are included.
+- A prominent generated missing-road card opens the OSM comparison; three original OSM service-road ways can be traced on either map renderer.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
 - Two real, address-matched county parcel polygons; no invented building blocks or heights.
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
@@ -63,9 +64,9 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 
 Read [DATA_PIPELINE.md](DATA_PIPELINE.md) for the source plan, matching rules, research log, unresolved dependencies, and next milestones.
 
-`src/data.ts` is the manually reviewed dossier. `src/research/stockyard-parcels.json` is a dated snapshot from the county's public parcel service. The map pin represents the combined parcel area, not a verified venue building or entrance. Parcel boundaries are reference geometry, not a legal survey. The decorative research illustration is not a site photograph or building reconstruction.
+`src/data.ts` is the manually reviewed dossier. `src/research/stockyard-parcels.json` is a dated county snapshot. The map pin represents the combined parcel area, not an entrance or surveyed building footprint. `src/research/osm-road-corridor.json` preserves three entire OSM ways and provenance, including WEOKIE parking circulation. Only way 1325580486 is tagged private; untagged ways do not establish public access.
 
-The county lists MID STATES PROPERTIES LLC for both address-matched parcels and names MID-STATES WHOLESALE LUMBER as occupant. The contributor identifies the western building in an annotated screenshot; its official building/parcel match, present use, vacancy, closure cause, and access remain unresolved. A reported missing road and conflicting 2701/2801 labels are recorded as observations. The entity name match has not been joined to the venue by a lease or detailed filing.
+The county lists MID STATES PROPERTIES LLC as owner and MID-STATES WHOLESALE LUMBER as occupant. The red-brick building is visually matched to account R261068040 by the county photograph and sketch. Its inventory lists a 1963 two-story warehouse, 193,038 square feet; the March 18, 2025 photo documents lumber storage at the building. These established findings lead the dossier. The old airsoft tenancy, closure cause and current room-by-room use remain separate research questions. The reported road is present in OSM but absent from the submitted Google view and queried city street-centerline coverage. That difference does not prove physical removal or explain Google's mapping decision.
 
 Fetch a review candidate without changing the published data:
 
@@ -96,7 +97,7 @@ node --test tests/data.test.ts
 npm run build
 ```
 
-The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired location fragments, illustration integrity, and original evidence-image hashes/dimensions/source links. Browser checks cover map rendering, evidence navigation, the image viewer and zoom, filters, saved places/notes, export, flat/tilt views, phone layout, and the map-failure path.
+The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired fragments, generated asset integrity/size, original evidence-image hashes/dimensions/source links, and OSM way geometry/access-tag scope. Browser checks cover both map renderers, evidence navigation, the image viewer, road tracing, filters, and phone layout.
 
 For a development-only styled-map failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. The 2D map should automatically load, with both parcels and the dossier available. Remove the query parameter to load the styled map. Also check `/?map=2d`, switching both ways, zero-result searches, zoom/fit, marker selection, and phone layout. LibreWolf's actual WebGL-disabled configuration was reproduced and the fallback verified on November 13, 2026, without changing browser privacy settings.
 
@@ -104,16 +105,20 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 
 - `src/data.ts`: reviewed case, separate findings, evidence, source metadata, and filters.
 - `src/research/stockyard-parcels.json`: reviewed county reference geometry and retrieval provenance.
+- `src/research/osm-road-corridor.json`: three complete OSM service-road ways, tags, versions and attribution.
 - `scripts/fetch-stockyard-parcels.mjs`: bounded county query that produces a review candidate.
 - `DATA_PIPELINE.md`: source plan, matching rules, research log, and next milestones.
 - `src/main.ts`: application interactions, map lifecycle, local persistence, export.
 - `src/compat-map.ts`: image/SVG map for browsers that block WebGL.
-- `src/evidence-images.ts`: submitted-image gallery, accessible full-resolution viewer, and export metadata.
-- `public/evidence/stockyard-airsoft/`: three unmodified contributor-supplied screenshots, preserving Google attribution and annotations.
-- `src/art.ts`: original icons and schematic pixel architectural illustrations.
-- `src/tabletop.css`: the card-table visual system and responsive layouts.
+- `src/evidence-images.ts`: evidence gallery, accessible full-resolution viewer, and export metadata.
+- `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
+- `public/art/`: five optimized generated WebP assets; no game assets are distributed.
+- `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
+- `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
+- `src/tabletop.css`: underlying card-table layout and responsive behavior.
+- `ARTWORK.md` and `art-prompts.json`: artwork provenance, exact prompts, reference roles and delivery settings.
 - `public/styles/board.json`: custom geographic map styling derived from OpenFreeMap Liberty.
 - `src/map-palette.ts`: shared decorative place accents for cards and map markers.
 - `DESIGN.md`: the approved reference and implementation guide for future changes.
 
-Next meaningful step: match the former venue to a specific building, review the deed and subsequent instruments, and resolve current use and closure history through relevant records.
+Next meaningful step: document which rooms/floor the former venue occupied, review the deed and subsequent instruments, and establish closure history through relevant records. Compare recorded plats and dated aerials to explain the service-road map discrepancy.

@@ -1,0 +1,171 @@
+{
+  "type": "FeatureCollection",
+  "provenance": {
+    "publisher": "OpenStreetMap contributors",
+    "sourceUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=-97.564,35.449,-97.559,35.453",
+    "retrievedAt": "2026-11-13T18:12:27.982545+00:00",
+    "coordinateSystem": "EPSG:4326",
+    "attribution": "© OpenStreetMap contributors",
+    "licenseUrl": "https://www.openstreetmap.org/copyright",
+    "interpretation": "Mapped service-road network corresponding to the corridor east of WEOKIE and west of the brick warehouse. Way 701894190 also includes part of the WEOKIE parking circulation; whole original ways are preserved. Only way 1325580486 has an explicit access=private tag; untagged segments have unspecified access, not verified public access. No inference of physical removal, legal right-of-way, or Google omission cause."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "placeId": "stockyard-airsoft",
+        "wayId": "701894190",
+        "highway": "service",
+        "osmUrl": "https://www.openstreetmap.org/way/701894190",
+        "version": 2,
+        "editedAt": "2019-07-06T23:53:17Z"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -97.5628939,
+            35.4496818
+          ],
+          [
+            -97.5629115,
+            35.450099
+          ],
+          [
+            -97.5629279,
+            35.4501323
+          ],
+          [
+            -97.5629582,
+            35.4501504
+          ],
+          [
+            -97.5634222,
+            35.4501456
+          ],
+          [
+            -97.5634346,
+            35.4501175
+          ],
+          [
+            -97.5634382,
+            35.4500858
+          ],
+          [
+            -97.5634337,
+            35.4499395
+          ],
+          [
+            -97.5634116,
+            35.4499193
+          ],
+          [
+            -97.5632869,
+            35.4499179
+          ],
+          [
+            -97.5630931,
+            35.4499222
+          ],
+          [
+            -97.5630869,
+            35.4499107
+          ],
+          [
+            -97.5630879,
+            35.4498123
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "placeId": "stockyard-airsoft",
+        "wayId": "779562948",
+        "highway": "service",
+        "osmUrl": "https://www.openstreetmap.org/way/779562948",
+        "version": 2,
+        "editedAt": "2025-08-27T00:18:46Z"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -97.5629279,
+            35.4501323
+          ],
+          [
+            -97.5629146,
+            35.4502851
+          ],
+          [
+            -97.5627628,
+            35.4509104
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "placeId": "stockyard-airsoft",
+        "wayId": "1325580486",
+        "highway": "service",
+        "osmUrl": "https://www.openstreetmap.org/way/1325580486",
+        "version": 1,
+        "editedAt": "2024-10-19T05:38:11Z",
+        "access": "private"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -97.5627628,
+            35.4509104
+          ],
+          [
+            -97.5628482,
+            35.4510812
+          ],
+          [
+            -97.5629001,
+            35.4513135
+          ],
+          [
+            -97.5629249,
+            35.4517299
+          ],
+          [
+            -97.5629249,
+            35.4523949
+          ],
+          [
+            -97.5626744,
+            35.4523817
+          ],
+          [
+            -97.5620702,
+            35.4523373
+          ],
+          [
+            -97.5617367,
+            35.4523231
+          ],
+          [
+            -97.5615376,
+            35.4523211
+          ],
+          [
+            -97.5612118,
+            35.4523178
+          ],
+          [
+            -97.5607198,
+            35.4523128
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -5,7 +5,7 @@ export const evidenceImageUrl = (image: EvidenceImage) => `${import.meta.env.BAS
 
 export function imageGallery(images: EvidenceImage[]) {
   if (!images.length) return '';
-  return `<section class="evidence-gallery" aria-labelledby="gallery-title"><div class="gallery-heading"><h3 id="gallery-title">Submitted images</h3><span>${images.length} ORIGINALS</span></div><p>Open an image to inspect the annotations and source labels.</p><div class="evidence-thumbnails">${images.map((image, index) => `<button class="evidence-thumbnail" data-image="${escape(image.id)}" aria-label="View image: ${escape(image.title)}"><img src="${evidenceImageUrl(image)}" alt="" width="${image.width}" height="${image.height}" loading="lazy" decoding="async"><span><small>IMAGE ${String(index + 1).padStart(2, '0')}</small><strong>${escape(image.title)}</strong><span>Expand image ↗</span></span></button>`).join('')}</div></section>`;
+  return `<section class="evidence-gallery" aria-labelledby="gallery-title"><div class="gallery-heading"><h3 id="gallery-title">Evidence images</h3><span>${images.length} ORIGINALS</span></div><p>County records and contributor screenshots. Inspect the originals and source labels.</p><div class="evidence-thumbnails">${images.map((image, index) => `<button class="evidence-thumbnail" data-image="${escape(image.id)}" aria-label="View image: ${escape(image.title)}"><img src="${evidenceImageUrl(image)}" alt="" width="${image.width}" height="${image.height}" loading="lazy" decoding="async"><span><small>IMAGE ${String(index + 1).padStart(2, '0')}</small><strong>${escape(image.title)}</strong><span>Expand image ↗</span></span></button>`).join('')}</div></section>`;
 }
 
 export function imageAttachments(place: Place, ids: string[] = []) {
@@ -16,15 +16,15 @@ export function imageAttachments(place: Place, ids: string[] = []) {
 }
 
 export function exportImageEvidence(images: EvidenceImage[]) {
-  return images.length ? ['','## Submitted images', ...images.map(image => `### ${image.title}\n![${image.alt}](${new URL(evidenceImageUrl(image), location.href).href})\n${image.caption}\nSubmitted: ${image.submitted}\nOriginal file: ${image.originalFilename}\n${image.attribution}\nSHA-256: ${image.sha256}`)] : [];
+  return images.length ? ['','## Evidence images', ...images.map(image => `### ${image.title}\n![${image.alt}](${new URL(evidenceImageUrl(image), location.href).href})\n${image.caption}\nRetrieved / submitted: ${image.submitted}\nOriginal file: ${image.originalFilename}\n${image.attribution}\nSHA-256: ${image.sha256}`)] : [];
 }
 
 export function initEvidenceViewer(getPlace: () => Place) {
   const dialog = document.createElement('dialog');
   dialog.id = 'evidence-dialog'; dialog.className = 'image-viewer';
   dialog.setAttribute('aria-labelledby', 'image-title');
-  dialog.innerHTML = `<div class="image-viewer-heading"><div><p class="eyebrow">SUBMITTED EVIDENCE</p><h2 id="image-title"></h2></div><button type="button" class="image-close" aria-label="Close image viewer">Close ×</button></div>
-    <div class="image-toolbar" role="group" aria-label="Image controls"><button type="button" id="image-previous" aria-label="Previous image">← Previous</button><span id="image-counter" role="status"></span><button type="button" id="image-next" aria-label="Next image">Next →</button><button type="button" id="image-zoom" aria-pressed="false">Actual size</button><a id="image-original" target="_blank" rel="noopener noreferrer">Open original ↗</a><a id="image-download" download>Download PNG ↓</a></div>
+  dialog.innerHTML = `<div class="image-viewer-heading"><div><p class="eyebrow">IMAGE EVIDENCE</p><h2 id="image-title"></h2></div><button type="button" class="image-close" aria-label="Close image viewer">Close ×</button></div>
+    <div class="image-toolbar" role="group" aria-label="Image controls"><button type="button" id="image-previous" aria-label="Previous image">← Previous</button><span id="image-counter" role="status"></span><button type="button" id="image-next" aria-label="Next image">Next →</button><button type="button" id="image-zoom" aria-pressed="false">Actual size</button><a id="image-original" target="_blank" rel="noopener noreferrer">Open original ↗</a><a id="image-download" download>Download image ↓</a></div>
     <div class="image-stage" tabindex="0" aria-label="Evidence image; scroll to inspect when at actual size"><img id="evidence-full-image" alt=""><p id="image-error" role="status" hidden>The image could not load. Try opening the original image.</p></div>
     <div class="image-description"><p id="image-caption"></p><p id="image-source"></p><p id="image-attribution"></p></div>`;
   document.body.append(dialog);

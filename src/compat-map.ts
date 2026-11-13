@@ -13,6 +13,7 @@ export function createCompatMap(options: {
   center: [number, number];
   places: Place[];
   parcels: FeatureCollection;
+  roads: FeatureCollection;
   reducedMotion: boolean;
   select: (id: string) => void;
   onTileStatus: (unavailable: boolean) => void;
@@ -45,6 +46,10 @@ export function createCompatMap(options: {
     style: { color: mapInk, weight: 2.5, dashArray: '8 5', fillColor: '#d28a59', fillOpacity: 0.18 },
     interactive: false,
   }).addTo(map);
+  const roads = L.geoJSON(undefined, {
+    style: feature => ({color: feature?.properties?.access === 'private' ? '#7e315d' : '#7954a1', weight: 5, opacity: .9, dashArray: feature?.properties?.access === 'private' ? '8 5' : undefined}),
+    interactive: false,
+  }).addTo(map);
   const markers = new Map<string, { marker: L.Marker; button: HTMLButtonElement }>();
   options.places.forEach(place => {
     const button = document.createElement('button');
@@ -69,6 +74,8 @@ export function createCompatMap(options: {
       const ids = new Set(visible.map(place => place.id));
       const collection: FeatureCollection = { ...options.parcels, features: options.parcels.features.filter(feature => ids.has(feature.properties?.placeId)) };
       parcels.clearLayers().addData(collection);
+      const roadCollection: FeatureCollection = { ...options.roads, features: options.roads.features.filter(feature => ids.has(feature.properties?.placeId)) };
+      roads.clearLayers().addData(roadCollection);
       markers.forEach(({ marker, button }, id) => {
         if (ids.has(id)) { if (!map.hasLayer(marker)) marker.addTo(map); }
         else marker.remove();

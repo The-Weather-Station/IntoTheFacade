@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { places, filterPlaces, getPlace, reviewed } from '../src/data.ts';
-import { architecture } from '../src/art.ts';
 const parcels = JSON.parse(readFileSync(new URL('../src/research/stockyard-parcels.json', import.meta.url), 'utf8'));
+const roads = JSON.parse(readFileSync(new URL('../src/research/osm-road-corridor.json', import.meta.url), 'utf8'));
 
 test('published claims and findings retain valid, dated provenance', () => {
   assert.equal(new Set(places.map(p=>p.id)).size,places.length);
@@ -54,7 +54,7 @@ test('closed business and expired entity do not become a vacancy or access verdi
   assert.equal(access.state,'unresolved');
   assert.equal(access.value,'Not established');
   assert.equal(p.findings.find(f=>f.label==='Former venue')!.state,'lead');
-  assert.ok(p.unknowns.some(s=>s.includes('exact building')));
+  assert.ok(p.unknowns.some(s=>s.includes('Stockyard Airsoft') && s.includes('rooms')));
 });
 test('search combines former name, owner, parcel, category, and saved filters', () => {
   const id='stockyard-airsoft';
@@ -69,11 +69,14 @@ test('retired landmark fragments resolve to the research case', () => {
   assert.equal(getPlace('gold-dome').id,'stockyard-airsoft');
   assert.equal(getPlace('invalid').id,'stockyard-airsoft');
 });
-test('repeated research illustrations have no duplicate SVG IDs', () => {
-  const html=architecture('stockyard-airsoft')+architecture('stockyard-airsoft');
-  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(new Set(ids).size,ids.length);
-  assert.ok(html.includes('not a depiction of the actual site'));
+test('generated art ships as separate bitmap assets, outside the evidence collection', () => {
+  for (const name of ['missing-road-card','brick-building-art','worn-card-face','table-felt','occult-card-back']) {
+    const bytes=readFileSync(new URL(`../public/art/${name}.webp`,import.meta.url));
+    assert.equal(bytes.subarray(0,4).toString(),'RIFF');
+    assert.equal(bytes.subarray(8,12).toString(),'WEBP');
+    assert.ok(bytes.length<750000);
+  }
+  assert.ok(places.every(place=>place.images.every(image=>image.src.startsWith('evidence/'))));
 });
 
 test('submitted images retain their original bytes and valid source/claim links', () => {
@@ -81,13 +84,18 @@ test('submitted images retain their original bytes and valid source/claim links'
     const images = new Map(place.images.map(image => [image.id, image]));
     assert.equal(images.size, place.images.length);
     for (const image of place.images) {
-      assert.match(image.src, /^evidence\/[a-z0-9/-]+\.png$/);
+      assert.match(image.src, /^evidence\/[a-z0-9/-]+\.(png|jpg)$/);
       const bytes = readFileSync(new URL(`../public/${image.src}`, import.meta.url));
-      assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
-      assert.equal(bytes.readUInt32BE(16), image.width);
-      assert.equal(bytes.readUInt32BE(20), image.height);
+      if(image.src.endsWith('.png')) {
+        assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+        assert.equal(bytes.readUInt32BE(16), image.width);
+        assert.equal(bytes.readUInt32BE(20), image.height);
+      } else {
+        assert.equal(bytes.subarray(0,2).toString('hex'),'ffd8');
+        assert.ok(image.width>0 && image.height>0);
+      }
       assert.equal(createHash('sha256').update(bytes).digest('hex'), image.sha256);
-      assert.equal(place.sources[image.source].kind, 'Submitted screenshot');
+      assert.ok(['Submitted screenshot','Official record'].includes(place.sources[image.source].kind));
       assert.ok(image.alt && image.caption && image.attribution && image.originalFilename);
       assert.ok(!Number.isNaN(Date.parse(image.submitted)));
       assert.ok(place.evidence.some(claim => claim.images?.includes(image.id)));
@@ -99,12 +107,27 @@ test('submitted images retain their original bytes and valid source/claim links'
   }
 });
 
-test('building and road annotations stay attributed observations', () => {
+test('new records strengthen the building match without inventing tenancy or access', () => {
   const place = getPlace('stockyard-airsoft');
-  assert.equal(place.findings.find(f => f.label === 'Building match')!.state, 'lead');
-  assert.equal(place.findings.find(f => f.label === 'Mapping discrepancy')!.state, 'lead');
+  assert.equal(place.findings.find(f => f.label === 'Building match')!.state, 'documented');
+  assert.equal(place.findings.find(f => f.label === 'Documented use')!.state, 'documented');
+  assert.ok(place.evidence.find(e=>e.id==='building-photo-match')!.images!.includes('county-building-photo'));
   assert.ok(place.evidence.find(e => e.id === 'street-view-context')!.detail.includes('2701'));
   assert.ok(place.evidence.find(e => e.id === 'street-view-context')!.detail.includes('2801'));
-  assert.ok(place.locationNote.includes('not been georeferenced'));
-  assert.ok(place.unknowns.some(text => text.includes('public/private')));
+  assert.ok(place.locationNote.includes('surveyed building footprint has not been added'));
+  assert.ok(place.unknowns.some(text => text.includes('untagged ways do not imply public access')));
+});
+
+test('road overlay preserves original OSM ways and limits the private tag to its source segment', () => {
+  assert.equal(roads.provenance.coordinateSystem,'EPSG:4326');
+  assert.deepEqual(roads.features.map(f=>f.properties.wayId).sort(),['1325580486','701894190','779562948']);
+  assert.deepEqual(roads.features.filter(f=>f.properties.access==='private').map(f=>f.properties.wayId),['1325580486']);
+  for(const feature of roads.features) {
+    assert.equal(feature.geometry.type,'LineString');
+    assert.equal(feature.properties.placeId,'stockyard-airsoft');
+    assert.equal(feature.properties.highway,'service');
+    assert.ok(!Number.isNaN(Date.parse(feature.properties.editedAt)));
+    assert.ok(feature.geometry.coordinates.length>=2);
+    for(const [x,y] of feature.geometry.coordinates){assert.ok(x>-97.57&&x<-97.55);assert.ok(y>35.44&&y<35.46);}
+  }
 });

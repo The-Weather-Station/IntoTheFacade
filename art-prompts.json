@@ -1,0 +1,43 @@
+{
+  "created": "2026-11-13",
+  "mode": "Built-in image generation; no CLI fallback",
+  "assets": [
+    {
+      "id": "missing-road-card",
+      "transparent_background": true,
+      "reference_roles": [
+        "Official Steam game screenshot — visual direction only"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: a single original portrait playing-card image for the Into The Facade research website, roughly 2:3 proportions. The supplied Dungeons & Degenerate Gamblers screenshot is ONLY a visual style reference: coarse low-resolution pixel clusters, limited dirty cream / oxblood red / dark plum / moss palette, chunky stepped black outlines, worn paper and mischievous occult card-table mood. Make an ORIGINAL card with its whole silhouette visible, front-facing and unrotated, isolated on genuine transparent background. Frayed cream edges, creases and rubbed ink; center art shows a small industrial access road vanishing into an impossible black cut-out in a folded map, with an eye-like question-mark motif. Industrial psychedelic Halloween atmosphere. At top large, perfectly readable pixel lettering exactly 'MISSING ROAD!!'. Bottom small lettering exactly 'FOLLOW THE CLUE'. A few SMALL dried red blood flecks and one tiny smear along an edge, playful theatrical spooky detail, no gore or victim. Entire image must be deliberate raster pixel art, hard square pixels and clustered dithering, NOT smooth painted art, not vector outlines with smooth grunge, not photorealistic. Design readable at 220px wide. Do not reuse game logos, characters, layout or existing game card designs. No fake address, street route, statistics, numbers or invented evidence. This is decorative card art."
+    },
+    {
+      "id": "brick-building-art",
+      "transparent_background": false,
+      "reference_roles": [
+        "Oklahoma County Assessor photograph R261068040",
+        "Official Steam game screenshot — visual direction only"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: a landscape pixel-art illustration of the REAL red-brick industrial building, for a location card on Into The Facade. Input image 1 is the architectural subject reference: official county photograph. Input image 2 is ONLY a raster pixel-art style reference from Dungeons & Degenerate Gamblers. Create an ORIGINAL, compelling low-resolution pixel-art depiction of this exact subject, not generic warehouses. Preserve the long two-story red face-brick facade, repeated dark upper rectangular window band, green-grey glass-block vertical bay at the far LEFT, L-shaped shorter brick wing returning on the right, paved yard, stacks of white-wrapped lumber against the lower facade, and flat roofline. Frame the whole building clearly, mostly straight-on with slight perspective like the photo, building occupies most of the width and lower two thirds, not mostly sky. Muted industrial Halloween dusk: rust brick, dirty peach sky, deep plum shadow, pale mint glass, moss ground, limited palette and strong square-pixel clusters / dithered ramps. Coarse game sprite art equivalent to a 384x216 source scaled with nearest-neighbor, landscape 16:9. Detailed enough to recognize the building but clearly illustration. No people, ghosts, blood, skulls, invented ruins, collapsing walls, extra towers, fabricated damage, abandoned signs, game logos, words, captions or frames. Raster game art, NOT SVG/vector style, smooth gradients, photorealistic paint or a fake photograph."
+    },
+    {
+      "id": "worn-card-face",
+      "transparent_background": true,
+      "reference_roles": [
+        "Official Steam game screenshot — visual direction only"
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: reusable portrait blank playing-card face texture for readable web UI. The input screenshot is only the pixel-art style reference. Make ONE large original empty worn cream playing card, front-facing perfectly rectangular and unrotated, 2:3 proportions, entire edge visible with a narrow transparent margin. True transparent background outside card. Strong stepped dark-plum pixel outline, subtly rounded stepped corners, little nicks, bent creases and dirty ochre rubbed fibers, irregular dithered age at perimeter. Center 78 percent is light dirty ivory and mostly quiet for HTML text and pictures to sit on top. VERY LOW-RES crisp pixel structure and clustered dithering as in Dungeons & Degenerate Gamblers, not a photoreal paper scan, no smooth vector geometry, no soft blur. Subtle fading wine-red and moss green ink traces ONLY in border corners. NO letters, numbers, logos, symbols, fake text, central illustration or drop shadow outside the silhouette. A practical separately reusable bitmap card surface."
+    },
+    {
+      "id": "table-felt",
+      "transparent_background": false,
+      "reference_roles": [],
+      "prompt": "Use case: stylized-concept. Asset type: original raster texture background for a Dungeons & Degenerate Gamblers-inspired industrial Halloween research card-table website. Single square flat top-down field of dark worn moss-green / charcoal-plum tavern felt, visible coarse square pixel clusters, irregular clustered dithering, rubbed patches, faded diagonal diamond weave, a few very subtle rusty reddish old stains at edges. Center stays dark and quiet so cream cards and a real map are legible on top. Low-resolution pixel game art, not photoreal, not vector, no soft gradients, no vignetting to white. No cards, objects, lettering, symbols, logos, numbers, border or perspective. Full bleed texture edge to edge, designed to tile unobtrusively. Original texture, visual style reference only; do not copy existing game assets."
+    },
+    {
+      "id": "occult-card-back",
+      "transparent_background": true,
+      "reference_roles": [],
+      "prompt": "Use case: stylized-concept. Asset type: one original portrait card BACK for an industrial psychedelic Halloween research deck, in the chunky limited-palette raster pixel-art direction of Dungeons & Degenerate Gamblers. Perfectly front-facing, whole card visible, unrotated, 2:3 portrait. A worn cream card edge with small cuts and bent corners; inside an ornate symmetrical oxblood red / black-plum / faded gold / moss pattern. Central original emblem: an open eye inside a simple industrial doorway, with small mirrored pumpkin-vine motifs at the corners and rails/pipes as geometric border ornaments. Occult and mischievous, abstract decorative card back, not official evidence. Crisp stair-step chunky pixels and clustered dithering, visibly scuffed ink and paper, readable at 80px tall. No letters, numbers, logos or game characters. NO text at all. Genuine transparent alpha outside the card; no surface or drop shadow behind it. Not smooth vector art, not a realistic paper photograph."
+    }
+  ]
+}

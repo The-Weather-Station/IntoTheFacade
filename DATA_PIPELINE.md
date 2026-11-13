@@ -8,8 +8,9 @@ The product must keep **former business, legal entity, parcel, building, present
 
 ## What runs today
 
-- A manually reviewed dossier with eleven evidence entries; source type, observation date, source date, collection method, and limitations travel with every claim.
-- Three contributor-supplied Google Maps / Street View screenshots are viewable in the Evidence tab, at full resolution, with original annotations and attribution intact. Each image has a source link, submission date, original filename, dimensions, and SHA-256 integrity record. Their observations are distinct from official records.
+- A manually reviewed dossier with fifteen evidence entries; source type, observation date, source date, collection method, and limitations travel with every claim.
+- Five evidence images: three contributor-supplied Google Maps / Street View screenshots and the county building photograph and sketch. Each original is viewable at full resolution with source metadata, retrieval/submission date, filename, dimensions, attribution and SHA-256 integrity record.
+- A reviewed snapshot of three complete OSM service-road ways, with their tags, versions and edit dates, overlaid on both map renderers. The missing-road card opens this comparison.
 - Two real county parcel polygons, retrieved from the service linked by the official assessor's parcel map. The pin is their combined bounding-box center. It is not the former field's verified location or an entrance.
 - A bounded Node fetcher for those two accounts. It saves a candidate snapshot outside the published dataset. It does not overwrite reviewed claims or publish changes automatically.
 - A static GitHub Pages application with browser-local notes and Markdown export. No paid backend, registry scraper, scheduled scan, or general discovery engine is running.
@@ -69,12 +70,14 @@ For scaling, use stable source IDs, claim IDs, parcel IDs, entity IDs, record ID
 
 ## Next milestones
 
-1. Resolve the exact former venue building and parcel, reconcile 2701/2801 and jurisdiction, inspect the deed and subsequent instruments, and connect the entity to the venue with documentary evidence.
+1. Document the former venue's rooms/floor within the visually matched brick building, reconcile 2701/2801 and jurisdiction, inspect the deed and subsequent instruments, and connect the entity to the venue with documentary evidence.
 2. Search relevant occupancy/fire/code files and dated venue material to establish closure history and current-use evidence. Keep cause unknown until records support it.
 3. Add two or three comparably researched former industrial/commercial venues, using the same evidence requirements. Reject active landmarks as filler.
 4. Generalize the bounded county adapter and add a source-permission-aware review queue. Choose automation per source; do not assume every registry has a free API.
 
-## Contributor image update · November 13, 2026
+## Contributor image update · November 13, 2026 · initial assessment
+
+This initial assessment records what the screenshots alone established. The subsequent county-photo and OSM comparison below strengthens the building and road findings.
 
 The contributor provided `EvidenceOne.png`, `Evidence2.png`, and `Screenshot 2026-11-13 114030.png` and explicitly requested public viewing on the website. These three originals are copied byte-for-byte to `public/evidence/stockyard-airsoft/`, displayed without cropping, and linked to their own claims and sources. This is a bounded, manually submitted evidence set, not a Google imagery ingestion pipeline. Google attribution remains visible in the originals and in captions; the files are not represented as openly licensed map data.
 
@@ -85,3 +88,27 @@ The contributor provided `EvidenceOne.png`, `Evidence2.png`, and `Screenshot 202
 The viewer supports fit/actual-size inspection, keyboard navigation, original-image links, PNG downloads, and mobile scrolling. Dossier exports include image URLs, captions, attribution, and integrity hashes. The original MapQuest screenshot remains a text-only source from the earlier review.
 
 No competitor allegation is published. There is no verified source supporting a cause of closure in this dossier.
+
+## Building and road comparison · November 13, 2026
+
+The official [county photograph](https://docs.oklahomacounty.org/AssessorWP5/ShowImageDB.asp?Propertyid=43457), visibly stamped **March 18, 2025**, provides a substantially clearer view of the brick building. The glass-block bay, upper window band, masonry facade and returning wing match the submitted Street View view. The [county sketch](https://docs.oklahomacounty.org/AssessorWP5/ShowSketchdb.asp?Propertyid=43457) supports the stepped western-building shape. This is a visual match to **R261068040 / PropertyID 43457**, not a surveyed building polygon or proof of the exact rooms occupied by the former airsoft field.
+
+The [building inventory](https://docs.oklahomacounty.org/AssessorWP5/BLDG_Detail.asp?PropertyID=43457&BuildingSequence=1) lists **1963, two stories, 193,038 square feet, masonry/face brick, storage warehouse**, with the name **MID-STATES WHOLESALE LUMBER**. The account owner is **MID STATES PROPERTIES LLC**. Those names are preserved separately; their corporate relationship is not inferred. Wrapped lumber at the brick facade in the dated photograph documents lumber storage at this building. The assessor condition field says “Poor”; this is an attributed inventory field, not a structural inspection or safety verdict.
+
+The county photograph and sketch are retained unchanged as JPG evidence. Generated pixel artwork is stored separately under `public/art/` and is never used to substantiate a claim. The dossier now leads with the matched building, listed owner and dated lumber use. Questions about old airsoft rooms, closure history, current room-by-room use and access are grouped in a collapsed section.
+
+### Road geometry and reproducible query
+
+Source: [bounded OSM XML snapshot](https://api.openstreetmap.org/api/0.6/map?bbox=-97.564,35.449,-97.559,35.453), retrieved November 13, 2026. Original node order is preserved in `src/research/osm-road-corridor.json`, EPSG:4326, with attribution to OpenStreetMap contributors and the ODbL link.
+
+| Whole OSM way | Tags and source date | Interpretation |
+| --- | --- | --- |
+| [701894190](https://www.openstreetmap.org/way/701894190) | highway=service; v2, July 6, 2019; no access tag | SW 15th approach **and WEOKIE parking circulation**; geometry is not trimmed into an invented route |
+| [779562948](https://www.openstreetmap.org/way/779562948) | highway=service; v2, August 27, 2025; no access tag | Northbound continuation |
+| [1325580486](https://www.openstreetmap.org/way/1325580486) | highway=service, **access=private**; v1, October 19, 2024 | Warehouse service way along its west/north edge; private tag applies to this way only |
+
+The service network is mapped in OSM although omitted in the contributor's Google view. Untagged ways do not prove public access. The map highlights complete source features, including the parking loop, and distinguishes the private-tagged way with dashes.
+
+The [City of Oklahoma City Street Centerlines item](https://www.arcgis.com/home/item.html?id=0e041a931ede4d38a9d23c5301708662) exposes layer 5 at `https://utility.arcgis.com/usrsvcs/servers/0e041a931ede4d38a9d23c5301708662/rest/services/OpenData/Transportation_Streets/FeatureServer/5`. The reviewed query used envelope `-97.566,35.449,-97.558,35.455`, geometryType `esriGeometryEnvelope`, inSR/outSR `4326`, spatialRel `esriSpatialRelIntersects`, where `1=1`, outFields `*`, returnGeometry `true`, f `json`. It returned nearby SW 15th, Miller, May and Exchange segments, but not the internal northbound service corridor.
+
+That is a bounded dataset-coverage observation. It does not explain Google's omission or establish a removed street, legal right-of-way, closure, or current physical conditions. Next research: recorded plats, dated aerials, source edit history and documentary former-tenant records.
