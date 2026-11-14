@@ -7,14 +7,13 @@ export const covers: Record<string, { asset: string; title: string; context: str
   'eagle-industries': { asset: 'illegal-dumping-card', title: 'ILLEGAL DUMPING!!', context: 'The shop closed. The solvent stayed.', alt: 'Illustrated ILLEGAL DUMPING!! card: Eagle Industries with theatrical toxic spills; not a photograph of site conditions' },
   'rhode-island-warehouse': { asset: 'organized-crime-card', title: 'ORGANIZED CRIME!!!', context: 'Suite 109 · the 2025 shipping case.', alt: 'Illustrated ORGANIZED CRIME!!! card: marijuana spilling from a cut couch; dramatization of the historical case, not evidence photography' },
 };
-export function caseStack(p: Place, active: boolean, isSaved: boolean) {
+export function caseStack(p: Place, active: boolean) {
   const c = covers[p.id];
   return `<article class="case-stack ${active ? 'selected' : ''}" data-card-key="${p.id}" data-place="${p.id}">
     <div class="stack-visual"><span class="stack-back" style="--stack-i:3" aria-hidden="true"></span><span class="stack-back" style="--stack-i:2" aria-hidden="true"></span><span class="stack-back" style="--stack-i:1" aria-hidden="true"></span>
       <button class="case-cover" data-select="${p.id}" aria-pressed="${active}" aria-label="Open ${p.name} case stack: ${c.title}"><img src="${artUrl(c.asset)}" alt="${c.alt}" width="1024" height="1536" decoding="async"></button>
     </div>
     <div class="stack-caption"><span class="eyebrow">CASE ${p.number} / ${p.evidence.length} RECORDS</span><h3>${p.name}</h3><p>${c.context}</p><span class="stack-state">${active ? '3 CARDS ON THE TABLE' : 'DEAL 3 CARDS ↗'}</span></div>
-    <button class="stack-save ${isSaved ? 'is-saved' : ''}" data-save="${p.id}" aria-pressed="${isSaved}" aria-label="${isSaved ? 'Unsave' : 'Save'} ${p.name}">${isSaved ? '◆' : '◇'}</button>
   </article>`;
 }
 
@@ -102,12 +101,12 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
       busy = false; front.style.visibility = ''; dock.classList.remove('deck-in-transit'); motion.pause(front, false);
     });
   }
-  function turn(previous: Face, oldView: string, view: string) {
+  function turn(previous: Face, oldView: string, view: string, direction = -1) {
     if (busy || !oldView || oldView === view || reduced.matches) return;
     cancel();
     const stamp = revision;
     motion.home(front); motion.pause(front, true);
-    const target = dock.querySelector<HTMLElement>(`.detail-underlay:has([data-tab="${oldView}"])`);
+    const target = dock.querySelector<HTMLElement>(`.detail-underlay:has([data-sheet="${oldView}"])`);
     if (!target) { motion.pause(front, false); return; }
     // Keep the old face opaque until it has cleared the entire fanned hand.
     // Only then lower it to its actual destination layer and slide it home.
@@ -117,7 +116,9 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     Object.assign(copy.style, { width:'100%', height:'100%', minHeight:'0', maxHeight:'none' });
     node.append(copy); dock.append(node);
     shuffleNode = node; shuffleTarget = target; target.style.visibility = 'hidden';
-    const clear = `translate3d(${-front.offsetWidth - 170}px,-18px,0) rotate(-9deg)`;
+    // Keep the full exit visible on the table when the hand sits at the viewport edge.
+    const exitSide = direction > 0 && front.getBoundingClientRect().right + front.offsetWidth + 170 > innerWidth ? -1 : direction;
+    const clear = `translate3d(${exitSide * (front.offsetWidth + 170)}px,-18px,0) rotate(${exitSide * 9}deg)`;
     const home = getComputedStyle(target).transform;
     node.style.zIndex = '20'; dock.dataset.shufflePhase = 'out';
     turnAnimation = node.animate([{transform:'none'}, {transform:clear}], {

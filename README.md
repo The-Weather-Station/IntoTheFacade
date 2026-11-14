@@ -1,6 +1,6 @@
 # Into The Facade
 
-An initial Oklahoma City field atlas built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
+An urban-exploration OSINT atlas for Oklahoma industrial properties, built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
 The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Nine original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
 
@@ -46,21 +46,22 @@ npm run build -- --base /IntoTheFacade/
 npm run preview -- --base /IntoTheFacade/
 ```
 
-Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker, scripts, and CSS must load from the correct base path. External basemap services still need internet access. Saved places and field notes belong to the browser origin; moving to a new host does not transfer old browser storage. Export any notes you want to retain before switching hosts.
+Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker, scripts, and CSS must load from the correct base path. External basemap services still need internet access. Old Saved and personal-note browser data stays on its original host; those features are currently disabled.
 
 ## Working features
 
 - Three sourced cases: Stockyard Airsoft, former Eagle Industries, and the Rhode Island Avenue warehouse / Suite 109 case history.
-- Twenty-nine evidence entries with source type, source date, review date, method, and explicit limitations.
+- Thirty-seven evidence entries with source type, source date, review date, method, and explicit limitations.
 - Seven original evidence images: three submitted screenshots, three county building photographs and a county sketch. Direct publisher links appear in the gallery, attached evidence, viewer and export; saved image copies are labeled separately. Contributor uploads without a supplied source-page URL are identified explicitly.
 - The missing-road case cover opens the Stockyard Overview, fits the road and pulses a gold halo for 5.4 seconds on either map renderer. Reduced-motion users get steady emphasis. On phones, selection brings the map into view. Filtering out the case and renderer changes cancel the pulse.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
 - Four real, address-matched county parcel polygons; no invented building blocks or heights.
-- Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
-- Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
+- Map/list/dossier selection; name, address, owner and parcel search; category filters; flat/tilt views.
+- Read-only prior-explorer accounts, separate from verified findings. The personal note editor and Saved collections are disabled and tracked in ROADMAP.md; existing browser data is preserved. Markdown export includes records, urbex readouts and attributed explorer accounts.
 - Responsive layouts, keyboard-operable controls, shareable case fragments, and usable dossiers when the map cannot connect.
-- The home URL opens with no selected case and a brief introduction. A one-time animated arrow points to the Missing Road cover, then stays dismissed in that browser after the visitor chooses a case. Valid case fragments still open the requested dossier directly.
-- Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion and pointer-driven artwork tilt keep the cards alive without dragging. Changing dossier tabs slides the outgoing card fully clear of the fanned hand before lowering its layer and returning it behind the new front card. Interrupted transitions clean up their inert copies. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
+- The home URL opens with no selected case and an urban-exploration introduction. The guide draws from its origin to the Missing Road cover once, then its dashes flow toward that cover. A one-time animated arrow points to the Missing Road cover, then stays dismissed in that browser after the visitor chooses a case. Valid case fragments still open the requested dossier directly.
+- The active case centers vertically in its own scrolling index and gains a gold highlight. The right hand’s side controls and exposed corners cycle Overview → Evidence → Field notes, with reverse cycling on the left. Tabs remain direct navigation.
+- Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion and pointer-driven artwork tilt keep the cards alive without dragging. Changing dossier tabs slides the outgoing card fully clear of the fanned hand before lowering its layer and returning it behind the new front card. Interrupted transitions clean up their inert copies. Each whole card tilts as one surface, including its text and images, with no hover scaling. Keyboard focus flattens it for reading. Reduced-motion preferences disable automatic movement.
 
 ## Data and representations
 
@@ -90,7 +91,7 @@ The 2D basemap uses `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and keeps v
 
 Google Maps and MapQuest are proprietary public-facing services, not open datasets. ChamberofCommerce.org is an explanatory guide, not the state filing registry. No live registry, Google, Overture, USGS, or EPA ingestion is running. Source-specific reuse rights need review before expanding automated collection.
 
-Saved records and notes are local browser conveniences. There is no login, database, cross-device sync, or offline application cache. They can be lost if browser data is cleared. Export makes a separate copy.
+Saved collections and the personal note editor are disabled. Existing browser keys are left untouched. The current Field Notes card contains submitted explorer accounts, with source status attached; it is not a live submission form. There is no login, database, cross-device sync or offline application cache.
 
 ## Verify
 
@@ -130,3 +131,16 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `DESIGN.md`: the approved reference and implementation guide for future changes.
 
 Next meaningful step: document which rooms/floor the former venue occupied, review the deed and subsequent instruments, and establish closure history through relevant records. Compare recorded plats and dated aerials to explain the service-road map discrepancy.
+
+
+## Urbex readouts and soundtrack (November 14 update)
+
+`src/field-research.ts` adds eight sourced entries without rewriting the original evidence. Each Overview now leads with a field readout: recorded activity, separately documented security features, approach/permission context, hazards and a public contact channel. The scale is a dated record classification, not live security or foot-traffic monitoring. Unreported guards, cameras, animals or hazards are never treated as absent. Public streets and map reference lines are distinct from permission to enter a parcel.
+
+`src/explorer-notes.ts` contains the Stockyard submission attributed to **Anonymous explorer**. Its exact first-person wording is preserved, with the competitor/closure/motive claims clearly labeled unverified. No submissions are invented for the other sites. Future Saved collections and editable notes are in [ROADMAP.md](ROADMAP.md).
+
+`src/background-audio.ts` attaches an audio element with `preload="none"` and no source URL. Only the first visitor gesture (or Play) attaches the same-origin MP3 and begins playback. Nothing in page rendering or map initialization awaits audio. Controls allow pause and volume changes; a hidden tab pauses the recording and a visible tab resumes only if the visitor has not paused it. A playback failure leaves the application usable. Playback permission remains subject to the browser. The full supplied 93m33s recording is compressed for background playback; the user's original is untouched. No audio is imported into the JavaScript bundle.
+
+For local guide QA, `?test-intro` ignores a prior guide dismissal in development only. The production build excludes that override. Test the side buttons/corners, wraparound, active-index centering, first-gesture audio, no media source before interaction, and hidden-tab pause. Mobile keeps the compact three-cover row and the active highlight.
+
+The source recording is stored in `media/dark-doom-jazz/` as bounded binary pieces to support connector upload limits. `scripts/assemble-audio.mjs` verifies SHA-256 hashes and reconstructs one 44,906,444-byte MP3 before both dev and production builds. The source pieces are outside `public/` and never requested by the player. The full duration is 5,613.216 seconds; the delivered MP3 is 64 kbit/s stereo at 32 kHz.

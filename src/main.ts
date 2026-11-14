@@ -14,6 +14,9 @@ import './generated-theme.css';
 import './card-motion.css';
 import { createCardMotion } from './card-motion';
 import { createIntroGuide } from './intro-guide';
+import { initBackgroundAudio } from './background-audio';
+import { fieldProfiles } from './field-research';
+import { explorerNotes } from './explorer-notes';
 import { mapInk, placeColor } from './map-palette';
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
@@ -22,11 +25,9 @@ setWorkerUrl(workerUrl);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
 function readStorage<T>(key: string, fallback: T): T { try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; } }
-const rawSaved = readStorage<unknown>('itf:saved', []);
-let saved: string[] = Array.isArray(rawSaved) ? rawSaved.filter((id): id is string => typeof id === 'string' && places.some(p => p.id === id)) : [];
 let selected: Place | undefined = places.find(p => p.id === location.hash.slice(1));
 const countyCenter: [number, number] = [-97.49, 35.46];
-let query = '', category = 'All', savedOnly = false, tab = 'overview', is3d = true;
+let query = '', category = 'All', tab = 'overview', is3d = true;
 let map: LibreMap | null = null, mapReady = false, toastTimer: ReturnType<typeof setTimeout>;
 let compatMap: CompatMap | null = null, mapGeneration = 0, mapTimeout: ReturnType<typeof setTimeout> | undefined;
 let mapMode: 'styled' | '2d' = 'styled';
@@ -43,13 +44,14 @@ $('#app').innerHTML = `
   <a class="skip-link" href="#places">Skip to places</a>
   <header class="masthead">
     <a class="brand" href="#" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
-    <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
+    <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button></nav>
+    <div id="soundtrack-control" class="soundtrack"><button type="button" aria-label="Play background music" aria-pressed="false">&#9654; <span class="music-label">DARK DOOM JAZZ</span></button><label><span class="sr-only">Music volume</span><input type="range" min="0" max="100" value="16" aria-label="Music volume"></label><span class="sr-only" role="status" aria-live="polite">Music starts after your first interaction</span></div>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 005</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
-  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">OKLAHOMA COUNTY / THREE CASE FILES</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Missing roads. Solvent trails.<br>Freight with a paper trail.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
+  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">URBAN EXPLORATION / OPEN-SOURCE INTELLIGENCE</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Know the site before you go.<br>Access. Hazards. Signs of life.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
-      <div class="panel-heading"><div><p class="eyebrow">CASE FILES</p><h2 id="discovery-title">Open cases.</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
+      <div class="panel-heading"><div><p class="eyebrow">URBEX CASE FILES</p><h2 id="discovery-title">Scout files.</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search the files…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>
@@ -68,7 +70,7 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
-    <div class="dossier-dock"><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
+    <div class="dossier-dock"><button class="deck-cycle deck-cycle-prev" type="button" data-cycle="-1" aria-label="Previous card in deck"><span aria-hidden="true">&#8249;</span></button><button class="deck-cycle deck-cycle-next" type="button" data-cycle="1" aria-label="Next card in deck"><span aria-hidden="true">&#8250;</span></button><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -77,6 +79,39 @@ $('#app').innerHTML = `
 const cardMotion = createCardMotion();
 const caseDeck = createCaseDeck($('#dossier'), $('.dossier-dock'), cardMotion);
 const introGuide = createIntroGuide();
+initBackgroundAudio();
+
+
+const viewOrder = ['overview','evidence','notes'];
+let turnDirection = -1;
+function cycleDeck(direction: number) {
+  if (!selected) return;
+  turnDirection = direction;
+  tab = viewOrder[(viewOrder.indexOf(tab) + direction + viewOrder.length) % viewOrder.length];
+  renderDossier();
+}
+$('.dossier-dock').addEventListener('click',event=>{
+  const target=event.target as HTMLElement;
+  const cycle=target.closest<HTMLElement>('[data-cycle]');
+  if(cycle) { cycleDeck(Number(cycle.dataset.cycle)); return; }
+  if(!selected || target.closest('a,button,input,textarea,summary,.dossier-content') || window.getSelection()?.toString())return;
+  const rect=$('#dossier').getBoundingClientRect();
+  cycleDeck(event.clientX < rect.left + rect.width/2 ? -1 : 1);
+});
+function centerActiveDeck(animate = true) {
+  requestAnimationFrame(()=>{
+    if(innerWidth<=580)return;
+    const frame=$('#places'), card=frame.querySelector<HTMLElement>('.case-stack.selected');
+    if(!card)return;
+    frame.scrollTo({top:frame.scrollTop+card.getBoundingClientRect().top-frame.getBoundingClientRect().top-(frame.clientHeight-card.offsetHeight)/2,behavior:animate&&!reducedMotion?'smooth':'instant'});
+  });
+}
+new ResizeObserver(()=>{
+  const frame=$('#places'), first=frame.querySelector<HTMLElement>('.case-stack'), last=frame.querySelector<HTMLElement>('.case-stack:last-child');
+  frame.style.paddingTop=innerWidth>580&&first?Math.max(16,(frame.clientHeight-first.offsetHeight)/2)+'px':'';
+  frame.style.paddingBottom=innerWidth>580&&last?Math.max(16,(frame.clientHeight-last.offsetHeight)/2)+'px':'';
+  centerActiveDeck(false);
+}).observe($('#places'));
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
@@ -85,7 +120,7 @@ function toast(message: string) {
 function storeValue(key: string, value: unknown): boolean {
   try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { toast('Browser storage is unavailable. Changes stay in this session.'); return false; }
 }
-function visiblePlaces() { return filterPlaces(query, category, savedOnly, saved); }
+function visiblePlaces() { return filterPlaces(query, category, false, []); }
 function renderDeck(markup: string) {
   const deck=$('#places'), template=document.createElement('template');
   template.innerHTML=markup;
@@ -101,10 +136,9 @@ function renderDeck(markup: string) {
       // Keep the actual card and focused buttons alive across map/search/save
       // updates. Only selection/bookmark state changes on an existing card.
       if(card!==incoming) {
-        incoming.querySelectorAll<HTMLButtonElement>('[data-select],[data-save]').forEach(button=>{
-          const live=card.querySelector<HTMLButtonElement>(button.hasAttribute('data-save')?'[data-save]':'[data-select]')!;
+        incoming.querySelectorAll<HTMLButtonElement>('[data-select]').forEach(button=>{
+          const live=card.querySelector<HTMLButtonElement>('[data-select]')!;
           live.className=button.className;
-          if(button.hasAttribute('data-save'))live.innerHTML=button.innerHTML;
           for(const name of ['aria-pressed','aria-label'])live.setAttribute(name,button.getAttribute(name)!);
         });
         const meta=card.querySelector('.stack-state');
@@ -120,10 +154,9 @@ function renderDeck(markup: string) {
 function renderList() {
   const visible = visiblePlaces();
   if(!visible.some(p=>p.id==='stockyard-airsoft')) { pendingRoadFocus=false; stopRoadPulse(); }
-  $('#results-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'PLACE' : 'PLACES'}${savedOnly ? ' SAVED' : ' FOUND'}`;
+  $('#results-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'PLACE' : 'PLACES'} FOUND`;
   $('#map-region-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'CASE' : 'CASES'}`;
-  $('#saved-count').textContent = String(saved.length);
-  const deckMarkup = visible.length ? visible.map(p=>caseStack(p,p.id===selected?.id,saved.includes(p.id))).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
+  const deckMarkup = visible.length ? visible.map(p=>caseStack(p,p.id===selected?.id)).join('') : `<div class="empty-state">${icon('search')}<h3>No sites found.</h3><p>Try the business name, address, owner, or parcel account.</p><button class="secondary-button" id="reset-filters">Browse all sites ${icon('arrow')}</button></div>`;
   renderDeck(deckMarkup);
   markers.forEach((marker, id) => {
     marker.getElement().style.display = visible.some(p => p.id === id) ? '' : 'none';
@@ -137,11 +170,6 @@ function renderList() {
     map.setFilter('candidate-parcels', filter); map.setFilter('parcel-outlines', filter); map.setFilter('osm-service-roads',filter); map.setFilter('osm-private-road',filter); map.setFilter('osm-road-highlight',filter);
   }
 }
-function toggleSave(id: string) {
-  const adding = !saved.includes(id); saved = adding ? [...saved,id] : saved.filter(x=>x!==id);
-  const persisted = storeValue('itf:saved',saved); renderList(); renderDossier();
-  if(persisted) toast(adding ? 'Place saved to your collection.' : 'Place removed from your collection.');
-}
 function selectPlace(id: string, fly = false) {
   introGuide.dismiss();
   stopRoadPulse(); pendingRoadFocus=false;
@@ -149,7 +177,7 @@ function selectPlace(id: string, fly = false) {
   const transition = caseDeck.switchCase(oldId, next.id, () => {
     selected = next; tab = 'overview';
     if(location.hash !== `#${selected?.id}`) history.pushState(null,'',`#${selected?.id}`);
-    renderList(); renderDossier(); updateMapSelection();
+    renderList(); renderDossier(); updateMapSelection(); centerActiveDeck();
   });
   if(fly) focusMap(next, 15.5);
   if(fly && innerWidth < 850) void transition.then(()=> {
@@ -171,45 +199,56 @@ function renderWelcome() {
   front.setAttribute('aria-label', 'About Into The Facade');
   $('#dossier-hand').replaceChildren();
   document.querySelectorAll('.detail-underlay').forEach(card=>card.replaceChildren());
-  front.innerHTML = `<div class="welcome-copy"><p class="eyebrow">INTO THE FACADE / PUBLIC RECORDS</p>
+  front.innerHTML = `<div class="welcome-copy"><p class="eyebrow">URBAN EXPLORATION / BEFORE THE FENCE</p>
     <span class="welcome-stamp" aria-hidden="true">OPEN<br>THE FILE.</span>
-    <h2>The building is only half the story.</h2>
-    <p>A public-record atlas of Oklahoma buildings with unfinished business. Find the owner, compare the maps, and read what the records actually say.</p>
-    <p><strong>Overview</strong> lays out the case. <strong>Evidence</strong> links the documents and photos. <strong>Field notes</strong> keeps your observations.</p>
+    <h2>Scout the site. Read the records.</h2>
+    <p>Urban exploration starts before you reach the fence. Trace ownership, compare possible approaches, and check hazards and signs of current use through public records.</p>
+    <p><strong>Overview</strong> lays out the case. <strong>Evidence</strong> links the documents and photos. <strong>Field notes</strong> holds prior explorers’ accounts.</p>
     <div class="welcome-start"><p class="eyebrow">FIRST FILE / STOCKYARD AIRSOFT</p><button id="intro-start" type="button">Start with MISSING ROAD!! <span aria-hidden="true">&#8601;</span></button><p>A road appears on one map and disappears from another. Open the card to compare the records.</p></div>
   </div>`;
   $('#intro-start').addEventListener('click',()=>{resetFilters();const cover=$<HTMLButtonElement>('[data-card-key="stockyard-airsoft"] .case-cover');cover.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'center'});cover.focus({preventScroll:true});});
   cardMotion.revealDossier(front); introGuide.show();
 }
+function fieldBrief(p: Place) {
+  const profile = fieldProfiles[p.id];
+  const refs = (ids: string[]) => ids.map(id=>`<button class="finding-evidence" data-evidence="${id}">Read record ${icon('arrow')}</button>`).join('');
+  const meter = (count: number, level: number | null) => `<div class="record-spectrum" aria-hidden="true">${Array.from({length:count},(_,i)=>`<span class="${i===level?'current':''}"></span>`).join('')}</div>`;
+  return `<section class="urbex-brief"><p class="eyebrow">URBEX READOUT / RECORDS CHECKED ${reviewLabel}</p><h3>${profile.verdict}</h3>
+    <div class="activity-readout"><p class="section-label">RECORDED ACTIVITY</p><strong>${profile.activity.label}</strong>${meter(5,profile.activity.level)}<div class="spectrum-labels"><span>Vacancy record</span><span>Operating use</span></div><p>${profile.activity.detail}</p>${refs(profile.activity.evidence)}</div>
+    <details class="field-detail"><summary>Visibility & security evidence</summary><strong>${profile.security.label}</strong>${meter(3,profile.security.level)}<div class="spectrum-labels"><span>Controls unverified</span><span>Staffed controls</span></div><p>${profile.security.detail}</p><small>Dated records, not a live security assessment.</small>${refs(profile.security.evidence)}</details>
+    ${profile.sections.map(section=>`<details class="field-detail" open><summary>${section.title}</summary><p>${section.text}</p>${refs(section.evidence)}</details>`).join('')}
+    <a class="permission-contact" href="${profile.contact.url}" target="_blank" rel="noopener noreferrer">${profile.contact.label} ↗</a><p class="contact-context">${profile.contact.detail}</p></section>`;
+}
+
 function renderDossier() {
   if (!selected) { renderWelcome(); return; }
   $('.dossier-dock').classList.remove('is-welcome');
   $('#dossier').setAttribute('aria-label', 'Selected place dossier');
-  const p = selected, isSaved = saved.includes(p.id);
+  const p = selected;
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
   const previousFace = caseDeck.capture();
-  const notePreview = readStorage<unknown>(`itf:note:${p.id}`,'');
   const sheets = [
     {id:'overview',title:'Overview',body:`<p>${p.summary}</p><strong>${p.statusTitle ?? 'Lumber storage documented'}</strong>`},
     {id:'evidence',title:'Evidence',body:`<p>${p.evidence.length} records · ${p.images.length} original images</p>${p.evidence.slice(0,3).map(e=>`<section><h4>${e.title}</h4><p>${e.detail}</p></section>`).join('')}`},
-    {id:'notes',title:'Field notes',body:`<p>${typeof notePreview==='string'&&notePreview ? escapeHtml(notePreview) : 'Dates, names, inconsistencies. Your observations for this case live here.'}</p><small>LOCAL NOTEBOOK / THIS BROWSER</small>`},
+    {id:'notes',title:'Field notes',body:`<p>${explorerNotes[p.id]?.length ? 'Anonymous explorer · first-person account' : 'No explorer accounts submitted for this site yet.'}</p><small>EXPLORER ACCOUNTS / READ ONLY</small>`},
   ].filter(sheet=>sheet.id!==tab).reverse();
   document.querySelectorAll<HTMLElement>('.detail-underlay').forEach((card,i)=>{
     const sheet = sheets[i];
-    card.innerHTML = `<button class="underlay-select" data-tab="${sheet.id}" tabindex="-1" aria-label="Bring ${sheet.title} card to front"><small>CASE ${p.number} / ${p.name}</small><h3>${sheet.title}</h3>${sheet.body}</button>`;
+    card.innerHTML = `<div class="underlay-select" data-sheet="${sheet.id}" aria-hidden="true"><small>CASE ${p.number} / ${p.name}</small><h3>${sheet.title}</h3>${sheet.body}</div>`;
   });
   $('#dossier').style.setProperty('--card-color', placeColor(p.id));
   $('#dossier').dataset.place = p.id;
   $('#dossier').dataset.tabView = tab;
   $('#dossier-hand').innerHTML = `<div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>`;
   $('#dossier').innerHTML = `
-    <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span><button id="dossier-save" class="icon-button ${isSaved?'is-saved':''}" aria-label="${isSaved?'Unsave':'Save'} ${p.name}" aria-pressed="${isSaved}">${icon('bookmark')}</button></div>
+    <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span></div>
     <div class="dossier-hero">${buildingArt(p.artName,p.name)}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="${p.heroImageId ?? 'county-building-photo'}">View source photo ↗</button></div>
     <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${p.name}</h2><p>${icon('pin')} ${p.address}</p></div>
     <div id="dossier-content" class="dossier-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
     <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${dateLabel(p.reviewed ?? reviewed)}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
   const content = $('#dossier-content');
   if(tab === 'overview') content.innerHTML = `
+    ${fieldBrief(p)}
     <section class="case-summary" aria-label="Case summary"><p class="eyebrow">CASE SUMMARY</p><p class="dossier-summary">${p.summary}</p><div class="summary-sources">${(p.summarySources ?? []).map(i=>`<a href="${escapeHtml(p.sources[i].url!)}" target="_blank" rel="noopener noreferrer">${p.sources[i].publisher} ↗</a>`).join('')}</div></section>
     <div class="case-status" data-tone="${p.statusTone ?? 'record'}"><span class="live-dot"></span> ${p.statusLabel ?? 'BUILDING & OWNER IDENTIFIED'} <strong>${p.statusTitle ?? 'Lumber storage documented'}</strong></div>
     <button id="view-submitted-images" class="image-callout">${icon('eye')} View ${p.images.length} evidence ${p.images.length===1?'image':'images'} ${icon('arrow')}</button>
@@ -220,14 +259,7 @@ function renderDossier() {
   else if(tab === 'evidence') content.innerHTML = `${imageGallery(p)}<p class="evidence-intro">Records, maps and submitted images. Source links and dates are attached below.</p>${p.evidence.map((e,i)=>`<article class="evidence-item" id="evidence-${e.id}" tabindex="-1"><span class="evidence-number">${String(i+1).padStart(2,'0')}</span><div><span class="evidence-badge">${icon(e.sources.some(n=>p.sources[n].kind==='Official record')?'book':'info')} ${p.sources[e.sources[0]].kind}</span><h3>${e.title}</h3><p>${e.detail}</p>${imageAttachments(p,e.images)}${e.sources.map(n=>sourceMarkup(p.sources[n])).join('')}</div></article>`).join('')}
     <details class="remaining-questions"><summary>Unresolved items</summary><div>${p.unknowns.map(u=>`<p>${u}</p>`).join('')}<p>${p.locationNote}</p></div></details>
     <section class="next-steps"><span class="section-label">NEXT RECORDS TO CHECK</span>${p.nextSteps.map(s=>`<article><h3>${s.title}</h3><p>${s.detail}</p><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${s.label} ${icon('external')}</a></article>`).join('')}</section>`;
-  else {
-    const storedNote = readStorage<unknown>(`itf:note:${p.id}`,'');
-    const note = typeof storedNote === 'string' ? storedNote : '';
-    content.innerHTML = `<label class="section-label" for="field-note">YOUR OBSERVATIONS</label><p class="evidence-intro">Keep questions, details to investigate, or observations for this place.</p><textarea id="field-note" maxlength="5000" placeholder="Dates, names, inconsistencies. Record them here.">${escapeHtml(note)}</textarea><div class="note-meta"><span id="note-count">${note.length} / 5000</span><span>Stored on this browser</span></div><button id="save-note" class="primary-button">${icon('check')} Save field note</button><p class="local-note">Your notes stay on this device. Export the dossier to keep a separate copy.</p>`;
-    $('#field-note').addEventListener('input',()=> {$('#note-count').textContent=`${$<HTMLTextAreaElement>('#field-note').value.length} / 5000`;});
-    $('#save-note').addEventListener('click',()=> {if(storeValue(`itf:note:${p.id}`,$<HTMLTextAreaElement>('#field-note').value)) toast('Field note saved on this browser.');});
-  }
-  $('#dossier-save').addEventListener('click',()=>toggleSave(p.id));
+  else content.innerHTML = `<p class="eyebrow">EXPLORER ACCOUNTS</p>${(explorerNotes[p.id] ?? []).length ? explorerNotes[p.id].map(note=>`<article class="explorer-account"><h3>${note.author}</h3><p class="explorer-meta">Submitted ${dateLabel(note.submitted)}<br>Visit: ${escapeHtml(note.observed)}</p><p class="account-context">${escapeHtml(note.context)}</p><blockquote>${escapeHtml(note.text)}</blockquote><p class="explorer-meta">Submitted account · wording preserved</p></article>`).join('') : '<div class="no-explorer-notes"><h3>No explorer accounts on file.</h3><p>This site has public records, but no prior explorer has submitted a field account here yet.</p></div>'}<p class="local-note">Explorer accounts are separate from the sourced findings. Note submissions and a personal notebook are planned for a future update.</p>`;
   $('#trace-road')?.addEventListener('click',traceRoad);
   $('#view-submitted-images')?.addEventListener('click',()=>{tab='evidence';renderDossier();$('#tab-evidence').focus();});
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady) {focusMap(p,16); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
@@ -238,7 +270,7 @@ function renderDossier() {
   });
   $('#export-dossier').addEventListener('click',()=>exportDossier(p));
   cardMotion.revealDossier($('#dossier'));
-  if(previousId===p.id)caseDeck.turn(previousFace,previousTab,tab);
+  if(previousId===p.id)caseDeck.turn(previousFace,previousTab,tab,turnDirection);
 }
 function showEvidence(id: string, reveal = true) {
   tab='evidence'; renderDossier();
@@ -293,16 +325,15 @@ function traceRoad() {
   toast('Service road highlighted. Dashed section: OSM private tag.');
 }
 function exportDossier(p: Place) {
-  const note = readStorage<unknown>(`itf:note:${p.id}`,'');
-  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${p.reviewed ?? reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,...(p.id==='stockyard-airsoft' ? [`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Road map comparison',roadSnapshot.provenance.interpretation,roadSnapshot.provenance.sourceUrl] : [`County geometry retrieved: ${additionalParcels.provenance.retrievedAt}`,additionalParcels.provenance.queryUrl]),'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified source-page permalink. See submitted images below when available.'}\nMethod: ${s.method}`;}).join('\n\n')}`),...exportImageEvidence(p),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Field notes',typeof note === 'string' ? note : ''].join('\n');
-  const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`into-the-facade-${p.id}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Dossier exported with sources and saved notes.');
+  const notes = explorerNotes[p.id] ?? [];
+  const profile = fieldProfiles[p.id];
+  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${p.reviewed ?? reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,...(p.id==='stockyard-airsoft' ? [`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Road map comparison',roadSnapshot.provenance.interpretation,roadSnapshot.provenance.sourceUrl] : [`County geometry retrieved: ${additionalParcels.provenance.retrievedAt}`,additionalParcels.provenance.queryUrl]),'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified source-page permalink. See submitted images below when available.'}\nMethod: ${s.method}`;}).join('\n\n')}`),...exportImageEvidence(p),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Urbex readout',profile.verdict,`Recorded activity: ${profile.activity.label}. ${profile.activity.detail}`,`Security evidence: ${profile.security.label}. ${profile.security.detail}`,...profile.sections.map(section=>`### ${section.title}\n${section.text}\nEvidence IDs: ${section.evidence.join(', ')}`),`${profile.contact.label}: ${profile.contact.url}`,'','## Explorer accounts',...notes.map(note=>`### ${note.author}\nSubmitted ${note.submitted}; visit ${note.observed}\n${note.context}\n\n${note.text}`)].join('\n');
+  const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`into-the-facade-${p.id}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Dossier exported with sources, urbex findings and explorer accounts.');
 }
-function resetFilters() {query='';category='All';savedOnly=false;$<HTMLInputElement>('#search').value='';updateFilters();renderList();fitMap();}
+function resetFilters() {query='';category='All';$<HTMLInputElement>('#search').value='';updateFilters();renderList();fitMap();}
 function updateFilters() {
   document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>{b.classList.toggle('active',b.dataset.category===category);b.setAttribute('aria-pressed',String(b.dataset.category===category));});
-  $('#explore-nav').classList.toggle('active',!savedOnly);$('#saved-nav').classList.toggle('active',savedOnly);
-  $('#explore-nav').setAttribute('aria-pressed',String(!savedOnly));$('#saved-nav').setAttribute('aria-pressed',String(savedOnly));
-  $('#discovery-title').textContent = savedOnly?'Saved files.':'Open cases.';
+  $('#discovery-title').textContent = 'Scout files.';
 }
 function focusMap(place: Place, zoom: number) {
   if (!mapReady) return;
@@ -401,7 +432,7 @@ function initMap() {
 function showDialog(kind: 'about'|'sources'|'region') {
   const content = $('#dialog-content');
   if(kind==='region') content.innerHTML=`<h2 id="dialog-title">OKLAHOMA COUNTY / THREE FILES</h2><p>Stockyard Airsoft, former Eagle Industries, and the Rhode Island Avenue warehouse. Three properties investigated through county records, environmental reports and court documents.</p><button class="region-choice" id="choose-region">${icon('pin')}<span><strong>Oklahoma City + Midwest City</strong><small>${places.length} cases · ${claimCount} evidence entries</small></span>${icon('check')}</button><p class="dialog-footnote">The deck contains reviewed leads. It is not a live scan of abandoned properties.</p>`;
-  else if(kind==='about') content.innerHTML=`<h2 id="dialog-title">Into The Facade</h2><p>Into The Facade helps investigate overlooked buildings through public records. Start with a former business, identify the possible parcels, and trace the evidence for ownership and current use.</p><div class="dialog-callout"><strong>Closed business ≠ empty building.</strong><p>It does not establish an abandoned building. Ownership, occupancy, condition, and access are separate findings, each with its own evidence.</p></div><p class="dialog-footnote">These three cases combine reviewed county records, environmental reports, court filings and dated parcel snapshots. Case history concerns the cited activity and date, not an accusation against a current owner or neighboring tenant. Illustrations are decorative. Saved places and notes remain in your browser.</p>`;
+  else if(kind==='about') content.innerHTML=`<h2 id="dialog-title">Into The Facade</h2><p>Into The Facade is an open-source intelligence atlas for urban exploration. Research overlooked industrial sites before a visit: who controls the property, what the maps show, which hazards are documented, and whether the site is still in use.</p><div class="dialog-callout"><strong>Closed business ≠ empty building.</strong><p>It does not establish an abandoned building. Ownership, occupancy, condition, and access are separate findings, each with its own evidence.</p></div><p class="dialog-footnote">These three cases combine reviewed county records, environmental reports, court filings and dated parcel snapshots. Case history concerns the cited activity and date, not an accusation against a current owner or neighboring tenant. Illustrations are decorative. Explorer accounts are labeled separately from verified findings. Saved collections and a personal note editor are planned for a future update.</p>`;
   else content.innerHTML=`<h2 id="dialog-title">Sources & methods</h2><p>Public-record research, with a source and date for each claim. This is a reviewed snapshot, not continuous monitoring.</p><div class="method-list">
     <div><span>01</span><p><strong>Start with a lead</strong>Former business listings and submitted observations provide names and addresses. Directory closure labels are kept as leads.</p></div>
     <div><span>02</span><p><strong>Match the property</strong>County assessor accounts and parcel boundaries identify possible matches. Shared addresses stay unresolved until the building is matched.</p></div>
@@ -416,14 +447,12 @@ $('#places').addEventListener('click',event=>{
   const button=(event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if(!button||button.closest('.is-leaving'))return;
   if(button.dataset.select){selectPlace(button.dataset.select,button.dataset.select!=='stockyard-airsoft');if(button.dataset.select==='stockyard-airsoft')traceRoad();}
-  else if(button.dataset.save)toggleSave(button.dataset.save);
   else if(button.hasAttribute('data-investigate-road')){selectPlace('stockyard-airsoft');showEvidence('osm-road',false);traceRoad();}
   else if(button.id==='reset-filters')resetFilters();
 });
 $('#search').addEventListener('input',()=>{query=$<HTMLInputElement>('#search').value;renderList();});
 document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category!;updateFilters();renderList();fitMap();}));
-$('#explore-nav').addEventListener('click',()=>{savedOnly=false;updateFilters();renderList();fitMap();});
-$('#saved-nav').addEventListener('click',()=>{savedOnly=true;updateFilters();renderList();fitMap();});
+$('#explore-nav').addEventListener('click',()=>{updateFilters();renderList();fitMap();});
 $('#view-toggle').addEventListener('click',()=>{if(!mapReady||!map)return;is3d=!is3d;$('#view-toggle').setAttribute('aria-pressed',String(is3d));$('#view-toggle').innerHTML=`${icon('layers')}<span>${is3d?'Tilt view':'Flat view'}</span>`;if(mapReady&&map){map.easeTo({pitch:is3d?52:0,bearing:is3d?-12:0,duration:reducedMotion?0:600});}});
 $('#zoom-in').addEventListener('click',()=>{if(compatMap)compatMap.zoom(1);else map?.zoomIn({duration:reducedMotion?0:250});});
 $('#zoom-out').addEventListener('click',()=>{if(compatMap)compatMap.zoom(-1);else map?.zoomOut({duration:reducedMotion?0:250});});
@@ -443,6 +472,6 @@ window.addEventListener('hashchange',()=>{
 });
 window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open && !$<HTMLDialogElement>('#evidence-dialog').open){e.preventDefault();$('#search').focus();}});
 initEvidenceViewer(()=>selected);
-renderList();renderDossier();updateMapSelection();
+renderList();renderDossier();updateMapSelection();centerActiveDeck(false);
 if(new URLSearchParams(location.search).get('map')==='2d'||readStorage<string>('itf:map-renderer','styled')==='2d')void initCompatMap();
 else initMap();

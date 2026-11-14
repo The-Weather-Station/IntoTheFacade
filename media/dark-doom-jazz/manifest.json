@@ -1,0 +1,49 @@
+{
+  "title": "Dark Doom Jazz",
+  "durationSeconds": 5613.216,
+  "encoding": "MP3, 64 kbit/s stereo, 32 kHz",
+  "bytes": 44906444,
+  "sha256": "94a453af7f64c6d026969f3a2f03f950615b3623758ba5ac37bfb606ffc3c868",
+  "parts": [
+    {
+      "file": "part-00.bin",
+      "bytes": 6291456,
+      "sha256": "98b912fbe2cc5bf5fba838a052ec0d20250b6ef6ef9ba754afd5044afe28a942"
+    },
+    {
+      "file": "part-01.bin",
+      "bytes": 6291456,
+      "sha256": "1f4df101f044bb70b66f496611629054724c391ff11c3333b3344190d3e6ab49"
+    },
+    {
+      "file": "part-02.bin",
+      "bytes": 6291456,
+      "sha256": "a95ceca8a124047196f57fef1387afdbec3b1747f51bf759db118fbc43b04b8d"
+    },
+    {
+      "file": "part-03.bin",
+      "bytes": 6291456,
+      "sha256": "685dbd367bd85985b45b4f96e5dfcad88d1e5940873eb419988bc08310d05a96"
+    },
+    {
+      "file": "part-04.bin",
+      "bytes": 6291456,
+      "sha256": "fc9ce128efa94afafb92aa080c4322c8acbe3cf2207cceaf4c5e7960bb60f418"
+    },
+    {
+      "file": "part-05.bin",
+      "bytes": 6291456,
+      "sha256": "49d5c770cad79040748458e02df0b5602604b2a21645bb47867a9ef84a8f57fd"
+    },
+    {
+      "file": "part-06.bin",
+      "bytes": 6291456,
+      "sha256": "2235d6604783329501f6f388d3b58034753d86acb8f9a183e1db305233737cb0"
+    },
+    {
+      "file": "part-07.bin",
+      "bytes": 866252,
+      "sha256": "f380526eb56213dc53f4003ac817d2145d9a5ff8bf519d6be87545e56981cf2b"
+    }
+  ]
+}

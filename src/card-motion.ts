@@ -3,15 +3,15 @@ type CardState = {
   px: number; py: number; vx: number; vy: number;
   aimX: number; aimY: number; rx: number; ry: number; rz: number;
 };
-// Subpixel compositor motion with elapsed-time damping. Only artwork tilts;
-// live copy never scales and settles onto whole pixels while being read.
+// One transform per physical card keeps its paper, image and live copy together.
+// No hover scaling; tilt settles flat when reading with keyboard focus.
 export function createCardMotion() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const phone = matchMedia('(max-width: 580px)');
   const states = new Map<HTMLElement, CardState>();
   let lastTime = performance.now();
   function paint(card: HTMLElement, s: CardState) {
-    card.style.transform = 'translate3d('+s.px.toFixed(3)+'px,'+s.py.toFixed(3)+'px,0)';
+    card.style.transform = `translate3d(${s.px.toFixed(3)}px,${s.py.toFixed(3)}px,0) perspective(1200px) rotateX(${s.rx.toFixed(3)}deg) rotateY(${s.ry.toFixed(3)}deg) rotateZ(${s.rz.toFixed(3)}deg)`;
     card.style.setProperty('--tilt-x', s.rx.toFixed(3)+'deg');
     card.style.setProperty('--tilt-y', s.ry.toFixed(3)+'deg');
     card.style.setProperty('--tilt-z', s.rz.toFixed(3)+'deg');
@@ -42,9 +42,13 @@ export function createCardMotion() {
     card.addEventListener('pointerleave', () => { s.hover = false; s.aimX = s.aimY = 0; });
     card.addEventListener('pointermove', event => {
       if (event.pointerType === 'touch' || reduced.matches) return;
-      const rect = card.getBoundingClientRect();
-      s.aimX = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
-      s.aimY = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
+      // Use the stable layout box, not the transformed edges, to avoid feedback jitter.
+      const parent = card.offsetParent as HTMLElement;
+      const rect = parent.getBoundingClientRect();
+      const left = rect.left + parent.clientLeft + card.offsetLeft - parent.scrollLeft;
+      const top = rect.top + parent.clientTop + card.offsetTop - parent.scrollTop;
+      s.aimX = Math.max(-1, Math.min(1, (event.clientX - left) / card.offsetWidth * 2 - 1));
+      s.aimY = Math.max(-1, Math.min(1, (event.clientY - top) / card.offsetHeight * 2 - 1));
     });
     card.addEventListener('dragstart', e => e.preventDefault());
     observer.observe(card); return s;
@@ -76,10 +80,11 @@ export function createCardMotion() {
         s.px += s.vx * h; s.py += s.vy * h;
       }
       if (!floating && Math.hypot(tx - s.px, ty - s.py, s.vx, s.vy) < .025) { s.px = Math.round(tx); s.py = Math.round(ty); s.vx = s.vy = 0; }
-      const blend = 1 - Math.exp(-11 * dt), tilt = s.side === 'left' ? 8 : 3;
-      s.rx += ((reduced.matches ? 0 : -s.aimY * tilt) - s.rx) * blend;
-      s.ry += ((reduced.matches ? 0 : s.aimX * tilt) - s.ry) * blend;
-      s.rz += ((floating ? Math.sin(phase * .65) * (s.side === 'left' ? 1.2 : .25) : s.aimX * .6) - s.rz) * blend;
+      const blend = 1 - Math.exp(-11 * dt), tilt = s.side === 'left' ? 6 : 1.8;
+      const still = reduced.matches || !!card.querySelector(':focus-visible');
+      s.rx += ((still ? 0 : -s.aimY * tilt) - s.rx) * blend;
+      s.ry += ((still ? 0 : s.aimX * tilt) - s.ry) * blend;
+      s.rz += ((still ? 0 : floating ? Math.sin(phase * .65) * (s.side === 'left' ? 1.2 : .25) : s.aimX * .6) - s.rz) * blend;
       if (reduced.matches) { s.px = s.py = 0; s.rx = s.ry = s.rz = 0; }
       paint(card, s);
     }

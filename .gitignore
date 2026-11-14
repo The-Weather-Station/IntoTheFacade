@@ -5,3 +5,6 @@ dist/
 .env*
 !.env.example
 research-candidates/
+
+# Generated from checked media chunks before dev/build
+/public/audio/dark-doom-jazz.mp3

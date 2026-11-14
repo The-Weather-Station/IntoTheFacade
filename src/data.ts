@@ -1,3 +1,4 @@
+import { addFieldResearch } from './field-research.ts';
 import { additionalPlaces } from './additional-places.ts';
 
 export type Category = 'Former business' | 'Environmental record' | 'Court record';
@@ -113,6 +114,7 @@ export const places: Place[] = [{
     { title: 'Establish the closure history', detail: 'Check occupancy, fire, and code records using the business name and both street-number aliases.', label: 'Open city records', url: cityPortalUrl },
   ],
 }, ...additionalPlaces];
+addFieldResearch(places);
 export function filterPlaces(query: string, category: string, savedOnly: boolean, saved: string[]): Place[] {
   const term = query.toLocaleLowerCase().trim();
   return places.filter(p => (!savedOnly || saved.includes(p.id)) && (category === 'All' || p.category === category) && (!term || [p.name, p.address, p.category, ...p.tags, ...p.parcelAccounts, ...p.findings.map(f=>f.value)].join(' ').toLocaleLowerCase().includes(term)));

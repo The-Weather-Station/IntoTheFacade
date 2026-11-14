@@ -1,3 +1,5 @@
+import { fieldProfiles } from '../src/field-research.ts';
+import { explorerNotes } from '../src/explorer-notes.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -19,7 +21,8 @@ test('published claims and findings retain valid, dated provenance', () => {
         const source=p.sources[index];
         assert.ok(source, `${p.id}: broken source reference`);
         assert.ok(source.date && source.method);
-        assert.equal(source.reviewed,p.reviewed ?? reviewed);
+        assert.match(source.reviewed,/^\d{4}-\d{2}-\d{2}$/);
+        assert.ok(source.reviewed <= (p.reviewed ?? reviewed), 'source review cannot follow the dossier review');
         if(source.url) assert.equal(new URL(source.url).protocol,'https:');
         else assert.equal(source.kind,'Submitted screenshot');
       }
@@ -149,4 +152,23 @@ test('road overlay preserves original OSM ways and limits the private tag to its
     assert.ok(feature.geometry.coordinates.length>=2);
     for(const [x,y] of feature.geometry.coordinates){assert.ok(x>-97.57&&x<-97.55);assert.ok(y>35.44&&y<35.46);}
   }
+});
+
+
+test('urbex readouts link to real evidence and keep explorer recollection separate', () => {
+  for (const place of places) {
+    const profile=fieldProfiles[place.id], ids=new Set(place.evidence.map(e=>e.id));
+    assert.ok(profile);
+    for (const section of [profile.activity,profile.security,...profile.sections]) {
+      assert.ok(section.evidence.length);
+      assert.ok(section.evidence.every(id=>ids.has(id)), `${place.id}: broken field evidence link`);
+    }
+    assert.equal(new URL(profile.contact.url).protocol,'https:');
+    assert.ok(profile.activity.level>=0&&profile.activity.level<5);
+  }
+  assert.equal(fieldProfiles['stockyard-airsoft'].security.level,null);
+  assert.equal(explorerNotes['stockyard-airsoft'][0].author,'Anonymous explorer');
+  assert.ok(explorerNotes['stockyard-airsoft'][0].context.includes('unverified'));
+  assert.equal(explorerNotes['eagle-industries'],undefined);
+  assert.equal(explorerNotes['rhode-island-warehouse'],undefined);
 });
