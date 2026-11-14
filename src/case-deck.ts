@@ -26,7 +26,8 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   let turnAnimation: Animation | undefined;
   let shuffleNode: HTMLElement | undefined, shuffleTarget: HTMLElement | undefined;
   const flights = new Set<{ node: HTMLElement; animation: Animation }>();
-  const coverCopies = new Set<HTMLElement>();
+  const returningStacks = new Set<HTMLElement>();
+  const indexFrame = document.querySelector<HTMLElement>('.discovery')!;
   function capture(): Face {
     const node = front.cloneNode(true) as HTMLElement;
     node.removeAttribute('id'); node.removeAttribute('aria-label'); node.inert = true;
@@ -48,18 +49,10 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     shuffleTarget = undefined;
     delete dock.dataset.shufflePhase;
     for (const f of flights) { f.animation.cancel(); f.node.remove(); }
-    for (const cover of coverCopies) cover.remove();
-    coverCopies.clear();
+    for (const stack of returningStacks) stack.classList.remove('cards-returning');
+    returningStacks.clear(); indexFrame.classList.remove('deck-index-in-transit');
     flights.clear(); busy = false; dock.classList.remove('deck-in-transit');
     front.style.visibility = ''; motion.pause(front, false);
-  }
-  function coverInFront(id: string) {
-    const cover = document.querySelector<HTMLElement>(`[data-card-key="${id}"] .case-cover`);
-    if (!cover) return;
-    const rect = cover.getBoundingClientRect(), copy = cover.querySelector('img')!.cloneNode(true) as HTMLElement;
-    copy.className = 'transit-cover'; copy.setAttribute('aria-hidden','true'); copy.inert = true;
-    Object.assign(copy.style, {left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px'});
-    document.body.append(copy); coverCopies.add(copy);
   }
   function fly(face: Face, from: DOMRect, to: DOMRect, index: number, incoming: boolean, delay: number) {
     const node = document.createElement('div'); node.className = 'case-flight'; node.inert = true; node.setAttribute('aria-hidden', 'true');
@@ -88,16 +81,27 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     const narrow = innerWidth < 951;
     const source = narrow ? new DOMRect(incoming.rect.left - 70, incoming.rect.top + 50, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);
     const destination = narrow ? new DOMRect(outgoing.rect.left - 90, outgoing.rect.top + 60, outgoing.rect.width * .6, outgoing.rect.height * .6) : anchor(oldId ?? id);
-    if (!narrow) { if (oldId) coverInFront(oldId); coverInFront(id); }
+    // Keep the real covers above the flights, including while the index scrolls.
+    // A fixed duplicate cover would visibly separate from its moving original.
+    if (!narrow) indexFrame.classList.add('deck-index-in-transit');
+    const returning = oldId ? document.querySelector<HTMLElement>(`[data-card-key="${oldId}"]`) : null;
+    if (returning) { returning.classList.add('cards-returning'); returningStacks.add(returning); }
     const jobs: Promise<void>[] = [];
+    const returnJobs: Promise<void>[] = [];
     for (let i = 2; i >= 0; i--) {
-      if (oldId) jobs.push(fly(outgoing, outgoing.rect, destination, i, false, (2 - i) * 60));
+      if (oldId) {
+        const job = fly(outgoing, outgoing.rect, destination, i, false, (2 - i) * 60);
+        jobs.push(job); returnJobs.push(job);
+      }
       jobs.push(fly(incoming, source, incoming.rect, i, true, 220 + (2 - i) * 90));
     }
+    void Promise.all(returnJobs).then(() => {
+      if (stamp !== revision || !returning) return;
+      returning.classList.remove('cards-returning'); returningStacks.delete(returning);
+    });
     return Promise.all(jobs).then(() => {
       if (stamp !== revision) return;
-      for (const cover of coverCopies) cover.remove();
-      coverCopies.clear();
+      indexFrame.classList.remove('deck-index-in-transit');
       busy = false; front.style.visibility = ''; dock.classList.remove('deck-in-transit'); motion.pause(front, false);
     });
   }

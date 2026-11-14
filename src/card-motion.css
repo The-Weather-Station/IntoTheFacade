@@ -17,7 +17,8 @@
 .case-stack { position:relative; margin:0 0 35px; padding:8px 7px 4px; }
 .stack-visual { position:relative; width:100%; aspect-ratio:2/3; transform:none; transform-origin:50% 55%; will-change:transform; }
 .stack-back { position:absolute; inset:5% 6% 4%; background:url('/art/occult-card-back.webp') center/100% 100% no-repeat; transform:translate(calc(var(--stack-i) * 4px),calc(var(--stack-i) * -4px)) rotate(calc(var(--stack-i) * 3deg)); filter:drop-shadow(2px 3px 1px #080e0ccc); transition:transform .6s cubic-bezier(.2,.75,.2,1); }
-.case-stack.selected .stack-back { transform:translate(calc(var(--stack-i) * 2px),calc(var(--stack-i) * -2px)) rotate(calc(var(--stack-i) * 1deg)); }
+.case-stack.selected .stack-back,.case-stack.cards-returning .stack-back { visibility:hidden; }
+.discovery.deck-index-in-transit { z-index:10020; }
 .case-cover { position:relative; z-index:4; width:100%; height:100%; padding:0; display:block; color:inherit; transform:none; translate:none; }
 .case-cover:active { translate:none; }
 .case-cover img { width:100%; height:100%; display:block; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(5px 7px 3px #09130fb3); cursor:pointer; }
@@ -67,7 +68,6 @@
 .case-status[data-tone=hazard] { background:#dfc784; border-color:#8b5a30; }
 .case-status[data-tone=case] { background:#d3c2ce; border-color:#6a445f; }
 .case-flight { position:fixed; left:0; top:0; transform-origin:0 0; pointer-events:none; will-change:transform; color:var(--ink); }
-.transit-cover { position:fixed; z-index:10030; pointer-events:none; object-fit:contain; image-rendering:pixelated; }
 .case-flight .dossier { display:flex; flex-direction:column; }
 .case-flight .dossier-content { overflow:hidden; }
 .flight-paper { padding:25px 14px; height:100%; display:flex; flex-direction:column; gap:15px; color:var(--ink); }
