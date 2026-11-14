@@ -7,7 +7,8 @@ export function initBackgroundAudio() {
   const toggle = panel.querySelector<HTMLButtonElement>('button')!;
   const volume = panel.querySelector<HTMLInputElement>('input')!;
   const status = panel.querySelector<HTMLElement>('[role=status]')!;
-  let enabled = true, started = false, starting = false;
+  let enabled = true, started = false, starting = false, scrollAttempted = false, playAttempt = 0;
+  const startup = new AbortController();
   try {
     enabled = localStorage.getItem('itf:music-enabled') !== 'false';
     const level = Number(localStorage.getItem('itf:music-volume') ?? '.16');
@@ -26,32 +27,49 @@ export function initBackgroundAudio() {
     panel.dataset.playing = String(playing);
   }
   function play() {
-    if (document.hidden || starting) return;
-    started = true; starting = true;
+    if (document.hidden || starting || !audio.paused) return;
+    const attempt = ++playAttempt;
+    starting = true;
     if (!audio.getAttribute('src')) audio.src = import.meta.env.BASE_URL + 'audio/dark-doom-jazz.mp3';
     status.textContent = 'Loading music'; paint();
     void audio.play().then(() => {
-      starting = false;
+      if (attempt !== playAttempt) return;
+      starting = false; started = true; startup.abort();
       if (!enabled || document.hidden) audio.pause();
       status.textContent = audio.paused ? 'Music paused' : 'Music playing'; paint();
     }).catch(error => {
+      if (attempt !== playAttempt) return;
       starting = false;
-      status.textContent = error.name === 'NotAllowedError' ? 'Press play to start music' : error.name === 'AbortError' ? 'Music paused' : 'Music unavailable; press play to retry';
+      status.textContent = error.name === 'NotAllowedError' ? 'Tap or click to start music' : error.name === 'AbortError' ? 'Music paused' : 'Music unavailable; press play to retry';
       paint();
     });
   }
   toggle.addEventListener('click', () => {
-    if (!audio.paused || starting) { enabled = false; starting = false; audio.pause(); status.textContent = 'Music paused'; paint(); }
+    if (!audio.paused || starting) { enabled = false; ++playAttempt; starting = false; startup.abort(); audio.pause(); status.textContent = 'Music paused'; paint(); }
     else { enabled = true; play(); }
     remember();
   });
   volume.addEventListener('input', () => { audio.volume = Number(volume.value)/100; remember(); });
-  document.addEventListener('pointerdown', event => {
-    if (!started && enabled && !(event.target as HTMLElement).closest('#soundtrack-control')) play();
-  }, {passive:true});
+  const options = {passive:true, capture:true, signal:startup.signal};
+  function startFromInput(event: Event) {
+    if (!started && enabled && !(event.target instanceof Element && event.target.closest('#soundtrack-control'))) play();
+  }
+  function startFromScroll(event: Event) {
+    if (scrollAttempted || document.hidden) return;
+    scrollAttempted = true;
+    startFromInput(event);
+  }
+  // Wheel/touch movement is user scroll intent, unlike programmatic scroll events.
+  // A denied scroll attempt must leave the next activation gesture available.
+  document.addEventListener('wheel', startFromScroll, options);
+  document.addEventListener('touchmove', startFromScroll, options);
+  document.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') startFromInput(event); }, options);
+  document.addEventListener('pointerup', event => { if (event.pointerType !== 'mouse') startFromInput(event); }, options);
+  document.addEventListener('touchend', startFromInput, options);
+  document.addEventListener('click', startFromInput, options);
   document.addEventListener('keydown', event => {
-    if (!started && enabled && ['Enter',' '].includes(event.key) && !(event.target as HTMLElement).closest('#soundtrack-control')) play();
-  });
+    if (['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End'].includes(event.key)) startFromInput(event);
+  }, options);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { audio.pause(); status.textContent = 'Music paused while tab is hidden'; paint(); }
     else if (started && enabled) play();
