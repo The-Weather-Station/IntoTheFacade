@@ -10,7 +10,9 @@ export function createIntroGuide() {
   svg.innerHTML = '<defs><marker id="intro-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 L6 4 L1 7"/></marker><mask id="intro-draw-mask" maskUnits="userSpaceOnUse"><path class="intro-draw-path" pathLength="1" fill="none" stroke="white" stroke-width="30" stroke-dasharray="1" stroke-dashoffset="1"/></mask></defs><g mask="url(#intro-draw-mask)"><path class="intro-arrow-shadow"/><path class="intro-arrow-line" marker-end="url(#intro-arrowhead)"/></g>';
   function draw() {
     if (dismissed || !document.querySelector('.dossier-dock.is-welcome')) { svg.remove(); frame = 0; return; }
-    const source = document.querySelector(innerWidth<=580 ? '#mobile-intro-start' : '#intro-start')?.getBoundingClientRect();
+    // Desktop starts at the welcome card's midpoint, even when its lower
+    // call-to-action is below the fold. Phones keep their compact rail prompt.
+    const source = document.querySelector(innerWidth<=580 ? '#mobile-intro-start' : '.dossier-dock.is-welcome #dossier')?.getBoundingClientRect();
     const target = document.querySelector('[data-card-key="stockyard-airsoft"] .case-cover')?.getBoundingClientRect();
     const visible = source && target && source.bottom > 0 && source.top < innerHeight && source.left < innerWidth && target.right > 0 && target.left < innerWidth && target.bottom > 0 && target.top < innerHeight;
     svg.style.display = visible && loaded ? '' : 'none';
