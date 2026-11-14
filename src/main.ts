@@ -7,7 +7,8 @@ import parcelSnapshot from './research/stockyard-parcels.json';
 import additionalParcels from './research/additional-parcels.json';
 import type { FeatureCollection } from 'geojson';
 import { icon } from './art';
-import { artUrl, buildingArt, mysteryCard } from './generated-art';
+import { artUrl, buildingArt } from './generated-art';
+import { caseStack, createCaseDeck } from './case-deck';
 import roadSnapshot from './research/osm-road-corridor.json';
 import './generated-theme.css';
 import './card-motion.css';
@@ -41,7 +42,7 @@ $('#app').innerHTML = `
   <header class="masthead">
     <a class="brand" href="#${places[0].id}" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
-    <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 004</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
+    <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 005</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
   <section class="intro" aria-label="Introduction"><div><p class="eyebrow">OKLAHOMA COUNTY / THREE CASE FILES</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Missing roads. Solvent trails.<br>Freight with a paper trail.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
@@ -50,8 +51,8 @@ $('#app').innerHTML = `
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search the files…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>
-      <div class="deck-controls"><span>Pick up a card. Move it.</span><button id="reset-cards" type="button">Reset cards</button></div>
-      <div id="places" class="places" tabindex="-1"></div>
+      <div class="deck-controls"><span>Pick a case. Deal the stack.</span><button id="reset-cards" type="button">Reset cards</button></div>
+      <div id="places" class="places" tabindex="-1"></div><p class="deck-art-note">Cover art dramatizes the case. Original images are in Evidence.</p>
       <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>THE COUNTY FILES</strong><p>${places.length} cases · ${claimCount} evidence entries.<br>Every claim has a paper trail.</p></div></div>
     </aside>
     <section class="map-section" aria-label="Interactive location map" tabindex="-1">
@@ -65,14 +66,15 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
-    <div class="dossier-dock"><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
+    <div class="dossier-dock"><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">INTO THE FACADE / FIELD GUIDE</span><button id="close-dialog" class="icon-button" aria-label="Close dialog">${icon('close')}</button></div><div id="dialog-content"></div></dialog>
 `;
 const cardMotion = createCardMotion();
-$('#reset-cards').addEventListener('click',()=>cardMotion.resetAll());
+const caseDeck = createCaseDeck($('#dossier'), $('.dossier-dock'), cardMotion);
+$('#reset-cards').addEventListener('click',()=>{caseDeck.cancel();cardMotion.resetAll();});
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
@@ -100,10 +102,11 @@ function renderDeck(markup: string) {
         incoming.querySelectorAll<HTMLButtonElement>('[data-select],[data-save]').forEach(button=>{
           const live=card.querySelector<HTMLButtonElement>(button.hasAttribute('data-save')?'[data-save]':'[data-select]')!;
           live.className=button.className;
+          if(button.hasAttribute('data-save'))live.innerHTML=button.innerHTML;
           for(const name of ['aria-pressed','aria-label'])live.setAttribute(name,button.getAttribute(name)!);
         });
-        const meta=card.querySelector('.card-meta>span:last-child');
-        if(meta)meta.textContent=incoming.querySelector('.card-meta>span:last-child')!.textContent;
+        const meta=card.querySelector('.stack-state');
+        if(meta)meta.textContent=incoming.querySelector('.stack-state')!.textContent;
       }
     }
     if(card===cursor)cursor=cursor.nextElementSibling;
@@ -118,11 +121,7 @@ function renderList() {
   $('#results-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'PLACE' : 'PLACES'}${savedOnly ? ' SAVED' : ' FOUND'}`;
   $('#map-region-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'CASE' : 'CASES'}`;
   $('#saved-count').textContent = String(saved.length);
-  const deckMarkup = visible.length ? (visible.some(p=>p.id==='stockyard-airsoft') ? mysteryCard() : '') + visible.map(p => `
-    <article class="place-card ${p.id === selected.id ? 'selected' : ''}" data-card-key="${p.id}" data-place="${p.id}" style="--card-color:${placeColor(p.id)}">
-      <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-heading"><span class="card-number">${p.number}</span><span class="card-category">${p.category}</span></div><div class="card-art">${buildingArt(p.artName,p.name)}<span class="card-year">${p.year}</span></div><div class="card-copy"><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} evidence entries</span><span>${p.id === selected.id ? 'ON THE TABLE' : 'OPEN DOSSIER'}</span></div></div></button>
-      <button class="card-save ${saved.includes(p.id) ? 'is-saved' : ''}" data-save="${p.id}" aria-pressed="${saved.includes(p.id)}" aria-label="${saved.includes(p.id) ? 'Unsave' : 'Save'} ${p.name}">${icon('bookmark')}</button>
-    </article>`).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
+  const deckMarkup = visible.length ? visible.map(p=>caseStack(p,p.id===selected.id,saved.includes(p.id))).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
   renderDeck(deckMarkup);
   markers.forEach((marker, id) => {
     marker.getElement().style.display = visible.some(p => p.id === id) ? '' : 'none';
@@ -143,12 +142,18 @@ function toggleSave(id: string) {
 }
 function selectPlace(id: string, fly = false) {
   stopRoadPulse(); pendingRoadFocus=false;
-  selected = getPlace(id); tab = 'overview';
-  if(location.hash !== `#${selected.id}`) history.pushState(null,'',`#${selected.id}`);
-  renderList(); renderDossier(); updateMapSelection();
+  const oldId = selected.id, next = getPlace(id);
+  const transition = caseDeck.switchCase(oldId, next.id, () => {
+    selected = next; tab = 'overview';
+    if(location.hash !== `#${selected.id}`) history.pushState(null,'',`#${selected.id}`);
+    renderList(); renderDossier(); updateMapSelection();
+  });
   if(fly) focusMap(selected, 15.5);
-  if(fly && window.innerWidth < 850) $('#dossier').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
+  if(fly && innerWidth < 850) void transition.then(()=> {
+    if(selected.id===next.id) $('.dossier-dock').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
+  });
 }
+
 function updateMapSelection() {
   $('#map-coordinate').textContent = `AREA CENTER · ${selected.coordinates[1].toFixed(4)}° N ${Math.abs(selected.coordinates[0]).toFixed(4)}° W`;
 }
@@ -157,14 +162,26 @@ function sourceMarkup(source: Source) {
 }
 function renderDossier() {
   const p = selected, isSaved = saved.includes(p.id);
+  const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
+  const previousFace = caseDeck.capture();
+  const notePreview = readStorage<unknown>(`itf:note:${p.id}`,'');
+  const sheets = [
+    {id:'overview',title:'Overview',body:`<p>${p.summary}</p><strong>${p.statusTitle ?? 'Lumber storage documented'}</strong>`},
+    {id:'evidence',title:'Evidence',body:`<p>${p.evidence.length} records · ${p.images.length} original images</p>${p.evidence.slice(0,3).map(e=>`<section><h4>${e.title}</h4><p>${e.detail}</p></section>`).join('')}`},
+    {id:'notes',title:'Field notes',body:`<p>${typeof notePreview==='string'&&notePreview ? escapeHtml(notePreview) : 'Dates, names, inconsistencies. Your observations for this case live here.'}</p><small>LOCAL NOTEBOOK / THIS BROWSER</small>`},
+  ].filter(sheet=>sheet.id!==tab).reverse();
+  document.querySelectorAll<HTMLElement>('.detail-underlay').forEach((card,i)=>{
+    const sheet = sheets[i];
+    card.innerHTML = `<button class="underlay-select" data-tab="${sheet.id}" tabindex="-1" aria-label="Bring ${sheet.title} card to front"><small>CASE ${p.number} / ${p.name}</small><h3>${sheet.title}</h3>${sheet.body}</button>`;
+  });
   $('#dossier').style.setProperty('--card-color', placeColor(p.id));
   $('#dossier').dataset.place = p.id;
   $('#dossier').dataset.tabView = tab;
+  $('#dossier-hand').innerHTML = `<div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>`;
   $('#dossier').innerHTML = `
     <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span><button id="dossier-save" class="icon-button ${isSaved?'is-saved':''}" aria-label="${isSaved?'Unsave':'Save'} ${p.name}" aria-pressed="${isSaved}">${icon('bookmark')}</button></div>
     <div class="dossier-hero">${buildingArt(p.artName,p.name)}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="${p.heroImageId ?? 'county-building-photo'}">View source photo ↗</button></div>
     <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${p.name}</h2><p>${icon('pin')} ${p.address}</p></div>
-    <div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>
     <div id="dossier-content" class="dossier-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
     <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${dateLabel(p.reviewed ?? reviewed)}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
   const content = $('#dossier-content');
@@ -196,7 +213,8 @@ function renderDossier() {
     button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();const tabs=['overview','evidence','notes'];tab=tabs[(tabs.indexOf(tab)+(event.key==='ArrowRight'?1:2))%3];renderDossier();$(`#tab-${tab}`).focus();}});
   });
   $('#export-dossier').addEventListener('click',()=>exportDossier(p));
-  cardMotion.revealDossier($('#dossier'),content,`${p.id}:${tab}`);
+  cardMotion.revealDossier($('#dossier'));
+  if(previousId===p.id)caseDeck.turn(previousFace,previousTab,tab);
 }
 function showEvidence(id: string, reveal = true) {
   tab='evidence'; renderDossier();
@@ -373,7 +391,7 @@ function showDialog(kind: 'about'|'sources'|'region') {
 $('#places').addEventListener('click',event=>{
   const button=(event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if(!button||button.closest('.is-leaving'))return;
-  if(button.dataset.select)selectPlace(button.dataset.select,true);
+  if(button.dataset.select){selectPlace(button.dataset.select,button.dataset.select!=='stockyard-airsoft');if(button.dataset.select==='stockyard-airsoft')traceRoad();}
   else if(button.dataset.save)toggleSave(button.dataset.save);
   else if(button.hasAttribute('data-investigate-road')){selectPlace('stockyard-airsoft');showEvidence('osm-road',false);traceRoad();}
   else if(button.id==='reset-filters')resetFilters();

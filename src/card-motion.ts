@@ -1,124 +1,110 @@
-type Motion = { fromX: number; fromY: number; toX: number; toY: number; start: number; duration: number; exit?: boolean };
 type CardState = {
-  side: 'left' | 'right'; index: number; visible: boolean; dealt: boolean; view?: string;
-  x: number; y: number; paintedX: number; paintedY: number; hover: boolean; motion?: Motion;
+  side: 'left' | 'right'; index: number; visible: boolean; dealt: boolean; hover: boolean; paused: boolean;
+  x: number; y: number; px: number; py: number; vx: number; vy: number;
+  aimX: number; aimY: number; rx: number; ry: number; rz: number;
 };
 type Drag = { card: HTMLElement; state: CardState; id: number; startX: number; startY: number; x: number; y: number; anchorX: number; anchorY: number; width: number; active: boolean; lastX: number; lastY: number; time: number; vx: number; vy: number };
 
-// Integer layout offsets keep live type native: never scaled, rotated or filtered.
+// Subpixel compositor motion with elapsed-time damping. Only artwork tilts;
+// live copy never scales and settles onto whole pixels while being read.
 export function createCardMotion() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const phone = matchMedia('(max-width: 580px)');
   const states = new Map<HTMLElement, CardState>();
-  let drag: Drag | undefined, topCard = 10, suppressClickUntil = 0;
-  function paint(card: HTMLElement, state: CardState, x: number, y: number) {
-    const px = Math.round(x), py = Math.round(y);
-    if (px !== state.paintedX) card.style.setProperty('--card-x', `${px}px`);
-    if (py !== state.paintedY) card.style.setProperty('--card-y', `${py}px`);
-    state.paintedX = px; state.paintedY = py;
+  let drag: Drag | undefined, topCard = 10, suppressClickUntil = 0, lastTime = performance.now();
+  function paint(card: HTMLElement, s: CardState) {
+    card.style.transform = 'translate3d('+s.px.toFixed(3)+'px,'+s.py.toFixed(3)+'px,0)';
+    card.style.setProperty('--tilt-x', s.rx.toFixed(3)+'deg');
+    card.style.setProperty('--tilt-y', s.ry.toFixed(3)+'deg');
+    card.style.setProperty('--tilt-z', s.rz.toFixed(3)+'deg');
   }
   function raise(card: HTMLElement) {
     const level = String(++topCard); card.style.zIndex = level;
     const dock = card.closest<HTMLElement>('.discovery,.dossier-dock');
     if (dock) dock.style.zIndex = level;
   }
-  function move(card: HTMLElement, state: CardState, x: number, y: number, duration = 600, delay = 0, exit = false) {
-    if (reduced.matches) { state.x = x; state.y = y; paint(card, state, x, y); if (exit) destroy(card); return; }
-    state.motion = { fromX: state.paintedX, fromY: state.paintedY, toX: x, toY: y, start: performance.now() + delay, duration, exit };
-    card.classList.add(exit ? 'is-leaving' : 'is-dealing');
-  }
-  function deal(card: HTMLElement, state: CardState) {
-    state.dealt = true; card.classList.remove('awaiting-deal');
-    if (reduced.matches) return;
-    const rect = card.getBoundingClientRect();
-    paint(card, state, state.side === 'left' ? -rect.right - 30 : innerWidth - rect.left + 30, 28);
-    move(card, state, 0, 0, 950, state.index * 110);
-  }
   const observer = new IntersectionObserver(entries => {
     for (const entry of entries) {
-      const card = entry.target as HTMLElement, state = states.get(card);
-      if (!state) continue;
-      state.visible = entry.isIntersecting;
-      if (state.visible && !state.dealt) deal(card, state);
+      const card = entry.target as HTMLElement, s = states.get(card);
+      if (!s) continue;
+      s.visible = entry.isIntersecting;
+      if (s.visible && !s.dealt) {
+        s.dealt = true; card.classList.remove('awaiting-deal');
+        if (!reduced.matches) {
+          const rect = card.getBoundingClientRect();
+          s.px = s.side === 'left' ? -rect.right - 25 : innerWidth - rect.left + 25;
+          s.py = 25; paint(card, s);
+        }
+      }
     }
-  });
+  }, { rootMargin: '40px' });
   function destroy(card: HTMLElement) { observer.unobserve(card); states.delete(card); card.remove(); }
-  function addGrip(card: HTMLElement) {
-    if (card.querySelector('.card-grip')) return;
-    const grip = document.createElement('button');
-    grip.type = 'button'; grip.className = 'card-grip'; grip.textContent = '⠿ Drag card';
-    grip.setAttribute('aria-label', 'Move card. Drag, or use arrow keys; Home returns it to its place.');
-    grip.title = 'Drag anywhere on the table · Arrow keys to move · Home to return';
-    const top = card.querySelector('.dossier-top');
-    if (top) top.append(grip); else card.prepend(grip);
-  }
   function mount(card: HTMLElement, side: CardState['side'], index = 0) {
-    addGrip(card);
-    const existing = states.get(card);
-    if (existing) {
-      existing.index = index;
-      if (existing.motion?.exit) { existing.motion = undefined; card.inert = false; card.classList.remove('is-leaving'); move(card, existing, existing.x, existing.y); }
-      return existing;
+    if (!card.querySelector('.card-grip')) {
+      const grip = document.createElement('button');
+      grip.type = 'button'; grip.className = 'card-grip'; grip.textContent = '⠿';
+      grip.setAttribute('aria-label', 'Move card. Drag, or use arrow keys; Home returns it to its place.');
+      grip.title = 'Drag card · Arrow keys to move · Home to return';
+      (card.querySelector('.dossier-top') ?? card).prepend(grip);
     }
-    const state: CardState = { side, index, visible: false, dealt: false, x: 0, y: 0, paintedX: 0, paintedY: 0, hover: false };
-    states.set(card, state); card.classList.add('card-motion'); card.dataset.cardSide = side;
-    card.style.zIndex = String(++topCard);
+    const existing = states.get(card);
+    if (existing) { existing.index = index; return existing; }
+    const s: CardState = { side, index, visible: false, dealt: false, hover: false, paused: false, x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, aimX: 0, aimY: 0, rx: 0, ry: 0, rz: 0 };
+    states.set(card, s); card.classList.add('card-motion'); card.dataset.cardSide = side;
     if (!reduced.matches) card.classList.add('awaiting-deal');
-    card.addEventListener('pointerenter', () => { state.hover = true; raise(card); });
-    card.addEventListener('pointerleave', () => { state.hover = false; });
-    card.addEventListener('focusin', () => raise(card));
-    card.addEventListener('dragstart', event => event.preventDefault());
-    card.addEventListener('pointerdown', event => {
-      const target = event.target as HTMLElement;
-      const handle = target.closest('.card-grip');
-      if (event.button !== 0 || state.motion?.exit || (event.pointerType === 'touch' && !handle)) return;
-      if (!handle && !target.closest('.card-art,.dossier-hero,.mystery-card>img,.dossier-top')) return;
-      if (!handle && target.closest('a,input,textarea,.icon-button,.hero-source')) return;
-      state.motion = undefined; card.classList.remove('is-dealing');
+    card.addEventListener('pointerenter', () => { s.hover = true; raise(card); });
+    card.addEventListener('pointerleave', () => { s.hover = false; s.aimX = s.aimY = 0; });
+    card.addEventListener('pointermove', event => {
+      if (event.pointerType === 'touch' || drag || reduced.matches) return;
       const rect = card.getBoundingClientRect();
-      drag = { card, state, id: event.pointerId, startX: event.clientX, startY: event.clientY, x: state.paintedX, y: state.paintedY, anchorX: rect.left - state.paintedX, anchorY: rect.top - state.paintedY, width: rect.width, active: false, lastX: event.clientX, lastY: event.clientY, time: performance.now(), vx: 0, vy: 0 };
+      s.aimX = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
+      s.aimY = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
+    });
+    card.addEventListener('focusin', () => raise(card));
+    card.addEventListener('dragstart', e => e.preventDefault());
+    card.addEventListener('pointerdown', event => {
+      const target = event.target as HTMLElement, handle = target.closest('.card-grip');
+      if (event.button !== 0 || s.paused || (event.pointerType === 'touch' && !handle)) return;
+      if (!handle && !target.closest('.stack-visual,.dossier-hero,.dossier-top')) return;
+      if (!handle && target.closest('a,input,textarea,.icon-button,.hero-source')) return;
+      const rect = card.getBoundingClientRect();
+      drag = { card, state: s, id: event.pointerId, startX: event.clientX, startY: event.clientY, x: s.px, y: s.py, anchorX: rect.left - s.px, anchorY: rect.top - s.py, width: rect.width, active: false, lastX: event.clientX, lastY: event.clientY, time: performance.now(), vx: 0, vy: 0 };
       raise(card);
     });
     card.addEventListener('keydown', event => {
       if (!(event.target as HTMLElement).closest('.card-grip')) return;
       const step = event.shiftKey ? 40 : 10;
       const delta: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
-      if (event.key === 'Home' || event.key === 'Escape') { event.preventDefault(); move(card, state, 0, 0); return; }
+      if (event.key === 'Home' || event.key === 'Escape') { event.preventDefault(); s.x = s.y = 0; return; }
       if (!delta[event.key]) return;
-      event.preventDefault(); state.motion = undefined;
-      const [dx, dy] = delta[event.key], rect = card.getBoundingClientRect();
-      state.x = state.paintedX + Math.max(8 - rect.left, Math.min(innerWidth - rect.width - 8 - rect.left, dx));
-      state.y = state.paintedY + Math.max(8 - rect.top, Math.min(innerHeight - 48 - rect.top, dy));
-      paint(card, state, state.x, state.y);
+      event.preventDefault(); const [dx, dy] = delta[event.key], rect = card.getBoundingClientRect();
+      s.x = s.px + Math.max(8 - rect.left, Math.min(innerWidth - rect.width - 8 - rect.left, dx));
+      s.y = s.py + Math.max(8 - rect.top, Math.min(innerHeight - 60 - rect.top, dy));
     });
-    observer.observe(card);
-    return state;
+    observer.observe(card); return s;
   }
-  function clampDrag(d: Drag, x: number, y: number) {
+  function clamp(d: Drag, x: number, y: number) {
     return [Math.max(8 - d.anchorX, Math.min(innerWidth - d.width - 8 - d.anchorX, x)), Math.max(8 - d.anchorY, Math.min(innerHeight - 60 - d.anchorY, y))];
   }
   window.addEventListener('pointermove', event => {
     const d = drag; if (!d || event.pointerId !== d.id) return;
     const dx = event.clientX - d.startX, dy = event.clientY - d.startY;
-    if (!d.active && Math.hypot(dx, dy) < 5) return;
+    if (!d.active && Math.hypot(dx, dy) < 6) return;
     if (!d.active) { d.active = true; d.card.setPointerCapture(d.id); d.card.classList.add('is-dragging'); }
-    event.preventDefault();
-    const now = performance.now(), dt = Math.max(16, now - d.time);
+    event.preventDefault(); const now = performance.now(), dt = Math.max(10, now - d.time);
     d.vx = (event.clientX - d.lastX) / dt; d.vy = (event.clientY - d.lastY) / dt;
     d.lastX = event.clientX; d.lastY = event.clientY; d.time = now;
-    const [x, y] = clampDrag(d, d.x + dx, d.y + dy);
-    d.state.x = x; d.state.y = y; paint(d.card, d.state, x, y);
+    [d.state.x, d.state.y] = clamp(d, d.x + dx, d.y + dy);
+    d.state.px = d.state.x; d.state.py = d.state.y; d.state.vx = d.state.vy = 0;
+    d.state.ry = Math.max(-9, Math.min(9, d.vx * 5)); paint(d.card, d.state);
   }, { passive: false });
   function finishDrag(cancel = false) {
-    const d = drag; if (!d) return;
-    drag = undefined; d.card.classList.remove('is-dragging');
+    const d = drag; if (!d) return; drag = undefined; d.card.classList.remove('is-dragging');
     if (d.card.hasPointerCapture(d.id)) d.card.releasePointerCapture(d.id);
     if (!d.active) return;
-    suppressClickUntil = performance.now() + 120;
-    if (cancel) { move(d.card, d.state, d.x, d.y); return; }
-    const fresh = performance.now() - d.time < 80;
-    const [x, y] = clampDrag(d, d.state.x + (fresh ? d.vx * 70 : 0), d.state.y + (fresh ? d.vy * 70 : 0));
-    move(d.card, d.state, x, y, 520);
+    suppressClickUntil = performance.now() + 160;
+    const fresh = performance.now() - d.time < 100;
+    [d.state.x, d.state.y] = cancel ? [d.x, d.y] : clamp(d, d.state.x + (fresh ? d.vx * 55 : 0), d.state.y + (fresh ? d.vy * 55 : 0));
   }
   window.addEventListener('pointerup', () => finishDrag());
   window.addEventListener('pointercancel', () => finishDrag(true));
@@ -127,48 +113,44 @@ export function createCardMotion() {
   document.addEventListener('click', event => {
     if (performance.now() < suppressClickUntil && (event.target as HTMLElement).closest('.card-motion')) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
-  function leave(card: HTMLElement) {
-    const state = states.get(card);
-    if (!state || !state.visible || reduced.matches) { destroy(card); return; }
-    if (state.motion?.exit) return;
-    card.inert = true; move(card, state, state.paintedX - card.getBoundingClientRect().right - 40, state.paintedY + 20, 340, 0, true);
+  function resetAll() { finishDrag(true); for (const s of states.values()) { s.x = s.y = 0; } }
+  function pause(card: HTMLElement, paused: boolean) {
+    const s = states.get(card); if (!s) return;
+    s.paused = paused;
+    if (paused) { s.px = s.x; s.py = s.y; s.vx = s.vy = s.rx = s.ry = s.rz = 0; paint(card, s); }
   }
-  function revealDossier(card: HTMLElement, content: HTMLElement, view: string) {
-    const state = mount(card, 'right', 2), previous = state.view; state.view = view;
-    if (!previous || previous === view || reduced.matches) return;
-    if (previous.split(':')[0] !== view.split(':')[0] && state.visible) {
-      const x = state.x, y = state.y, rect = card.getBoundingClientRect();
-      paint(card, state, state.paintedX + innerWidth - rect.left + 30, y + 22);
-      move(card, state, x, y, 850);
-    } else content.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 180 });
+  function home(card: HTMLElement) {
+    const s = states.get(card); if (!s) return;
+    s.x = s.y = s.px = s.py = s.vx = s.vy = 0; paint(card, s);
   }
-  function resetAll() { finishDrag(true); for (const [card, state] of states) if (!state.motion?.exit) move(card, state, 0, 0, 650); }
-  reduced.addEventListener('change', () => {
-    for (const [card, state] of states) {
-      if (state.motion?.exit) { destroy(card); continue; }
-      state.motion = undefined; state.dealt = true; card.classList.remove('is-dealing', 'awaiting-deal'); paint(card, state, state.x, state.y);
-    }
-  });
+  function leave(card: HTMLElement) { destroy(card); }
   window.addEventListener('resize', resetAll);
+  reduced.addEventListener('change', () => {
+    for (const [card, s] of states) { s.dealt = true; s.px = s.x; s.py = s.y; s.vx = s.vy = s.rx = s.ry = s.rz = 0; card.classList.remove('awaiting-deal'); paint(card, s); }
+  });
   function tick(now: number) {
-    for (const [card, state] of states) {
-      if (drag?.card === card) continue;
-      const motion = state.motion;
-      if (motion) {
-        const t = Math.max(0, Math.min(1, (now - motion.start) / motion.duration));
-        const p = motion.exit ? t * t : 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
-        paint(card, state, motion.fromX + (motion.toX - motion.fromX) * p, motion.fromY + (motion.toY - motion.fromY) * p);
-        if (t === 1) {
-          if (motion.exit) { destroy(card); continue; }
-          state.x = motion.toX; state.y = motion.toY; state.motion = undefined; card.classList.remove('is-dealing');
-        }
-      } else if (state.dealt && state.visible && !state.hover && !card.matches(':focus-within') && !reduced.matches && !(state.side==='right' && phone.matches) && !document.hidden) {
-        const phase = now / 1500 + state.index * 2.1;
-        paint(card, state, state.x + Math.sin(phase * .7) * 2, state.y + Math.sin(phase) * 4);
+    const dt = Math.min(.032, Math.max(.001, (now - lastTime) / 1000)); lastTime = now;
+    if (!document.hidden) for (const [card, s] of states) {
+      if (!s.dealt || s.paused || drag?.card === card) continue;
+      const reading = s.hover || card.matches(':focus-within') || (s.side === 'right' && phone.matches);
+      const phase = now / 1800 + s.index * 2.2, floating = !reduced.matches && !reading && s.visible;
+      const tx = floating ? s.x + Math.sin(phase * .7) * 2.6 : Math.round(s.x);
+      const ty = floating ? s.y + Math.sin(phase) * 4.8 : Math.round(s.y);
+      for (let i = 0; i < 2; i++) {
+        const h = dt / 2;
+        s.vx += ((tx - s.px) * 145 - s.vx * 23) * h; s.vy += ((ty - s.py) * 145 - s.vy * 23) * h;
+        s.px += s.vx * h; s.py += s.vy * h;
       }
+      if (!floating && Math.hypot(tx - s.px, ty - s.py, s.vx, s.vy) < .025) { s.px = Math.round(tx); s.py = Math.round(ty); s.vx = s.vy = 0; }
+      const blend = 1 - Math.exp(-11 * dt), tilt = s.side === 'left' ? 8 : 3;
+      s.rx += ((reduced.matches ? 0 : -s.aimY * tilt) - s.rx) * blend;
+      s.ry += ((reduced.matches ? 0 : s.aimX * tilt) - s.ry) * blend;
+      s.rz += ((floating ? Math.sin(phase * .65) * (s.side === 'left' ? 1.2 : .25) : s.aimX * .6) - s.rz) * blend;
+      if (reduced.matches) { s.px = s.x; s.py = s.y; s.rx = s.ry = s.rz = 0; }
+      paint(card, s);
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
-  return { mount, leave, revealDossier, resetAll };
+  return { mount, leave, pause, home, resetAll, revealDossier: (card: HTMLElement) => mount(card, 'right', 3) };
 }

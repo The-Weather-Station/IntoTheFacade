@@ -2,7 +2,7 @@
 
 An initial Oklahoma City field atlas built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
-The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Seven original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
+The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Nine original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
 
 ## Run
 
@@ -53,13 +53,13 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 - Three sourced cases: Stockyard Airsoft, former Eagle Industries, and the Rhode Island Avenue warehouse / Suite 109 case history.
 - Twenty-nine evidence entries with source type, source date, review date, method, and explicit limitations.
 - Seven original evidence images: three submitted screenshots, three county building photographs and a county sketch. Direct publisher links appear in the gallery, attached evidence, viewer and export; saved image copies are labeled separately. Contributor uploads without a supplied source-page URL are identified explicitly.
-- The missing-road card opens the OSM comparison, fits the road and pulses a gold halo for 5.4 seconds on either map renderer. Reduced-motion users get steady emphasis. On phones, selection brings the map into view. Filtering out the case and renderer changes cancel the pulse.
+- The missing-road case cover opens the Stockyard Overview, fits the road and pulses a gold halo for 5.4 seconds on either map renderer. Reduced-motion users get steady emphasis. On phones, selection brings the map into view. Filtering out the case and renderer changes cancel the pulse.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
 - Four real, address-matched county parcel polygons; no invented building blocks or heights.
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
 - Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
 - Responsive layouts, keyboard-operable controls, shareable case fragments, and usable dossiers when the map cannot connect.
-- Off-screen card slide-ins, subtle idle drift and free dragging across the table. Drag a grip or illustration, or focus the grip and use arrow keys (Shift for larger steps, Home to reset). Reset cards returns every card. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
+- Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion, pointer-driven artwork tilt and free dragging replace rounded layout offsets. Drag a grip or illustration, or focus the grip and use arrow keys (Shift for larger steps, Home to reset). Reset cards returns every card. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
 
 ## Data and representations
 
@@ -115,9 +115,10 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `src/compat-map.ts`: image/SVG map for browsers that block WebGL.
 - `src/evidence-images.ts`: evidence gallery, accessible full-resolution viewer, and export metadata.
 - `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
-- `public/art/`: seven optimized generated WebP assets; no game assets are distributed.
+- `public/art/`: nine optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
-- `src/card-motion.ts` and `src/card-motion.css`: dealt-card transitions, idle float, pointer response and visibility-aware cleanup.
+- `src/case-deck.ts`: case covers, cancelable return/deal transitions and card switching.
+- `src/card-motion.ts` and `src/card-motion.css`: damped subpixel float, artwork perspective, dragging and the taller reading layout.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
 - `src/tabletop.css`: underlying card-table layout and responsive behavior.
 - `ARTWORK.md` and `art-prompts.json`: artwork provenance, exact prompts, reference roles and delivery settings.

@@ -1,0 +1,25 @@
+{
+  "generator": "built-in image_gen",
+  "purpose": "Theatrical attention-card illustrations, separate from documentary evidence",
+  "assets": [
+    {
+      "id": "illegal-dumping-card",
+      "webAsset": "public/art/illegal-dumping-card.webp",
+      "sourcePng": "../output/art-direction/illegal-dumping-card.png",
+      "referenceImages": [
+        "public/art/missing-road-card.webp",
+        "public/art/eagle-building-art.webp"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: portrait attention-card illustration for the Into The Facade exploration website, original worn pixel-art game card.\nInput images: image 1 is the style and card-format reference only (MISSING ROAD!!); image 2 is the building-shape reference only. Create a NEW distinct card, do not reuse the missing-road illustration.\nPrimary request: an attention card with exact headline \"ILLEGAL DUMPING!!\" depicting the recognizable long, low, single-storey pale corrugated metal Eagle Industries building from image 2, including its small entrance canopy, dark narrow windows, and chain-link edge, surrounded by exaggerated theatrical toxic spills. Green-olive glowing sludge spreading from overturned industrial barrels on the forecourt, stylized vapor curls, all unmistakably illustrated and allegorical, not a photograph or evidentiary reconstruction. No claim text or company label in the image.\nStyle/medium: match image 1's coarse visible pixel clusters, distressed printed card, dark burgundy ink, parchment cream, muted olive, rusty pumpkin orange, occult industrial Halloween mood, worn rounded rectangular card corners and chipped double border. Original artwork with the approachable gritty pixel-card feel of Dungeons & Degenerate Gamblers. Strong readable silhouettes and restrained palette.\nComposition/framing: upright portrait 2:3 card, centered, complete card visible with a narrow transparent exterior margin; large headline in the upper quarter, building in middle, theatrical sludge/barrels foreground. Match the reference's two-line, bold condensed block-serif pixel lettering. No perspective tilt of the card. Blank ornamental lower border with simple matching stars.\nText (verbatim): \"ILLEGAL DUMPING!!\" — exactly these two words and TWO exclamation marks; \"ILLEGAL\" on first line and \"DUMPING!!\" on second. Do not include any other words.\nConstraints: genuine alpha transparency outside the worn card edges, opaque illustrated parchment inside. Keep headline crisp and legible when reduced to a small website card. No people, ethnic symbols, real-world seals, watermarks, extra slogans, photorealism, smooth vector look, or busy tiny details."
+    },
+    {
+      "id": "organized-crime-card",
+      "webAsset": "public/art/organized-crime-card.webp",
+      "sourcePng": "../output/art-direction/organized-crime-card.png",
+      "referenceImages": [
+        "public/art/missing-road-card.webp"
+      ],
+      "prompt": "Use case: stylized-concept.\nAsset type: portrait attention-card illustration for the Into The Facade exploration website, original worn pixel-art game card.\nInput images: image 1 is the style and card-format reference only (MISSING ROAD!!). Create a NEW distinct card, do not reuse the missing-road illustration.\nPrimary request: an attention card with exact headline \"ORGANIZED CRIME!!!\" depicting an old olive-brown upholstered couch in a gloomy industrial storage setting. A very clearly visible roughly cut rectangular hole in the near SIDE panel of the couch releases a theatrical cascade of recognizable green marijuana leaves and leafy buds onto the floor. The couch is three-quarter view so its side hole and pouring leaves read instantly. This is a playful exaggerated illustrated dramatization, not a photograph or documentary evidence.\nStyle/medium: match image 1's coarse visible pixel clusters, distressed printed card, dark burgundy ink, parchment cream, muted olive, rusty pumpkin orange, occult industrial Halloween mood, worn rounded rectangular card corners and chipped double border. Original artwork with the approachable gritty pixel-card feel of Dungeons & Degenerate Gamblers. Strong readable silhouettes and restrained palette.\nComposition/framing: upright portrait 2:3 card, centered, complete card visible with narrow transparent exterior margin; large headline upper quarter, couch middle, spill of leaves foreground. Match the reference's two-line, bold condensed block-serif pixel lettering. No perspective tilt of the card. Blank ornamental lower border with simple matching stars.\nText (verbatim): \"ORGANIZED CRIME!!!\" — exactly these two words and THREE exclamation marks; \"ORGANIZED\" on first line and \"CRIME!!!\" on second. Do not include any other words.\nConstraints: genuine alpha transparency outside the worn card edges, opaque illustrated parchment inside. Keep headline crisp and legible when reduced to a small website card. No people, ethnic symbols, real-world criminal logos, weapons, money, smoking paraphernalia, real-world seals, watermarks, extra slogans, photorealism, smooth vector look, or busy tiny details."
+    }
+  ]
+}

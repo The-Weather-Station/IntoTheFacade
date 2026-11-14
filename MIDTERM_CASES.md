@@ -10,10 +10,10 @@ All cases include a summary first in Overview, dated source-linked evidence, ori
 
 ## Demo sequence
 
-- Open https://intothefacade.com/ and choose a property card or map marker. Search for Eagle or Rhode to bring a case card to the top.
+- Open https://intothefacade.com/ and choose a case-cover stack or map marker. Search for Eagle or Rhode to bring its stack to the top. Each case deals three reading cards: Overview, Evidence and Field notes.
 - Read the Overview summary, then open the county photo and its publisher source. Switch to Evidence for the dated record and method.
-- Select Missing Road from any case. The dossier switches to Stockyard and the road gets a temporary highlight. Switch to the 2D map to test the WebGL-independent renderer.
-- Drag either a left card or the right dossier onto the map using its grip or illustration. Text keeps its native size. Use Reset cards to return them; keyboard grips support arrow keys, Shift+arrow and Home.
+- Select Missing Road from any case. The old reading cards shrink back behind their cover; Stockyard's cards expand across the table and the road gets a temporary highlight. Switch to the 2D map to test the WebGL-independent renderer.
+- Drag either a left stack or the right reading card onto the map using its grip or illustration. Subpixel springs smooth the float, and artwork tilts with pointer position. Live reading text retains its native size and settles while focused or hovered. Use Reset cards to return them; keyboard grips support arrow keys, Shift+arrow and Home. Switching reading cards is separate from switching cases.
 
 ## Research limits that matter
 
@@ -22,3 +22,5 @@ The Eagle summary does not claim full-site cleanup is complete. DEQ and EPA diff
 ## Artwork
 
 Two additional bitmap illustrations were created with the built-in image generation tool using each county photograph as the subject reference and the established brick-building illustration as the style reference. They are stored in `public/art/eagle-building-art.webp` and `public/art/warehouse-building-art.webp`. Original photos remain unaltered in `public/evidence/`; source URLs, visible capture dates and SHA-256 hashes are recorded in the dossiers. Exact generation prompts are in `midterm-art-prompts.json`.
+
+The new attention covers are `public/art/illegal-dumping-card.webp` and `public/art/organized-crime-card.webp`. Their spills and couch illustration are theatrical interpretations of the dated records, not photographs, current-condition observations, or accusations against present owners. Built-in image generation prompts and references are in `attention-card-prompts.json`.
