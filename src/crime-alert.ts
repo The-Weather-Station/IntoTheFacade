@@ -9,10 +9,6 @@ export function crimeAlert(p: Place, sourceMarkup: (source: Source) => string) {
       <img src="${artUrl('organized-alert-card')}" alt="ALERT!!! ALERT!!! — fictional gas-masked communist villain with red sirens and realistic theatrical bloodstains; no defendant is depicted" width="1024" height="1536" decoding="async">
       <span class="siren-glow left" aria-hidden="true"></span><span class="siren-glow right" aria-hidden="true"></span>
     </div>
-    <p class="eyebrow">SUITE 109 / CF-2025-1618</p>
-    <h3>Freight out. Charges in.</h3>
-    <p class="alert-lead">A documented shipping case, investigated with the Oklahoma Attorney General’s Organized Crime Task Force. The warehouse was alleged to be a packing and shipping point for marijuana obtained from illegal grows.</p>
-    <p class="alert-date">Historical case · March–April 2025<br>Partial sentencing update · February 2026</p>
     ${alertEvidenceIds.map(id=>{
       const e=p.evidence.find(entry=>entry.id===id)!;
       return `<section class="alert-record"><h4>${e.title}</h4><p>${e.detail}</p>${e.sources.map(i=>sourceMarkup(p.sources[i])).join('')}</section>`;

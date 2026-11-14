@@ -26,6 +26,7 @@ export interface Place {
   parcelAccounts: string[]; locationNote: string; images: EvidenceImage[];
   reviewed?: string; statusLabel?: string; statusTitle?: string; statusTone?: 'hazard' | 'case';
   summarySources?: number[]; artName?: string; heroImageId?: string;
+  summaryTitle?: string; summaryDates?: string[];
 }
 export const reviewed = '2026-11-13';
 export const registryUrl = 'https://business.sos.ok.gov/corp/corpInquiryFind.aspx';

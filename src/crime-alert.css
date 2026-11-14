@@ -24,9 +24,9 @@
 .siren-glow.right::after { animation-delay:-1.4s; }
 @keyframes beacon-sweep { to { transform:rotate(360deg); } }
 @keyframes beacon-flash { 0%,100% { opacity:.25; } 45%,60% { opacity:.95; } }
-.crime-alert h3 { font:32px/1.05 var(--display); color:#732b37; margin:9px 0 14px; }
+.case-summary h3 { font:32px/1.05 var(--display); margin:9px 0 14px; }
 .crime-alert>p,.alert-record>p { font-size:13px; line-height:1.75; }
-.alert-date { border-left:3px solid #8c383f; padding-left:10px; color:#653e3c; }
+.summary-dates { border-left:3px solid #8c383f; padding-left:10px; margin-top:14px; font-size:12px; line-height:1.7; }
 .alert-record { border-top:1px dashed #a48064; margin-top:22px; padding-top:18px; }
 .alert-record h4 { font:25px/1.1 var(--display); margin:0 0 10px; }
 .alert-context { border-top:1px dashed #a48064; padding-top:16px; color:#6a4c45; }
