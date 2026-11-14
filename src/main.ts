@@ -51,7 +51,7 @@ $('#app').innerHTML = `
   <section class="intro" aria-label="Introduction"><div><p class="eyebrow">URBAN EXPLORATION / OPEN-SOURCE INTELLIGENCE</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Know the site before you go.<br>Access. Hazards. Signs of life.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
-      <div class="panel-heading"><div><p class="eyebrow">URBEX CASE FILES</p><h2 id="discovery-title">Scout files.</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
+      <div class="panel-heading"><div><p class="eyebrow">URBEX CASE FILES</p><h2 id="discovery-title">Location Recon</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search the files…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>

@@ -120,6 +120,7 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `public/art/`: nine optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
 - `src/intro-guide.ts`: introductory pointer to the first case cover, reset on each page visit.
+- The right-hand card tracks the full deck and nearby space around its side selectors, so moving off the front face does not abruptly flatten it. This proximity tracking adds no click-blocking overlay.
 - `src/case-deck.ts`: case covers, cancelable return/deal transitions and card switching.
 - `src/card-motion.ts` and `src/card-motion.css`: damped subpixel float, artwork perspective and the taller reading layout.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.

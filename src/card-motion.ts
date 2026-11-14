@@ -2,6 +2,7 @@ type CardState = {
   side: 'left' | 'right'; index: number; visible: boolean; dealt: boolean; hover: boolean; paused: boolean;
   px: number; py: number; vx: number; vy: number;
   aimX: number; aimY: number; rx: number; ry: number; rz: number;
+  events: AbortController;
 };
 // One transform per physical card keeps its paper, image and live copy together.
 // No hover scaling; tilt settles flat when reading with keyboard focus.
@@ -31,17 +32,24 @@ export function createCardMotion() {
       }
     }
   }, { rootMargin: '40px' });
-  function destroy(card: HTMLElement) { observer.unobserve(card); states.delete(card); card.remove(); }
+  function destroy(card: HTMLElement) { states.get(card)?.events.abort(); observer.unobserve(card); states.delete(card); card.remove(); }
   function mount(card: HTMLElement, side: CardState['side'], index = 0) {
     const existing = states.get(card);
     if (existing) { existing.index = index; return existing; }
-    const s: CardState = { side, index, visible: false, dealt: false, hover: false, paused: false, px: 0, py: 0, vx: 0, vy: 0, aimX: 0, aimY: 0, rx: 0, ry: 0, rz: 0 };
+    const s: CardState = { side, index, visible: false, dealt: false, hover: false, paused: false, px: 0, py: 0, vx: 0, vy: 0, aimX: 0, aimY: 0, rx: 0, ry: 0, rz: 0, events: new AbortController() };
     states.set(card, s); card.classList.add('card-motion'); card.dataset.cardSide = side;
     if (!reduced.matches) card.classList.add('awaiting-deal');
-    card.addEventListener('pointerenter', () => { s.hover = true; });
-    card.addEventListener('pointerleave', () => { s.hover = false; s.aimX = s.aimY = 0; });
-    card.addEventListener('pointermove', event => {
+    const options = { signal:s.events.signal, passive:true };
+    const clearPointer = () => { s.hover = false; s.aimX = s.aimY = 0; };
+    const movePointer = (event: PointerEvent) => {
       if (event.pointerType === 'touch' || reduced.matches) return;
+      if (side === 'right') {
+        // Include the exposed backs, selector strips and nearby empty space.
+        // Observe proximity without placing an invisible hitbox over the map.
+        const dock = card.closest<HTMLElement>('.dossier-dock')!.getBoundingClientRect();
+        if (event.clientX < dock.left - 42 || event.clientX > dock.right + 42 || event.clientY < dock.top - 24 || event.clientY > dock.bottom + 24) { clearPointer(); return; }
+        s.hover = true;
+      }
       // Use the stable layout box, not the transformed edges, to avoid feedback jitter.
       const parent = card.offsetParent as HTMLElement;
       const rect = parent.getBoundingClientRect();
@@ -49,7 +57,16 @@ export function createCardMotion() {
       const top = rect.top + parent.clientTop + card.offsetTop - parent.scrollTop;
       s.aimX = Math.max(-1, Math.min(1, (event.clientX - left) / card.offsetWidth * 2 - 1));
       s.aimY = Math.max(-1, Math.min(1, (event.clientY - top) / card.offsetHeight * 2 - 1));
-    });
+    };
+    if (side === 'right') {
+      document.addEventListener('pointermove', movePointer, options);
+      document.addEventListener('pointerleave', clearPointer, options);
+      window.addEventListener('blur', clearPointer, options);
+    } else {
+      card.addEventListener('pointerenter', () => { s.hover = true; }, options);
+      card.addEventListener('pointerleave', clearPointer, options);
+      card.addEventListener('pointermove', movePointer, options);
+    }
     card.addEventListener('dragstart', e => e.preventDefault());
     observer.observe(card); return s;
   }
