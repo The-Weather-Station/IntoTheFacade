@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "use_case": "background-extraction",
+  "transparent_background": true,
+  "source": "public/art/organized-crime-card-blood.webp",
+  "output": "public/art/organized-crime-card-cutout.webp",
+  "prompt": "Remove ONLY the flat brown rectangular backdrop OUTSIDE the outer dark jagged worn-paper card silhouette. Use genuine transparent alpha. Preserve the complete card, worn edges, border, ORGANIZED CRIME!!! title, couch, marijuana, blood pool and factory background INSIDE the card. Keep the full portrait framing; do not crop any edge or erase painted content inside the card. No other edits."
+}

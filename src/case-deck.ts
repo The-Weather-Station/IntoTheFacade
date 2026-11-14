@@ -6,7 +6,7 @@ import { deckViews } from './deck-order';
 export const covers: Record<string, { asset: string; title: string; context: string; alt: string }> = {
   'stockyard-airsoft': { asset: 'missing-road-card', title: 'MISSING ROAD!!', context: 'One road. Two maps.', alt: 'Illustrated MISSING ROAD!! card with a vanishing road and occult eye' },
   'eagle-industries': { asset: 'illegal-dumping-card', title: 'ILLEGAL DUMPING!!', context: 'The shop closed. The solvent stayed.', alt: 'Illustrated ILLEGAL DUMPING!! card: Eagle Industries with theatrical toxic spills; not a photograph of site conditions' },
-  'rhode-island-warehouse': { asset: 'organized-crime-card-blood', title: 'ORGANIZED CRIME!!!', context: 'Suite 109 · the 2025 shipping case.', alt: 'Illustrated ORGANIZED CRIME!!! card: marijuana spilling from a cut couch with a theatrical blood pool behind it; decorative dramatization, not evidence photography' },
+  'rhode-island-warehouse': { asset: 'organized-crime-card-cutout', title: 'ORGANIZED CRIME!!!', context: 'Suite 109 · the 2025 shipping case.', alt: 'Illustrated ORGANIZED CRIME!!! card: marijuana spilling from a cut couch with a theatrical blood pool behind it; decorative dramatization, not evidence photography' },
 };
 export function caseStack(p: Place, active: boolean) {
   const c = covers[p.id];
