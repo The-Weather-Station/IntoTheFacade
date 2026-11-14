@@ -1,6 +1,6 @@
 # Into The Facade
 
-The November 14 alert update adds a fourth, separately illustrated card to the Rhode Island warehouse deck. `src/deck-order.ts` drives tab order, directional cycling, stack counts and deal/return counts. The other cases retain three info cards. Display order is Stockyard, Rhode Island, Eagle; stable case numbers and URLs remain unchanged. Siren effects can be paused and honor reduced-motion preferences.
+The November 14 alert update adds a fourth, separately illustrated card to the Rhode Island warehouse deck. `src/deck-order.ts` drives tab order, directional cycling, stack counts and deal/return counts. The other cases retain three info cards. Display order is Stockyard, Rhode Island, Eagle; stable case numbers and URLs remain unchanged. Siren effects run automatically and honor reduced-motion preferences. Selecting this case activates a red felt theme, a pulsing ALERT!!!! banner and a slow red viewport glow; switching cases or returning home immediately restores the normal theme. Bloodstained paper extends beyond the reading surface on both the front card and its underlays.
 
 The expanded shipping case distinguishes the April 8, 2025 charges and affidavit, the April 16 announcement, and Deping Sun's February 4, 2026 sentencing entry in the July 2026 parole docket. OSCN could not be retrieved for a complete current disposition check. The record does not substantiate citizenship or political affiliations. Artwork provenance and prompts are in `ARTWORK.md` and `alert-art-prompts.json`.
 
@@ -151,3 +151,12 @@ Next meaningful step: document which rooms/floor the former venue occupied, revi
 For guide QA, open the homepage, select a case, then reopen the homepage: the arrow must draw again even in a browser that dismissed it previously. Test the side buttons/corners, wraparound, active-index centering, first-gesture audio, no media source before interaction, and hidden-tab pause. Mobile keeps the compact three-cover row and the active highlight.
 
 The source recording is stored in `media/dark-doom-jazz/` as bounded binary pieces to support connector upload limits. `scripts/assemble-audio.mjs` verifies SHA-256 hashes and reconstructs one 44,906,444-byte MP3 before both dev and production builds. The source pieces are outside `public/` and never requested by the player. The full duration is 5,613.216 seconds; the delivered MP3 is 64 kbit/s stereo at 32 kHz.
+
+
+## Mobile layout refresh
+
+Phone onboarding uses a short intro plus a separate Start with MISSING ROAD!! button immediately above the horizontal case rail. The guide measures that actual button and the visible first card, draws once per page visit, and is removed when a case opens. The case rail centers the selected deck horizontally.
+
+At phone/tablet widths, large hazard tokens are removed from the map and rendered as compact, sourced controls beneath it. Tapping one opens and scrolls to the supporting record. The shared hazard-group renderer preserves the same classifications and citations in both map renderers and the mobile strip. Phone map controls share one top row, surplus overlays are hidden, and previous/next card controls stay visible.
+
+QA: first visit and drawing arrow; direct first-case open; active rail centering; 320px and 390px phone widths; 768px tablet layout; both styled and 2D maps; hazard-to-evidence navigation; alert-theme activation, tab changes, case switching and return home.

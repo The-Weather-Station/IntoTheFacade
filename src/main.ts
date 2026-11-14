@@ -16,13 +16,14 @@ import './generated-theme.css';
 import './card-motion.css';
 import './map-hazards.css';
 import './crime-alert.css';
+import './mobile.css';
 import { createCardMotion } from './card-motion';
 import { createIntroGuide } from './intro-guide';
 import { initBackgroundAudio } from './background-audio';
 import { fieldProfiles } from './field-research';
 import { explorerNotes } from './explorer-notes';
 import { mapInk, placeColor } from './map-palette';
-import { createPlaceMarker, setMarkerSelected } from './map-marker';
+import { createPlaceMarker, createHazardGroup, setMarkerSelected } from './map-marker';
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
 
@@ -53,6 +54,7 @@ $('#app').innerHTML = `
     <div id="soundtrack-control" class="soundtrack"><button type="button" aria-label="Play background music" aria-pressed="false">&#9654; <span class="music-label">DARK DOOM JAZZ</span></button><label><span class="sr-only">Music volume</span><input type="range" min="0" max="100" value="16" aria-label="Music volume"></label><span class="sr-only" role="status" aria-live="polite">Music starts after your first interaction</span></div>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 005</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
+  <div class="case-alert-banner" aria-hidden="true"><strong>ALERT!!!!</strong><span>SUITE 109 / CASE FILE</span><strong>ALERT!!!!</strong></div>
   <section class="intro" aria-label="Introduction"><div><p class="eyebrow">URBAN EXPLORATION / OPEN-SOURCE INTELLIGENCE</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Know the site before you go.<br>Access? Hazards? Signs of life?</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
@@ -61,6 +63,7 @@ $('#app').innerHTML = `
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>
       <div class="deck-controls"><span>Pick a case. Deal the stack.</span></div>
+      <div class="mobile-intro-guide"><button id="mobile-intro-start" type="button">Start with MISSING ROAD!!</button></div>
       <div id="places" class="places" tabindex="-1"></div><p class="deck-art-note">Cover art dramatizes the case. Original images are in Evidence.</p>
       <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>THE COUNTY FILES</strong><p>${places.length} cases · ${claimCount} evidence entries.<br>Every claim has a paper trail.</p></div></div>
     </aside>
@@ -75,6 +78,7 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
+    <section id="mobile-site-hazards" class="mobile-site-hazards" aria-label="Selected site hazards" hidden></section>
     <div class="dossier-dock"><button class="deck-cycle deck-cycle-prev" type="button" data-cycle="-1" aria-label="Previous card in deck"><span aria-hidden="true">&#8249;</span></button><button class="deck-cycle deck-cycle-next" type="button" data-cycle="1" aria-label="Next card in deck"><span aria-hidden="true">&#8250;</span></button><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><div class="detail-underlay three" hidden></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
@@ -104,9 +108,9 @@ $('.dossier-dock').addEventListener('click',event=>{
 });
 function centerActiveDeck(animate = true) {
   requestAnimationFrame(()=>{
-    if(innerWidth<=580)return;
     const frame=$('#places'), card=frame.querySelector<HTMLElement>('.case-stack.selected');
     if(!card)return;
+    if(innerWidth<=580) { frame.scrollTo({left:frame.scrollLeft+card.getBoundingClientRect().left-frame.getBoundingClientRect().left-(frame.clientWidth-card.offsetWidth)/2,behavior:animate&&!reducedMotion?'smooth':'instant'}); return; }
     frame.scrollTo({top:frame.scrollTop+card.getBoundingClientRect().top-frame.getBoundingClientRect().top-(frame.clientHeight-card.offsetHeight)/2,behavior:animate&&!reducedMotion?'smooth':'instant'});
   });
 }
@@ -188,7 +192,7 @@ function selectPlace(id: string, fly = false) {
     renderList(); renderDossier(); updateMapSelection(); centerActiveDeck();
   });
   if(fly) focusMap(next, 15.5);
-  if(fly && innerWidth < 850) void transition.then(()=> {
+  if(innerWidth < 850) void transition.then(()=> {
     if(selected?.id===next.id) $('.dossier-dock').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
   });
 }
@@ -202,21 +206,26 @@ function sourceMarkup(source: Source) {
 }
 function renderWelcome() {
   const front = $('#dossier');
+  document.body.classList.add('case-welcome');
+  $('#mobile-site-hazards').hidden=true; $('#mobile-site-hazards').replaceChildren();
   $('.dossier-dock').classList.add('is-welcome');
   delete front.dataset.place; delete front.dataset.tabView;
   front.style.removeProperty('--card-face');
   $('.dossier-dock').classList.remove('crime-deck');
+  document.body.classList.remove('case-alert-active');
   front.setAttribute('aria-label', 'About Into The Facade');
   $('#dossier-hand').replaceChildren();
   document.querySelectorAll('.detail-underlay').forEach(card=>card.replaceChildren());
   front.innerHTML = `<div class="welcome-copy"><p class="eyebrow">URBAN EXPLORATION / BEFORE THE FENCE</p>
     <span class="welcome-stamp" aria-hidden="true">OPEN<br>THE FILE.</span>
-    <h2>Scout the site. Read the records.</h2>
+    <h2>Scout the site. Read the records.</h2><p class="welcome-mobile-copy">Access, hazards and signs of life. Open a case to read the records.</p>
     <p>Urban exploration starts before you reach the fence. Trace ownership, compare possible approaches, and check hazards and signs of current use through public records.</p>
     <p><strong>Overview</strong> lays out the case. <strong>Evidence</strong> links the documents and photos. <strong>Field notes</strong> holds prior explorers’ accounts.</p>
     <div class="welcome-start"><p class="eyebrow">FIRST FILE / STOCKYARD AIRSOFT</p><button id="intro-start" type="button">Start with MISSING ROAD!! <span aria-hidden="true">&#8601;</span></button><p>A road appears on one map and disappears from another. Open the card to compare the records.</p></div>
   </div>`;
-  $('#intro-start').addEventListener('click',()=>{resetFilters();selectPlace('stockyard-airsoft');traceRoad();});
+  const startCase=()=>{resetFilters();selectPlace('stockyard-airsoft');traceRoad();};
+  $('#intro-start').addEventListener('click',startCase);
+  $('#mobile-intro-start').onclick=startCase;
   cardMotion.revealDossier(front); introGuide.show();
 }
 function fieldBrief(p: Place) {
@@ -232,12 +241,17 @@ function fieldBrief(p: Place) {
 
 function renderDossier() {
   if (!selected) { renderWelcome(); return; }
+  document.body.classList.remove('case-welcome');
   $('.dossier-dock').classList.remove('is-welcome');
   $('#dossier').setAttribute('aria-label', 'Selected place dossier');
   const p = selected;
+  const mobileHazards=$('#mobile-site-hazards');
+  mobileHazards.innerHTML='<p class="eyebrow">SITE HAZARDS <span>Tap a record</span></p>';
+  const hazardGroup=createHazardGroup(p,showEvidence); hazardGroup.hidden=false; mobileHazards.append(hazardGroup); mobileHazards.hidden=false;
   const views = deckViews(p.id);
   const cardFace = `url("${artUrl(p.id==='rhode-island-warehouse' ? 'crime-card-face' : 'worn-card-face')}")`;
   $('.dossier-dock').classList.toggle('crime-deck',p.id==='rhode-island-warehouse');
+  document.body.classList.toggle('case-alert-active',p.id==='rhode-island-warehouse');
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
   const previousFace = caseDeck.capture();
   const sheets = [
@@ -251,6 +265,7 @@ function renderDossier() {
     card.hidden = !sheet;
     if (!sheet) { card.replaceChildren(); return; }
     card.style.setProperty('--card-face',cardFace);
+    card.classList.toggle('crime-card-stock',p.id==='rhode-island-warehouse');
     card.innerHTML = `<div class="underlay-select" data-sheet="${sheet.id}" aria-hidden="true"><small>CASE ${p.number} / ${p.name}</small><h3>${sheet.title}</h3>${sheet.body}</div>`;
   });
   $('#dossier').style.setProperty('--card-color', placeColor(p.id));
@@ -281,7 +296,6 @@ function renderDossier() {
     <details class="remaining-questions"><summary>Unresolved items</summary><div>${p.unknowns.map(u=>`<p>${u}</p>`).join('')}<p>${p.locationNote}</p></div></details>
     <section class="next-steps"><span class="section-label">NEXT RECORDS TO CHECK</span>${p.nextSteps.map(s=>`<article><h3>${s.title}</h3><p>${s.detail}</p><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${s.label} ${icon('external')}</a></article>`).join('')}</section>`;
   else content.innerHTML = `<p class="eyebrow">EXPLORER ACCOUNTS</p>${(explorerNotes[p.id] ?? []).length ? explorerNotes[p.id].map(note=>`<article class="explorer-account"><h3>${note.author}</h3><p class="explorer-meta">Submitted ${dateLabel(note.submitted)}<br>Visit: ${escapeHtml(note.observed)}</p><blockquote>${escapeHtml(note.text)}</blockquote><p class="account-context">${escapeHtml(note.context)}</p><p class="explorer-meta">Submitted account · wording preserved</p></article>`).join('') : '<div class="no-explorer-notes"><h3>No explorer accounts on file.</h3><p>This site has public records, but no prior explorer has submitted a field account here yet.</p></div>'}<p class="local-note">Explorer accounts are separate from the sourced findings. Note submissions and a personal notebook are planned for a future update.</p>`;
-  $('.alert-motion-toggle')?.addEventListener('click',()=>{const paused=$('.crime-alert').classList.toggle('lights-paused');const button=$('.alert-motion-toggle');button.setAttribute('aria-pressed',String(paused));button.textContent=paused?'Resume siren lights':'Pause siren lights';});
   $('#trace-road')?.addEventListener('click',traceRoad);
   $('#view-submitted-images')?.addEventListener('click',()=>{tab='evidence';renderDossier();$('#tab-evidence').focus();});
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady) {focusMap(p,16); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
@@ -300,6 +314,7 @@ function showEvidence(id: string, reveal = true) {
   if(reveal)target.focus({preventScroll:true});
   if(panel.scrollHeight>panel.clientHeight) panel.scrollTop+=target.getBoundingClientRect().top-panel.getBoundingClientRect().top-12;
   else if(reveal)target.scrollIntoView({block:'start',behavior:reducedMotion?'instant':'smooth'});
+  if(reveal && innerWidth<=950) $('.dossier-dock').scrollIntoView({block:'start',behavior:reducedMotion?'instant':'smooth'});
 }
 function paintRoadPulse(strength: number) {
   compatMap?.highlightRoad(strength);

@@ -10,9 +10,9 @@ export function createIntroGuide() {
   svg.innerHTML = '<defs><marker id="intro-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 L6 4 L1 7"/></marker><mask id="intro-draw-mask" maskUnits="userSpaceOnUse"><path class="intro-draw-path" pathLength="1" fill="none" stroke="white" stroke-width="30" stroke-dasharray="1" stroke-dashoffset="1"/></mask></defs><g mask="url(#intro-draw-mask)"><path class="intro-arrow-shadow"/><path class="intro-arrow-line" marker-end="url(#intro-arrowhead)"/></g>';
   function draw() {
     if (dismissed || !document.querySelector('.dossier-dock.is-welcome')) { svg.remove(); frame = 0; return; }
-    const source = document.querySelector('#intro-start')?.getBoundingClientRect();
+    const source = document.querySelector(innerWidth<=580 ? '#mobile-intro-start' : '#intro-start')?.getBoundingClientRect();
     const target = document.querySelector('[data-card-key="stockyard-airsoft"] .case-cover')?.getBoundingClientRect();
-    const visible = source && target && target.bottom > 0 && target.top < innerHeight;
+    const visible = source && target && source.bottom > 0 && source.top < innerHeight && source.left < innerWidth && target.right > 0 && target.left < innerWidth && target.bottom > 0 && target.top < innerHeight;
     svg.style.display = visible && loaded ? '' : 'none';
     if (visible && loaded) {
       const now = performance.now();
@@ -24,8 +24,9 @@ export function createIntroGuide() {
       const bob = reduced.matches ? 0 : Math.sin(performance.now() / 380) * 5;
       let path: string;
       if (innerWidth <= 580) {
-        const x = target.left + target.width * .6, y = target.top - 8 + bob;
-        path = `M ${x + 45} ${y - 45} Q ${x + 8} ${y - 50} ${x} ${y}`;
+        const x = target.left + target.width * .5, y = target.top - 5 + bob * .35;
+        const sx = source.left + 12, sy = source.bottom + 3;
+        path = `M ${sx} ${sy} Q ${x + 20} ${sy + 6} ${x} ${y}`;
       } else {
         const x = target.right + 12 + bob, y = target.top + target.height * .38;
         const sx = Math.max(x + 70, source.left - 10), sy = Math.min(innerHeight - 60, Math.max(70, source.top + source.height / 2));

@@ -20,6 +20,10 @@ export function createPlaceMarker(place: Place, select: (id:string)=>void, showE
   const number=document.createElement('span'); number.className='marker-square'; number.textContent=place.number;
   const name=document.createElement('span'); name.className='marker-name'; name.textContent=place.name;
   button.append(number,name); button.addEventListener('click',()=>select(place.id)); root.append(button);
+  root.append(createHazardGroup(place,showEvidence)); return root;
+}
+
+export function createHazardGroup(place: Place, showEvidence:(id:string)=>void) {
   const hazards=document.createElement('div'); hazards.className='map-hazards'; hazards.hidden=true;
   hazards.setAttribute('role','group'); hazards.setAttribute('aria-label',`${place.name} hazard indicators`);
   for(const hazard of caseHazards[place.id] ?? []) {
@@ -33,7 +37,7 @@ export function createPlaceMarker(place: Place, select: (id:string)=>void, showE
     hazards.append(token);
   }
   const caption=document.createElement('small'); caption.className='map-hazard-caption'; caption.textContent='CASE HAZARDS · VIEW RECORDS';
-  hazards.append(caption); root.append(hazards); return root;
+  hazards.append(caption); return hazards;
 }
 
 export function setMarkerSelected(root: HTMLElement, selected: boolean) {

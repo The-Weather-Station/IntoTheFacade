@@ -1,5 +1,9 @@
 .dossier::before,.detail-underlay { background-image:var(--card-face,url('/art/worn-card-face.webp')); }
 .dossier::before { image-rendering:auto; }
+/* Expand the physical paper beyond its reading surface, including its alpha margins. */
+.dossier[data-place=rhode-island-warehouse]::before { inset:-20px -22px; }
+.detail-underlay.crime-card-stock { background:none; isolation:isolate; }
+.detail-underlay.crime-card-stock::before { content:''; position:absolute; inset:-20px -22px; z-index:-1; background:var(--card-face) center/100% 100% no-repeat; pointer-events:none; }
 .detail-underlay.three { z-index:0; transform:translate(-33px,5px) rotate(-12deg); }
 .detail-underlay[hidden] { display:none; }
 .dossier-dock.crime-deck .dossier-tabs { gap:4px; }
@@ -22,21 +26,47 @@
 @keyframes beacon-flash { 0%,100% { opacity:.25; } 45%,60% { opacity:.95; } }
 .crime-alert h3 { font:32px/1.05 var(--display); color:#732b37; margin:9px 0 14px; }
 .crime-alert>p,.alert-record>p { font-size:13px; line-height:1.75; }
-.alert-motion-toggle { display:block; margin:0 auto 18px; padding:5px 8px; font:10px var(--mono); border:1px solid #893b3c; color:#732b37; background:#ecd4b2; }
-.alert-motion-toggle:hover { color:#732b37; background:#f8e3c1; }
 .alert-date { border-left:3px solid #8c383f; padding-left:10px; color:#653e3c; }
 .alert-record { border-top:1px dashed #a48064; margin-top:22px; padding-top:18px; }
 .alert-record h4 { font:25px/1.1 var(--display); margin:0 0 10px; }
 .alert-context { border-top:1px dashed #a48064; padding-top:16px; color:#6a4c45; }
 .alert-context a { text-decoration:underline; }
-.crime-alert.lights-paused .siren-glow,.crime-alert.lights-paused .siren-glow::after { animation-play-state:paused; }
 .underlay-alert-art { display:block; width:75%; max-height:65%; object-fit:contain; margin:0 auto; }
 @media(max-width:950px) {
+  .dossier[data-place=rhode-island-warehouse]::before,.detail-underlay.crime-card-stock::before { inset:-16px -14px; }
   .detail-underlay.three { transform:translate(-11px,4px) rotate(-7deg); }
   .dossier-dock.crime-deck .dossier-tabs button { font-size:13px; white-space:normal; padding:5px 2px; min-height:36px; }
   .dossier-dock.crime-deck .dossier-tabs button span { font-size:7px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .siren-glow,.siren-glow::after { animation:none; opacity:.4; }
-  .alert-motion-toggle { display:none; }
+}
+
+/* This atmosphere follows the selected case, not the current card or scroll position. */
+.case-alert-banner { display:none; }
+.case-alert-active #app { background-color:#3d1419; background-blend-mode:luminosity; }
+.case-alert-active .masthead,.case-alert-active .app-footer { background:#300e15e8; border-color:#a33d43; }
+.case-alert-active .nav-button.active,.case-alert-active .filter.active { background:#833039; border-color:#b95d59; }
+.case-alert-active .search-wrap { background:#241117e6; }
+.case-alert-active .case-alert-banner { display:flex; align-items:center; justify-content:center; gap:28px; min-height:36px; padding:5px 12px; background:#7e1724; border-block:1px solid #e76c62; color:#ffe6c8; box-shadow:0 0 20px #e9263060; animation:alert-banner-pulse 2.6s ease-in-out infinite; }
+.case-alert-banner strong { font:24px/1 var(--display); letter-spacing:2px; }
+.case-alert-banner span { font:9px/1.4 var(--mono); letter-spacing:1px; }
+.case-alert-active::after { content:''; position:fixed; inset:0; z-index:80; pointer-events:none; background:radial-gradient(ellipse at center,transparent 35%,#d6102433 80%,#ff1c3655),linear-gradient(#dc153414,#dc153414); box-shadow:inset 0 0 90px #fc163d6b; animation:alert-room-pulse 2.6s ease-in-out infinite; }
+.case-alert-active .map-section { outline-color:#ac464b; }
+.case-alert-active .map-section::after { border-color:#663139; }
+.case-alert-active .index-footer { border-color:#91494e; }
+.case-alert-active .stack-state { color:#ffb5a1; }
+.case-alert-active .case-stack.selected .stack-state { background:#a43943; color:#fff0d6; }
+.case-alert-active .case-stack.selected .stack-caption { border-color:#ea7770; }
+.case-alert-active .case-stack.selected .case-cover img { filter:drop-shadow(0 0 8px #fa4a5499) drop-shadow(0 0 18px #dc143d66); }
+@keyframes alert-room-pulse { 0%,100% { opacity:.12; } 50% { opacity:.85; } }
+@keyframes alert-banner-pulse { 0%,100% { background-color:#61121f; box-shadow:0 0 6px #d91e2630; } 50% { background-color:#b82e38; box-shadow:0 0 24px #e9263080; } }
+@media(max-width:580px) {
+  .case-alert-active .case-alert-banner { gap:12px; }
+  .case-alert-banner strong { font-size:19px; letter-spacing:0; }
+  .case-alert-banner span { font-size:7px; text-align:center; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .case-alert-active::after { animation:none; opacity:.25; }
+  .case-alert-active .case-alert-banner { animation:none; }
 }
