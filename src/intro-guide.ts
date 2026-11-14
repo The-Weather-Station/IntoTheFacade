@@ -1,12 +1,10 @@
-// A single-use guide follows the actual cover, including while it is dealt in.
+// Once per page visit, the guide follows the cover while it is dealt in.
 // It never intercepts pointer input and stops measuring as soon as a case opens.
 export function createIntroGuide() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let dismissed = false, frame = 0;
   let loaded = document.readyState === 'complete', started = 0;
   window.addEventListener('load', () => { loaded = true; }, { once:true });
-  try { dismissed = localStorage.getItem('itf:intro-dismissed') === 'true'; } catch { /* Session-only when storage is blocked. */ }
-  if (import.meta.env.DEV && new URLSearchParams(location.search).has('test-intro')) dismissed = false;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('intro-arrow'); svg.setAttribute('aria-hidden', 'true');
   svg.innerHTML = '<defs><marker id="intro-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 L6 4 L1 7"/></marker><mask id="intro-draw-mask" maskUnits="userSpaceOnUse"><path class="intro-draw-path" pathLength="1" fill="none" stroke="white" stroke-width="30" stroke-dasharray="1" stroke-dashoffset="1"/></mask></defs><g mask="url(#intro-draw-mask)"><path class="intro-arrow-shadow"/><path class="intro-arrow-line" marker-end="url(#intro-arrowhead)"/></g>';
@@ -47,7 +45,6 @@ export function createIntroGuide() {
   }
   function dismiss() {
     dismissed = true; cancelAnimationFrame(frame); frame = 0; svg.remove();
-    try { localStorage.setItem('itf:intro-dismissed', 'true'); } catch { /* Keep the session dismissal. */ }
   }
   return { show, dismiss };
 }

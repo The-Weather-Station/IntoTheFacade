@@ -59,7 +59,7 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 - Map/list/dossier selection; name, address, owner and parcel search; category filters; flat/tilt views.
 - Read-only prior-explorer accounts, separate from verified findings. The personal note editor and Saved collections are disabled and tracked in ROADMAP.md; existing browser data is preserved. Markdown export includes records, urbex readouts and attributed explorer accounts.
 - Responsive layouts, keyboard-operable controls, shareable case fragments, and usable dossiers when the map cannot connect.
-- The home URL opens with no selected case and an urban-exploration introduction. The guide draws from its origin to the Missing Road cover once, then its dashes flow toward that cover. A one-time animated arrow points to the Missing Road cover, then stays dismissed in that browser after the visitor chooses a case. Valid case fragments still open the requested dossier directly.
+- The home URL opens with no selected case and an urban-exploration introduction. On every fresh homepage load, the guide draws from its origin to the Missing Road cover once, then its dashes flow toward that cover. Choosing a case dismisses it for the current page visit only; old browser dismissal flags are ignored. Valid case fragments still open the requested dossier directly.
 - The active case centers vertically in its own scrolling index and gains a gold highlight. The right hand’s side controls and exposed corners cycle Overview → Evidence → Field notes, with reverse cycling on the left. Tabs remain direct navigation.
 - Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion and pointer-driven artwork tilt keep the cards alive without dragging. Changing dossier tabs slides the outgoing card fully clear of the fanned hand before lowering its layer and returning it behind the new front card. Interrupted transitions clean up their inert copies. Each whole card tilts as one surface, including its text and images, with no hover scaling. Keyboard focus flattens it for reading. Reduced-motion preferences disable automatic movement.
 
@@ -119,7 +119,7 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
 - `public/art/`: nine optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
-- `src/intro-guide.ts`: one-time pointer to the first case cover.
+- `src/intro-guide.ts`: introductory pointer to the first case cover, reset on each page visit.
 - `src/case-deck.ts`: case covers, cancelable return/deal transitions and card switching.
 - `src/card-motion.ts` and `src/card-motion.css`: damped subpixel float, artwork perspective and the taller reading layout.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
@@ -141,6 +141,6 @@ Next meaningful step: document which rooms/floor the former venue occupied, revi
 
 `src/background-audio.ts` attaches an audio element with `preload="none"` and no source URL. Only the first visitor gesture (or Play) attaches the same-origin MP3 and begins playback. Nothing in page rendering or map initialization awaits audio. Controls allow pause and volume changes; a hidden tab pauses the recording and a visible tab resumes only if the visitor has not paused it. A playback failure leaves the application usable. Playback permission remains subject to the browser. The full supplied 93m33s recording is compressed for background playback; the user's original is untouched. No audio is imported into the JavaScript bundle.
 
-For local guide QA, `?test-intro` ignores a prior guide dismissal in development only. The production build excludes that override. Test the side buttons/corners, wraparound, active-index centering, first-gesture audio, no media source before interaction, and hidden-tab pause. Mobile keeps the compact three-cover row and the active highlight.
+For guide QA, open the homepage, select a case, then reopen the homepage: the arrow must draw again even in a browser that dismissed it previously. Test the side buttons/corners, wraparound, active-index centering, first-gesture audio, no media source before interaction, and hidden-tab pause. Mobile keeps the compact three-cover row and the active highlight.
 
 The source recording is stored in `media/dark-doom-jazz/` as bounded binary pieces to support connector upload limits. `scripts/assemble-audio.mjs` verifies SHA-256 hashes and reconstructs one 44,906,444-byte MP3 before both dev and production builds. The source pieces are outside `public/` and never requested by the player. The full duration is 5,613.216 seconds; the delivered MP3 is 64 kbit/s stereo at 32 kHz.
