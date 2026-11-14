@@ -211,7 +211,7 @@ function renderWelcome() {
     <p><strong>Overview</strong> lays out the case. <strong>Evidence</strong> links the documents and photos. <strong>Field notes</strong> holds prior explorers’ accounts.</p>
     <div class="welcome-start"><p class="eyebrow">FIRST FILE / STOCKYARD AIRSOFT</p><button id="intro-start" type="button">Start with MISSING ROAD!! <span aria-hidden="true">&#8601;</span></button><p>A road appears on one map and disappears from another. Open the card to compare the records.</p></div>
   </div>`;
-  $('#intro-start').addEventListener('click',()=>{resetFilters();const cover=$<HTMLButtonElement>('[data-card-key="stockyard-airsoft"] .case-cover');cover.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'center'});cover.focus({preventScroll:true});});
+  $('#intro-start').addEventListener('click',()=>{resetFilters();selectPlace('stockyard-airsoft');traceRoad();});
   cardMotion.revealDossier(front); introGuide.show();
 }
 function fieldBrief(p: Place) {
