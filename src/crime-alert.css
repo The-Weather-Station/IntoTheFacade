@@ -1,0 +1,42 @@
+.dossier::before,.detail-underlay { background-image:var(--card-face,url('/art/worn-card-face.webp')); }
+.dossier::before { image-rendering:auto; }
+.detail-underlay.three { z-index:0; transform:translate(-33px,5px) rotate(-12deg); }
+.detail-underlay[hidden] { display:none; }
+.dossier-dock.crime-deck .dossier-tabs { gap:4px; }
+.dossier-dock.crime-deck .dossier-tabs button { font-size:16px; }
+.dossier-tabs [data-tab=alert] { background:#ac544d; color:#fff0d2; }
+.dossier-tabs [data-tab=alert].active { background:#742b39; }
+.dossier[data-tab-view=alert] .dossier-hero { display:none; }
+.dossier[data-place=rhode-island-warehouse] .dossier-content { background:#fbeedbcc; }
+.dossier[data-place=rhode-island-warehouse] .dossier-title { margin:4px 7px 9px; padding:8px; background:#f7e6ccf2; border:1px solid #a58267; }
+.dossier[data-place=rhode-island-warehouse] .dossier-top>.eyebrow { flex:0 1 auto; padding:3px 6px; background:#f7e6ccf2; }
+.dossier[data-place=rhode-island-warehouse] .dossier-bottom { background:#f7e6ccee; padding:7px 5px 3px; }
+.alert-art { position:relative; width:min(100%,255px); margin:0 auto 12px; }
+.alert-art img { display:block; width:100%; height:auto; image-rendering:auto; }
+.siren-glow { position:absolute; width:19%; aspect-ratio:1; top:23.5%; border-radius:50%; pointer-events:none; mix-blend-mode:screen; background:radial-gradient(ellipse,#ffb18daa 0%,#ff321f55 28%,transparent 66%); animation:beacon-flash 1.8s ease-in-out infinite; }
+.siren-glow::after { content:''; position:absolute; inset:-55%; background:conic-gradient(from 0deg,transparent 0 20deg,#ff5422aa 35deg,transparent 65deg 200deg,#ff482080 215deg,transparent 245deg); border-radius:50%; animation:beacon-sweep 2.8s linear infinite; }
+.siren-glow.left { left:10.5%; }
+.siren-glow.right { right:10.5%; animation-delay:.9s; }
+.siren-glow.right::after { animation-delay:-1.4s; }
+@keyframes beacon-sweep { to { transform:rotate(360deg); } }
+@keyframes beacon-flash { 0%,100% { opacity:.25; } 45%,60% { opacity:.95; } }
+.crime-alert h3 { font:32px/1.05 var(--display); color:#732b37; margin:9px 0 14px; }
+.crime-alert>p,.alert-record>p { font-size:13px; line-height:1.75; }
+.alert-motion-toggle { display:block; margin:0 auto 18px; padding:5px 8px; font:10px var(--mono); border:1px solid #893b3c; color:#732b37; background:#ecd4b2; }
+.alert-motion-toggle:hover { color:#732b37; background:#f8e3c1; }
+.alert-date { border-left:3px solid #8c383f; padding-left:10px; color:#653e3c; }
+.alert-record { border-top:1px dashed #a48064; margin-top:22px; padding-top:18px; }
+.alert-record h4 { font:25px/1.1 var(--display); margin:0 0 10px; }
+.alert-context { border-top:1px dashed #a48064; padding-top:16px; color:#6a4c45; }
+.alert-context a { text-decoration:underline; }
+.crime-alert.lights-paused .siren-glow,.crime-alert.lights-paused .siren-glow::after { animation-play-state:paused; }
+.underlay-alert-art { display:block; width:75%; max-height:65%; object-fit:contain; margin:0 auto; }
+@media(max-width:950px) {
+  .detail-underlay.three { transform:translate(-11px,4px) rotate(-7deg); }
+  .dossier-dock.crime-deck .dossier-tabs button { font-size:13px; white-space:normal; padding:5px 2px; min-height:36px; }
+  .dossier-dock.crime-deck .dossier-tabs button span { font-size:7px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .siren-glow,.siren-glow::after { animation:none; opacity:.4; }
+  .alert-motion-toggle { display:none; }
+}

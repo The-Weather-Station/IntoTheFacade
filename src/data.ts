@@ -113,7 +113,7 @@ export const places: Place[] = [{
     { title: 'Verify the property transfer', detail: 'Review book 12303, page 874, then check later deeds against the legal description.', label: 'Open deed reference', url: deedUrl },
     { title: 'Establish the closure history', detail: 'Check occupancy, fire, and code records using the business name and both street-number aliases.', label: 'Open city records', url: cityPortalUrl },
   ],
-}, ...additionalPlaces];
+}, ...['rhode-island-warehouse', 'eagle-industries'].map(id => additionalPlaces.find(p => p.id === id)!)];
 addFieldResearch(places);
 export function filterPlaces(query: string, category: string, savedOnly: boolean, saved: string[]): Place[] {
   const term = query.toLocaleLowerCase().trim();

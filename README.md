@@ -1,5 +1,9 @@
 # Into The Facade
 
+The November 14 alert update adds a fourth, separately illustrated card to the Rhode Island warehouse deck. `src/deck-order.ts` drives tab order, directional cycling, stack counts and deal/return counts. The other cases retain three info cards. Display order is Stockyard, Rhode Island, Eagle; stable case numbers and URLs remain unchanged. Siren effects can be paused and honor reduced-motion preferences.
+
+The expanded shipping case distinguishes the April 8, 2025 charges and affidavit, the April 16 announcement, and Deping Sun's February 4, 2026 sentencing entry in the July 2026 parole docket. OSCN could not be retrieved for a complete current disposition check. The record does not substantiate citizenship or political affiliations. Artwork provenance and prompts are in `ARTWORK.md` and `alert-art-prompts.json`.
+
 An urban-exploration OSINT atlas for Oklahoma industrial properties, built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
 The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Nine original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.

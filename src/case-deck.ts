@@ -1,6 +1,7 @@
 import { artUrl } from './generated-art';
 import type { Place } from './data';
 import type { createCardMotion } from './card-motion';
+import { deckViews } from './deck-order';
 
 export const covers: Record<string, { asset: string; title: string; context: string; alt: string }> = {
   'stockyard-airsoft': { asset: 'missing-road-card', title: 'MISSING ROAD!!', context: 'One road. Two maps.', alt: 'Illustrated MISSING ROAD!! card with a vanishing road and occult eye' },
@@ -9,11 +10,12 @@ export const covers: Record<string, { asset: string; title: string; context: str
 };
 export function caseStack(p: Place, active: boolean) {
   const c = covers[p.id];
+  const count = deckViews(p.id).length;
   return `<article class="case-stack ${active ? 'selected' : ''}" data-card-key="${p.id}" data-place="${p.id}">
-    <div class="stack-visual"><span class="stack-back" style="--stack-i:3" aria-hidden="true"></span><span class="stack-back" style="--stack-i:2" aria-hidden="true"></span><span class="stack-back" style="--stack-i:1" aria-hidden="true"></span>
+    <div class="stack-visual">${Array.from({length:count},(_,i)=>`<span class="stack-back" style="--stack-i:${count-i}" aria-hidden="true"></span>`).join('')}
       <button class="case-cover" data-select="${p.id}" aria-pressed="${active}" aria-label="Open ${p.name} case stack: ${c.title}"><img src="${artUrl(c.asset)}" alt="${c.alt}" width="1024" height="1536" decoding="async"></button>
     </div>
-    <div class="stack-caption"><span class="eyebrow">CASE ${p.number} / ${p.evidence.length} RECORDS</span><h3>${p.name}</h3><p>${c.context}</p><span class="stack-state">${active ? '3 CARDS ON THE TABLE' : 'DEAL 3 CARDS ↗'}</span></div>
+    <div class="stack-caption"><span class="eyebrow">CASE ${p.number} / ${p.evidence.length} RECORDS</span><h3>${p.name}</h3><p>${c.context}</p><span class="stack-state">${active ? `${count} CARDS ON THE TABLE` : `DEAL ${count} CARDS ↗`}</span></div>
   </article>`;
 }
 
@@ -36,7 +38,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     node.style.transform = 'none'; node.style.visibility = 'visible'; node.style.margin = '0';
     const reading = node.querySelector<HTMLElement>('.dossier-content');
     if (reading) reading.scrollTop = front.querySelector<HTMLElement>('.dossier-content')?.scrollTop ?? 0;
-    return { element: node, rect: front.getBoundingClientRect(), backs:[...dock.querySelectorAll<HTMLElement>('.detail-underlay')].map(card=>card.innerHTML) };
+    return { element: node, rect: front.getBoundingClientRect(), backs:[...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])')].map(card=>card.innerHTML) };
   }
   function anchor(id: string) {
     return document.querySelector<HTMLElement>(`[data-card-key="${id}"] .case-cover`)?.getBoundingClientRect() ?? new DOMRect(-240, 200, 180, 270);
@@ -56,10 +58,10 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   }
   function fly(face: Face, from: DOMRect, to: DOMRect, index: number, incoming: boolean, delay: number) {
     const node = document.createElement('div'); node.className = 'case-flight'; node.inert = true; node.setAttribute('aria-hidden', 'true');
-    node.style.width = face.rect.width + 'px'; node.style.height = face.rect.height + 'px'; node.style.zIndex = String(10000 + (incoming ? 10 : 0) + 3 - index);
+    node.style.width = face.rect.width + 'px'; node.style.height = face.rect.height + 'px'; node.style.zIndex = String(10000 + (incoming ? 10 : 0) + face.backs.length + 1 - index);
     const copy = face.element.cloneNode(true) as HTMLElement;
     copy.style.width = '100%'; copy.style.height = '100%'; copy.style.minHeight = '0';
-    if (index > 0) copy.innerHTML = face.backs[2 - index] ?? '';
+    if (index > 0) copy.innerHTML = face.backs[face.backs.length - index] ?? '';
     node.append(copy); document.body.append(node);
     const transform = (r: DOMRect, rotation: number) => `translate3d(${r.left}px,${r.top}px,0) rotate(${rotation}deg) scale(${r.width / face.rect.width},${r.height / face.rect.height})`;
     const twist = (index - 1) * 3;
@@ -88,13 +90,13 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     if (returning) { returning.classList.add('cards-returning'); returningStacks.add(returning); }
     const jobs: Promise<void>[] = [];
     const returnJobs: Promise<void>[] = [];
-    for (let i = 2; i >= 0; i--) {
-      if (oldId) {
-        const job = fly(outgoing, outgoing.rect, destination, i, false, (2 - i) * 60);
+    if (oldId) {
+      for (let i = outgoing.backs.length; i >= 0; i--) {
+        const job = fly(outgoing, outgoing.rect, destination, i, false, (outgoing.backs.length - i) * 60);
         jobs.push(job); returnJobs.push(job);
       }
-      jobs.push(fly(incoming, source, incoming.rect, i, true, 220 + (2 - i) * 90));
     }
+    for (let i = incoming.backs.length; i >= 0; i--) jobs.push(fly(incoming, source, incoming.rect, i, true, 220 + (incoming.backs.length - i) * 90));
     void Promise.all(returnJobs).then(() => {
       if (stamp !== revision || !returning) return;
       returning.classList.remove('cards-returning'); returningStacks.delete(returning);

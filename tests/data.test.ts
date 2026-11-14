@@ -105,7 +105,7 @@ test('retired landmark fragments resolve to the research case', () => {
   assert.equal(getPlace('invalid').id,'stockyard-airsoft');
 });
 test('generated art ships as separate bitmap assets, outside the evidence collection', () => {
-  for (const name of ['missing-road-card','illegal-dumping-card','organized-crime-card','brick-building-art','eagle-building-art','warehouse-building-art','worn-card-face','table-felt','occult-card-back']) {
+  for (const name of ['missing-road-card','illegal-dumping-card','organized-crime-card','organized-alert-card','crime-card-face','brick-building-art','eagle-building-art','warehouse-building-art','worn-card-face','table-felt','occult-card-back']) {
     const bytes=readFileSync(new URL(`../public/art/${name}.webp`,import.meta.url));
     assert.equal(bytes.subarray(0,4).toString(),'RIFF');
     assert.equal(bytes.subarray(8,12).toString(),'WEBP');

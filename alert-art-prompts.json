@@ -1,0 +1,28 @@
+{
+  "tool": "Built-in image generation",
+  "date": "2026-11-14",
+  "prompts": [
+    {
+      "asset": "organized-alert-card",
+      "prompt": "Use case: stylized-concept. Asset type: additional worn collectible dossier card for Into The Facade website. Reference image: the supplied ORGANIZED CRIME card establishes our existing original industrial Halloween pixel-art palette and printed card treatment. Create a DIFFERENT original card, portrait 2:3, entire torn card visible with transparent exterior. Bold large exact two-line heading \"ALERT!!!\" \"ALERT!!!\". Central art: a fictional ominous authoritarian communist commissar, face entirely concealed by a black gas mask, olive military coat and red-star cap, looming over freight crates in a shadowy industrial warehouse, red banners and hammer-and-sickle insignia. Political horror villain, no resemblance to any real person, no national flag, no ethnic features or caricatures. Two conspicuous red rotating emergency-beacon housings flank the upper scene below the title. Pixel art with coarse deliberate clusters, limited oxblood / parchment / moss / ochre palette, old occult card-game print. Overlay physically realistic NON-PIXELATED dark red dried blood stains and a few fine droplets soaked into the outer parchment, tangible capillary feathering, not square pixel blood; no injured person or gore. Keep title perfectly legible. Narrow footer text \"FICTIONAL COVER ART\". This is theatrical decoration, never a documentary image. Do not reuse existing couch composition.",
+      "transparent": true,
+      "reference_asset": "organized-crime-card.webp"
+    },
+    {
+      "asset": "crime-card-face",
+      "prompt": "Use case: precise-object-edit. Edit target: supplied blank worn card face. Preserve the exact portrait card silhouette, transparent outside, cream center, dark plum pixelated border and distressed original pixel-paper design. Add PHOTOREALISTIC bloodstains, not pixel-art blood, as a separate mixed-media layer on the card: several dried dark crimson blood smears along the top-left and lower-right border, irregular fine satellite droplets and realistic porous absorption into paper, a few thin dried streaks at the margins. Blood is theatrical decoration only, no injuries, no body parts, no scene. Retain a very quiet pale central 75 percent area for readable website text. Keep all preexisting pixels/design unchanged except the stains; blood itself must have continuous organic detailed edges, not blocky or raster-pixel stylization. No text. Transparent background outside the card.",
+      "transparent": true,
+      "reference_asset": "worn-card-face.webp"
+    },
+    {
+      "asset": "organized-alert-card",
+      "prompt": "Edit this exact card, preserving the illustration, pixel-art villain, siren positions, card silhouette and exact top title ALERT!!! ALERT!!!. REMOVE the entire bottom text FICTIONAL COVER ART including its two flanking dashes; replace that small footer area with worn plain parchment. Make the realistic NON-PIXELATED blood much more prominent: broad dark crimson blood-soaked smears across parts of the top and bottom margins, thick organic dried streaks down the sides, and clearly visible irregular droplets. Strong theatrical horror-prop blood, roughly four times the visible area, no bodies or injuries. Do not cover or change the title, gas-mask character, or two sirens. Preserve the pixel illustration but render blood as convincing photographic fluid stains. Remove all background outside the card to true alpha transparency; do not replace with a colored backdrop.",
+      "reference_asset": "exec-966ca480-ad02-490e-b921-f75b057f3f76.png"
+    },
+    {
+      "asset": "crime-card-face",
+      "prompt": "Edit this blank worn card face. Make the photorealistic NON-PIXELATED BLOODSTAINS FAR MORE PROMINENT. Broad dense dark crimson smears and blood-soaked patches along the full top and bottom margins, heavy irregular streaks down both edges, bold splatter with fine organic droplets; unmistakable horror-prop blood occupying about 25 percent of the card instead of sparse subtle stains. Keep central 65 percent cream and sufficiently quiet to place readable black website text. Preserve underlying cream pixelated card design and dark pixel-border, but all blood itself must look like real blood absorbed into paper, smooth organic edges and photographic fluid detail, not square pixels. No text, bodies, wounds or injuries. Preserve full card silhouette. Outside the card must be true alpha transparency, not the existing dark colored backdrop.",
+      "reference_asset": "exec-88e19470-188a-487f-b8ca-c7a6c5e7dd2e.png"
+    }
+  ]
+}

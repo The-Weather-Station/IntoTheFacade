@@ -9,10 +9,13 @@ import type { FeatureCollection } from 'geojson';
 import { icon } from './art';
 import { artUrl, buildingArt } from './generated-art';
 import { caseStack, createCaseDeck } from './case-deck';
+import { deckViews, nextDeckView } from './deck-order';
+import { crimeAlert } from './crime-alert';
 import roadSnapshot from './research/osm-road-corridor.json';
 import './generated-theme.css';
 import './card-motion.css';
 import './map-hazards.css';
+import './crime-alert.css';
 import { createCardMotion } from './card-motion';
 import { createIntroGuide } from './intro-guide';
 import { initBackgroundAudio } from './background-audio';
@@ -72,7 +75,7 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
-    <div class="dossier-dock"><button class="deck-cycle deck-cycle-prev" type="button" data-cycle="-1" aria-label="Previous card in deck"><span aria-hidden="true">&#8249;</span></button><button class="deck-cycle deck-cycle-next" type="button" data-cycle="1" aria-label="Next card in deck"><span aria-hidden="true">&#8250;</span></button><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
+    <div class="dossier-dock"><button class="deck-cycle deck-cycle-prev" type="button" data-cycle="-1" aria-label="Previous card in deck"><span aria-hidden="true">&#8249;</span></button><button class="deck-cycle deck-cycle-next" type="button" data-cycle="1" aria-label="Next card in deck"><span aria-hidden="true">&#8250;</span></button><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><div class="detail-underlay three" hidden></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -84,12 +87,11 @@ const introGuide = createIntroGuide();
 initBackgroundAudio();
 
 
-const viewOrder = ['overview','evidence','notes'];
 let turnDirection = -1;
 function cycleDeck(direction: number) {
   if (!selected) return;
   turnDirection = direction;
-  tab = viewOrder[(viewOrder.indexOf(tab) + direction + viewOrder.length) % viewOrder.length];
+  tab = nextDeckView(selected.id, tab, direction);
   renderDossier();
 }
 $('.dossier-dock').addEventListener('click',event=>{
@@ -202,6 +204,8 @@ function renderWelcome() {
   const front = $('#dossier');
   $('.dossier-dock').classList.add('is-welcome');
   delete front.dataset.place; delete front.dataset.tabView;
+  front.style.removeProperty('--card-face');
+  $('.dossier-dock').classList.remove('crime-deck');
   front.setAttribute('aria-label', 'About Into The Facade');
   $('#dossier-hand').replaceChildren();
   document.querySelectorAll('.detail-underlay').forEach(card=>card.replaceChildren());
@@ -231,21 +235,30 @@ function renderDossier() {
   $('.dossier-dock').classList.remove('is-welcome');
   $('#dossier').setAttribute('aria-label', 'Selected place dossier');
   const p = selected;
+  const views = deckViews(p.id);
+  const cardFace = `url("${artUrl(p.id==='rhode-island-warehouse' ? 'crime-card-face' : 'worn-card-face')}")`;
+  $('.dossier-dock').classList.toggle('crime-deck',p.id==='rhode-island-warehouse');
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
   const previousFace = caseDeck.capture();
   const sheets = [
     {id:'overview',title:'Overview',body:`<h4>Recon Summary</h4><p>${p.summary}</p><strong>${p.statusTitle ?? 'Lumber storage documented'}</strong>`},
     {id:'evidence',title:'Evidence',body:`<p>${p.evidence.length} records · ${p.images.length} original images</p>${p.evidence.slice(0,3).map(e=>`<section><h4>${e.title}</h4><p>${e.detail}</p></section>`).join('')}`},
     {id:'notes',title:'Field notes',body:`<p>${explorerNotes[p.id]?.length ? 'Anonymous explorer · first-person account' : 'No explorer accounts submitted for this site yet.'}</p><small>EXPLORER ACCOUNTS / READ ONLY</small>`},
-  ].filter(sheet=>sheet.id!==tab).reverse();
+    {id:'alert',title:'ALERT!!! ALERT!!!',body:`<img class="underlay-alert-art" src="${artUrl('organized-alert-card')}" alt=""><p>Suite 109 · the shipping case</p>`},
+  ].filter(sheet=>views.includes(sheet.id)&&sheet.id!==tab).sort((a,b)=>views.indexOf(b.id)-views.indexOf(a.id));
   document.querySelectorAll<HTMLElement>('.detail-underlay').forEach((card,i)=>{
     const sheet = sheets[i];
+    card.hidden = !sheet;
+    if (!sheet) { card.replaceChildren(); return; }
+    card.style.setProperty('--card-face',cardFace);
     card.innerHTML = `<div class="underlay-select" data-sheet="${sheet.id}" aria-hidden="true"><small>CASE ${p.number} / ${p.name}</small><h3>${sheet.title}</h3>${sheet.body}</div>`;
   });
   $('#dossier').style.setProperty('--card-color', placeColor(p.id));
+  $('#dossier').style.setProperty('--card-face',cardFace);
   $('#dossier').dataset.place = p.id;
   $('#dossier').dataset.tabView = tab;
-  $('#dossier-hand').innerHTML = `<div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>`;
+  const labels: Record<string,string> = {overview:'Overview',alert:'Alert!!!',evidence:`Evidence <span>${p.evidence.length}</span>`,notes:'Field notes'};
+  $('#dossier-hand').innerHTML = `<div class="dossier-tabs" role="tablist" aria-label="Dossier sections">${views.map(view=>`<button role="tab" id="tab-${view}" data-tab="${view}" aria-controls="dossier-content" aria-selected="${tab===view}" tabindex="${tab===view?0:-1}" class="${tab===view?'active':''}">${labels[view]}</button>`).join('')}</div>`;
   $('#dossier').innerHTML = `
     <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span></div>
     <div class="dossier-hero">${buildingArt(p.artName,p.name)}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="${p.heroImageId ?? 'county-building-photo'}">View source photo ↗</button></div>
@@ -263,17 +276,19 @@ function renderDossier() {
     <div class="findings">${p.findings.filter(f=>p.id!=='stockyard-airsoft'||['Property owner','Building match','Documented use'].includes(f.label)).map(f=>`<article class="finding finding-${f.state}"><span class="section-label">${f.label}</span><h3>${f.value}</h3><p>${f.detail}</p>${f.evidence.length ? `<button class="finding-evidence" data-evidence="${f.evidence[0]}">View evidence ${icon('arrow')}</button>` : ''}</article>`).join('')}</div>
     <div class="interest"><span class="eyebrow">THE QUESTION</span><p>${p.interest}</p></div>
     <button id="focus-place" class="primary-button">${icon('crosshair')} Show property on map ${icon('arrow')}</button>`;
+  else if(tab === 'alert') content.innerHTML = crimeAlert(p,sourceMarkup);
   else if(tab === 'evidence') content.innerHTML = `${imageGallery(p)}<p class="evidence-intro">Records, maps and submitted images. Source links and dates are attached below.</p>${p.evidence.map((e,i)=>`<article class="evidence-item" id="evidence-${e.id}" tabindex="-1"><span class="evidence-number">${String(i+1).padStart(2,'0')}</span><div><span class="evidence-badge">${icon(e.sources.some(n=>p.sources[n].kind==='Official record')?'book':'info')} ${p.sources[e.sources[0]].kind}</span><h3>${e.title}</h3><p>${e.detail}</p>${imageAttachments(p,e.images)}${e.sources.map(n=>sourceMarkup(p.sources[n])).join('')}</div></article>`).join('')}
     <details class="remaining-questions"><summary>Unresolved items</summary><div>${p.unknowns.map(u=>`<p>${u}</p>`).join('')}<p>${p.locationNote}</p></div></details>
     <section class="next-steps"><span class="section-label">NEXT RECORDS TO CHECK</span>${p.nextSteps.map(s=>`<article><h3>${s.title}</h3><p>${s.detail}</p><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${s.label} ${icon('external')}</a></article>`).join('')}</section>`;
   else content.innerHTML = `<p class="eyebrow">EXPLORER ACCOUNTS</p>${(explorerNotes[p.id] ?? []).length ? explorerNotes[p.id].map(note=>`<article class="explorer-account"><h3>${note.author}</h3><p class="explorer-meta">Submitted ${dateLabel(note.submitted)}<br>Visit: ${escapeHtml(note.observed)}</p><blockquote>${escapeHtml(note.text)}</blockquote><p class="account-context">${escapeHtml(note.context)}</p><p class="explorer-meta">Submitted account · wording preserved</p></article>`).join('') : '<div class="no-explorer-notes"><h3>No explorer accounts on file.</h3><p>This site has public records, but no prior explorer has submitted a field account here yet.</p></div>'}<p class="local-note">Explorer accounts are separate from the sourced findings. Note submissions and a personal notebook are planned for a future update.</p>`;
+  $('.alert-motion-toggle')?.addEventListener('click',()=>{const paused=$('.crime-alert').classList.toggle('lights-paused');const button=$('.alert-motion-toggle');button.setAttribute('aria-pressed',String(paused));button.textContent=paused?'Resume siren lights':'Pause siren lights';});
   $('#trace-road')?.addEventListener('click',traceRoad);
   $('#view-submitted-images')?.addEventListener('click',()=>{tab='evidence';renderDossier();$('#tab-evidence').focus();});
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady) {focusMap(p,16); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
   document.querySelectorAll<HTMLButtonElement>('[data-evidence]').forEach(button=>button.addEventListener('click',()=>showEvidence(button.dataset.evidence!)));
   document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(button=>{
     button.addEventListener('click',()=>{tab=button.dataset.tab!;renderDossier();$(`#tab-${tab}`).focus();});
-    button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();const tabs=['overview','evidence','notes'];tab=tabs[(tabs.indexOf(tab)+(event.key==='ArrowRight'?1:2))%3];renderDossier();$(`#tab-${tab}`).focus();}});
+    button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();tab=nextDeckView(p.id,tab,event.key==='ArrowRight'?1:-1);renderDossier();$(`#tab-${tab}`).focus();}});
   });
   $('#export-dossier').addEventListener('click',()=>exportDossier(p));
   cardMotion.revealDossier($('#dossier'));

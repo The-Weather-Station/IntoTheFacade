@@ -1,5 +1,14 @@
 # Generated artwork · November 13–14, 2026
 
+## November 14 alert deck additions
+
+Two further assets were generated and edited with the **built-in image generation tool**. Full prompt history is in [alert-art-prompts.json](alert-art-prompts.json). Full-resolution PNGs are retained in the parent project's `output/art-direction/`; same-size WebP derivatives preserve alpha transparency.
+
+- `public/art/organized-alert-card.webp`: additional ALERT!!! ALERT!!! card, a fictional gas-masked communist commissar and two red emergency beacons. The final revision removes the footer label from the image and adds prominent photorealistic blood smears and drips over the pixel illustration. The on-screen beacons have rotating light beams and a slow pulse, with a pause button and reduced-motion support.
+- `public/art/crime-card-face.webp`: blank card stock with heavy realistic bloodstains, used only for the Rhode Island warehouse's four info cards and their transit copies. Text panels preserve legibility. Other case art and original evidence photographs are unchanged.
+
+The villain depicts no defendant. Reviewed records document an alleged trafficking operation and an Organized Crime Task Force investigation, but do not establish citizenship, Communist Party membership, Chinese-state involvement, or a named Chinese criminal-group connection. Political symbols and blood are decorative fiction, not evidence or an allegation of violence. The existing ORGANIZED CRIME!!! couch cover is unchanged.
+
 All nine assets were made with the **built-in image generation tool**. No CLI fallback or procedural SVG substitute was used. Exact prompts are preserved in [art-prompts.json](art-prompts.json), [midterm-art-prompts.json](midterm-art-prompts.json) and [attention-card-prompts.json](attention-card-prompts.json).
 
 ## Deliverables
