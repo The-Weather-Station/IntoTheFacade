@@ -27,7 +27,7 @@ export function exportImageEvidence(place: Place) {
   return place.images.length ? ['','## Evidence images', ...place.images.map(image => `### ${image.title}\n![${image.alt}](${new URL(evidenceImageUrl(image), location.href).href})\n${image.caption}\nPublisher source: ${place.sources[image.source].url ?? 'Contributor upload; source-page link not supplied'}\nRetrieved / submitted: ${image.submitted}\nOriginal file: ${image.originalFilename}\n${image.attribution}\nSHA-256: ${image.sha256}`)] : [];
 }
 
-export function initEvidenceViewer(getPlace: () => Place) {
+export function initEvidenceViewer(getPlace: () => Place | undefined) {
   const dialog = document.createElement('dialog');
   dialog.id = 'evidence-dialog'; dialog.className = 'image-viewer';
   dialog.setAttribute('aria-labelledby', 'image-title');
@@ -78,7 +78,9 @@ export function initEvidenceViewer(getPlace: () => Place) {
   document.querySelector('#dossier')!.addEventListener('click', event => {
     const trigger = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-image]');
     if (!trigger) return;
-    place = getPlace();
+    const current = getPlace();
+    if (!current) return;
+    place = current;
     const selected = place.images.findIndex(image => image.id === trigger.dataset.image);
     if (selected < 0) return;
     showImage(selected); dialog.showModal(); find<HTMLButtonElement>('.image-close').focus();

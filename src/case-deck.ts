@@ -25,6 +25,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let revision = 0, busy = false;
   let turnAnimation: Animation | undefined;
+  let shuffleNode: HTMLElement | undefined, shuffleTarget: HTMLElement | undefined;
   const flights = new Set<{ node: HTMLElement; animation: Animation }>();
   const coverCopies = new Set<HTMLElement>();
   function capture(): Face {
@@ -43,6 +44,10 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   function cancel() {
     revision++;
     turnAnimation?.cancel(); turnAnimation = undefined;
+    shuffleNode?.remove(); shuffleNode = undefined;
+    if (shuffleTarget) shuffleTarget.style.visibility = '';
+    shuffleTarget = undefined;
+    delete dock.dataset.shufflePhase;
     for (const f of flights) { f.animation.cancel(); f.node.remove(); }
     for (const cover of coverCopies) cover.remove();
     coverCopies.clear();
@@ -73,7 +78,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     const flight = { node, animation }; flights.add(flight);
     return animation.finished.catch(() => {}).then(() => { node.remove(); flights.delete(flight); });
   }
-  function switchCase(oldId: string, id: string, update: () => void): Promise<void> {
+  function switchCase(oldId: string | undefined, id: string, update: () => void): Promise<void> {
     cancel(); const stamp = revision, outgoing = capture();
     if (oldId !== id) motion.home(front);
     busy = true; motion.pause(front, true);
@@ -83,11 +88,11 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     // Mobile has a vertical table: keep the same deal motion local to its hand.
     const narrow = innerWidth < 951;
     const source = narrow ? new DOMRect(incoming.rect.left - 70, incoming.rect.top + 50, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);
-    const destination = narrow ? new DOMRect(outgoing.rect.left - 90, outgoing.rect.top + 60, outgoing.rect.width * .6, outgoing.rect.height * .6) : anchor(oldId);
-    if (!narrow) { coverInFront(oldId); coverInFront(id); }
+    const destination = narrow ? new DOMRect(outgoing.rect.left - 90, outgoing.rect.top + 60, outgoing.rect.width * .6, outgoing.rect.height * .6) : anchor(oldId ?? id);
+    if (!narrow) { if (oldId) coverInFront(oldId); coverInFront(id); }
     const jobs: Promise<void>[] = [];
     for (let i = 2; i >= 0; i--) {
-      jobs.push(fly(outgoing, outgoing.rect, destination, i, false, (2 - i) * 60));
+      if (oldId) jobs.push(fly(outgoing, outgoing.rect, destination, i, false, (2 - i) * 60));
       jobs.push(fly(incoming, source, incoming.rect, i, true, 220 + (2 - i) * 90));
     }
     return Promise.all(jobs).then(() => {
@@ -100,13 +105,38 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   function turn(previous: Face, oldView: string, view: string) {
     if (busy || !oldView || oldView === view || reduced.matches) return;
     cancel();
-    const rect = front.getBoundingClientRect();
-    turnAnimation = front.animate([
-      { transform: 'translate3d(20px,12px,0)', opacity: .45 },
-      { transform: 'translate3d(0,0,0)', opacity: 1 },
-    ], { duration: 450, easing: 'cubic-bezier(.2,.75,.2,1)' });
-    void fly(previous, previous.rect, new DOMRect(rect.left - 28, rect.top + 12, rect.width * .94, rect.height * .94), 0, false, 0);
-    void turnAnimation.finished.catch(() => {});
+    const stamp = revision;
+    motion.home(front); motion.pause(front, true);
+    const target = dock.querySelector<HTMLElement>(`.detail-underlay:has([data-tab="${oldView}"])`);
+    if (!target) { motion.pause(front, false); return; }
+    // Keep the old face opaque until it has cleared the entire fanned hand.
+    // Only then lower it to its actual destination layer and slide it home.
+    const node = document.createElement('div');
+    node.className = 'shuffle-card'; node.inert = true; node.setAttribute('aria-hidden', 'true');
+    const copy = previous.element;
+    Object.assign(copy.style, { width:'100%', height:'100%', minHeight:'0', maxHeight:'none' });
+    node.append(copy); dock.append(node);
+    shuffleNode = node; shuffleTarget = target; target.style.visibility = 'hidden';
+    const clear = `translate3d(${-front.offsetWidth - 170}px,-18px,0) rotate(-9deg)`;
+    const home = getComputedStyle(target).transform;
+    node.style.zIndex = '20'; dock.dataset.shufflePhase = 'out';
+    turnAnimation = node.animate([{transform:'none'}, {transform:clear}], {
+      duration:420, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards',
+    });
+    void turnAnimation.finished.then(async () => {
+      if (stamp !== revision) return;
+      node.style.zIndex = getComputedStyle(target).zIndex;
+      dock.dataset.shufflePhase = 'behind';
+      turnAnimation!.cancel();
+      turnAnimation = node.animate([{transform:clear}, {transform:home}], {
+        duration:520, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards',
+      });
+      await turnAnimation.finished;
+      if (stamp !== revision) return;
+      target.style.visibility = ''; node.remove();
+      shuffleNode = shuffleTarget = undefined; turnAnimation = undefined;
+      delete dock.dataset.shufflePhase; motion.pause(front, false);
+    }).catch(() => {});
   }
   window.addEventListener('resize', cancel);
   reduced.addEventListener('change', cancel);

@@ -13,6 +13,7 @@ import roadSnapshot from './research/osm-road-corridor.json';
 import './generated-theme.css';
 import './card-motion.css';
 import { createCardMotion } from './card-motion';
+import { createIntroGuide } from './intro-guide';
 import { mapInk, placeColor } from './map-palette';
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
@@ -23,7 +24,8 @@ const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({'&':'&
 function readStorage<T>(key: string, fallback: T): T { try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; } }
 const rawSaved = readStorage<unknown>('itf:saved', []);
 let saved: string[] = Array.isArray(rawSaved) ? rawSaved.filter((id): id is string => typeof id === 'string' && places.some(p => p.id === id)) : [];
-let selected = getPlace(location.hash.slice(1));
+let selected: Place | undefined = places.find(p => p.id === location.hash.slice(1));
+const countyCenter: [number, number] = [-97.49, 35.46];
 let query = '', category = 'All', savedOnly = false, tab = 'overview', is3d = true;
 let map: LibreMap | null = null, mapReady = false, toastTimer: ReturnType<typeof setTimeout>;
 let compatMap: CompatMap | null = null, mapGeneration = 0, mapTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -40,7 +42,7 @@ const claimCount = places.reduce((sum,p)=>sum+p.evidence.length,0);
 $('#app').innerHTML = `
   <a class="skip-link" href="#places">Skip to places</a>
   <header class="masthead">
-    <a class="brand" href="#${places[0].id}" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
+    <a class="brand" href="#" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 005</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
@@ -51,7 +53,7 @@ $('#app').innerHTML = `
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search the files…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>
-      <div class="deck-controls"><span>Pick a case. Deal the stack.</span><button id="reset-cards" type="button">Reset cards</button></div>
+      <div class="deck-controls"><span>Pick a case. Deal the stack.</span></div>
       <div id="places" class="places" tabindex="-1"></div><p class="deck-art-note">Cover art dramatizes the case. Original images are in Evidence.</p>
       <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>THE COUNTY FILES</strong><p>${places.length} cases · ${claimCount} evidence entries.<br>Every claim has a paper trail.</p></div></div>
     </aside>
@@ -74,7 +76,7 @@ $('#app').innerHTML = `
 `;
 const cardMotion = createCardMotion();
 const caseDeck = createCaseDeck($('#dossier'), $('.dossier-dock'), cardMotion);
-$('#reset-cards').addEventListener('click',()=>{caseDeck.cancel();cardMotion.resetAll();});
+const introGuide = createIntroGuide();
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
@@ -121,14 +123,14 @@ function renderList() {
   $('#results-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'PLACE' : 'PLACES'}${savedOnly ? ' SAVED' : ' FOUND'}`;
   $('#map-region-count').textContent = `${String(visible.length).padStart(2,'0')} ${visible.length === 1 ? 'CASE' : 'CASES'}`;
   $('#saved-count').textContent = String(saved.length);
-  const deckMarkup = visible.length ? visible.map(p=>caseStack(p,p.id===selected.id,saved.includes(p.id))).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
+  const deckMarkup = visible.length ? visible.map(p=>caseStack(p,p.id===selected?.id,saved.includes(p.id))).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
   renderDeck(deckMarkup);
   markers.forEach((marker, id) => {
     marker.getElement().style.display = visible.some(p => p.id === id) ? '' : 'none';
-    marker.getElement().classList.toggle('selected', id === selected.id);
-    marker.getElement().setAttribute('aria-pressed', String(id === selected.id));
+    marker.getElement().classList.toggle('selected', id === selected?.id);
+    marker.getElement().setAttribute('aria-pressed', String(id === selected?.id));
   });
-  compatMap?.update(visible, selected.id);
+  compatMap?.update(visible, selected?.id ?? '');
   if (mapReady && map) {
     const ids = visible.map(p=>p.id);
     const filter = ['in', ['get','placeId'], ['literal',ids]] as any;
@@ -141,26 +143,48 @@ function toggleSave(id: string) {
   if(persisted) toast(adding ? 'Place saved to your collection.' : 'Place removed from your collection.');
 }
 function selectPlace(id: string, fly = false) {
+  introGuide.dismiss();
   stopRoadPulse(); pendingRoadFocus=false;
-  const oldId = selected.id, next = getPlace(id);
+  const oldId = selected?.id, next = getPlace(id);
   const transition = caseDeck.switchCase(oldId, next.id, () => {
     selected = next; tab = 'overview';
-    if(location.hash !== `#${selected.id}`) history.pushState(null,'',`#${selected.id}`);
+    if(location.hash !== `#${selected?.id}`) history.pushState(null,'',`#${selected?.id}`);
     renderList(); renderDossier(); updateMapSelection();
   });
-  if(fly) focusMap(selected, 15.5);
+  if(fly) focusMap(next, 15.5);
   if(fly && innerWidth < 850) void transition.then(()=> {
-    if(selected.id===next.id) $('.dossier-dock').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
+    if(selected?.id===next.id) $('.dossier-dock').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
   });
 }
 
 function updateMapSelection() {
-  $('#map-coordinate').textContent = `AREA CENTER · ${selected.coordinates[1].toFixed(4)}° N ${Math.abs(selected.coordinates[0]).toFixed(4)}° W`;
+  if (!selected) { $('#map-coordinate').textContent = 'OKLAHOMA COUNTY / CHOOSE A CASE'; return; }
+  $('#map-coordinate').textContent = `AREA CENTER · ${(selected?.coordinates ?? countyCenter)[1].toFixed(4)}° N ${Math.abs((selected?.coordinates ?? countyCenter)[0]).toFixed(4)}° W`;
 }
 function sourceMarkup(source: Source) {
   return `<div class="source-reference">${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${source.title} ${icon('external')}</a>` : `<strong>${source.title}</strong>`}<small>${source.publisher} · ${source.kind}<br>${source.date}<br>REVIEWED ${source.reviewed}</small><details><summary>How this was checked</summary><p>${source.method}</p></details></div>`;
 }
+function renderWelcome() {
+  const front = $('#dossier');
+  $('.dossier-dock').classList.add('is-welcome');
+  delete front.dataset.place; delete front.dataset.tabView;
+  front.setAttribute('aria-label', 'About Into The Facade');
+  $('#dossier-hand').replaceChildren();
+  document.querySelectorAll('.detail-underlay').forEach(card=>card.replaceChildren());
+  front.innerHTML = `<div class="welcome-copy"><p class="eyebrow">INTO THE FACADE / PUBLIC RECORDS</p>
+    <span class="welcome-stamp" aria-hidden="true">OPEN<br>THE FILE.</span>
+    <h2>The building is only half the story.</h2>
+    <p>A public-record atlas of Oklahoma buildings with unfinished business. Find the owner, compare the maps, and read what the records actually say.</p>
+    <p><strong>Overview</strong> lays out the case. <strong>Evidence</strong> links the documents and photos. <strong>Field notes</strong> keeps your observations.</p>
+    <div class="welcome-start"><p class="eyebrow">FIRST FILE / STOCKYARD AIRSOFT</p><button id="intro-start" type="button">Start with MISSING ROAD!! <span aria-hidden="true">&#8601;</span></button><p>A road appears on one map and disappears from another. Open the card to compare the records.</p></div>
+  </div>`;
+  $('#intro-start').addEventListener('click',()=>{resetFilters();const cover=$<HTMLButtonElement>('[data-card-key="stockyard-airsoft"] .case-cover');cover.scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'center'});cover.focus({preventScroll:true});});
+  cardMotion.revealDossier(front); introGuide.show();
+}
 function renderDossier() {
+  if (!selected) { renderWelcome(); return; }
+  $('.dossier-dock').classList.remove('is-welcome');
+  $('#dossier').setAttribute('aria-label', 'Selected place dossier');
   const p = selected, isSaved = saved.includes(p.id);
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
   const previousFace = caseDeck.capture();
@@ -254,7 +278,7 @@ function traceRoad() {
   $('.map-section').focus({preventScroll:true});
   if(!mapReady){pendingRoadFocus=true;toast('Road selected. Waiting for the map.');return;}
   pendingRoadFocus=false;
-  if(!visiblePlaces().some(p=>p.id===selected.id))resetFilters();
+  if(!visiblePlaces().some(p=>p.id===selected?.id))resetFilters();
   const points=roadSnapshot.features.flatMap(f=>f.geometry.coordinates);
   const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
   const bounds: MapBounds=[[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)]];
@@ -329,7 +353,7 @@ async function initCompatMap() {
     const { createCompatMap } = await import('./compat-map');
     if(generation!==mapGeneration)return;
     compatMap=createCompatMap({
-      container:$('#map'),center:selected.coordinates,places,parcels:parcelCollection,roads:roadSnapshot as unknown as FeatureCollection,reducedMotion,
+      container:$('#map'),center:(selected?.coordinates ?? countyCenter),places,parcels:parcelCollection,roads:roadSnapshot as unknown as FeatureCollection,reducedMotion,
       select:id=>selectPlace(id,true),
       onTileStatus:unavailable=>{
         if(generation!==mapGeneration)return;
@@ -349,7 +373,7 @@ function initMap() {
   const fallback=()=>{if(generation===mapGeneration)void initCompatMap();};
   try {
     if(import.meta.env.DEV && new URLSearchParams(location.search).has('test-map-failure')) { fallback(); return; }
-    const instance=new LibreMap({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:selected.coordinates,zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
+    const instance=new LibreMap({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:(selected?.coordinates ?? countyCenter),zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
     map=instance;
     instance.addControl(new AttributionControl({compact:true,customAttribution:'<a href="https://assessor.oklahomacounty.org/" target="_blank" rel="noopener noreferrer">Parcel reference: Oklahoma County Assessor</a>'}),'bottom-right');
     mapTimeout=setTimeout(fallback,16000);
@@ -412,7 +436,11 @@ $('#map-switch').addEventListener('click',()=>{
 $('#about-button').addEventListener('click',()=>showDialog('about'));$('#sources-button').addEventListener('click',()=>showDialog('sources'));$('#region-button').addEventListener('click',()=>showDialog('region'));
 $('#close-dialog').addEventListener('click',()=> $<HTMLDialogElement>('#info-dialog').close());$('#info-dialog').addEventListener('click',event=>{if(event.target===$('#info-dialog')){const rect=$('#info-dialog').getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$<HTMLDialogElement>('#info-dialog').close();}});
 $('#mobile-index').addEventListener('click',()=>$('.discovery').scrollIntoView({behavior:reducedMotion?'instant':'smooth'}));
-window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(places.some(p=>p.id===id))selectPlace(id,false);});
+window.addEventListener('hashchange',()=>{
+  const id=location.hash.slice(1);
+  if(places.some(p=>p.id===id))selectPlace(id,false);
+  else if (!id) { caseDeck.cancel(); selected=undefined; pendingRoadFocus=false; stopRoadPulse(); renderList(); renderDossier(); updateMapSelection(); fitMap(); }
+});
 window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open && !$<HTMLDialogElement>('#evidence-dialog').open){e.preventDefault();$('#search').focus();}});
 initEvidenceViewer(()=>selected);
 renderList();renderDossier();updateMapSelection();

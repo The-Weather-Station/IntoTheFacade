@@ -59,7 +59,8 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
 - Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
 - Responsive layouts, keyboard-operable controls, shareable case fragments, and usable dossiers when the map cannot connect.
-- Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion, pointer-driven artwork tilt and free dragging replace rounded layout offsets. Drag a grip or illustration, or focus the grip and use arrow keys (Shift for larger steps, Home to reset). Reset cards returns every card. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
+- The home URL opens with no selected case and a brief introduction. A one-time animated arrow points to the Missing Road cover, then stays dismissed in that browser after the visitor chooses a case. Valid case fragments still open the requested dossier directly.
+- Three illustrated case stacks deal Overview, Evidence and Field notes across the table; switching cases shrinks the previous hand behind its cover. Short-lived inert transit copies keep one interactive dossier and avoid duplicate IDs. Subpixel spring motion and pointer-driven artwork tilt keep the cards alive without dragging. Changing dossier tabs slides the outgoing card fully clear of the fanned hand before lowering its layer and returning it behind the new front card. Interrupted transitions clean up their inert copies. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
 
 ## Data and representations
 
@@ -117,8 +118,9 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
 - `public/art/`: nine optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
+- `src/intro-guide.ts`: one-time pointer to the first case cover.
 - `src/case-deck.ts`: case covers, cancelable return/deal transitions and card switching.
-- `src/card-motion.ts` and `src/card-motion.css`: damped subpixel float, artwork perspective, dragging and the taller reading layout.
+- `src/card-motion.ts` and `src/card-motion.css`: damped subpixel float, artwork perspective and the taller reading layout.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.
 - `src/tabletop.css`: underlying card-table layout and responsive behavior.
 - `ARTWORK.md` and `art-prompts.json`: artwork provenance, exact prompts, reference roles and delivery settings.
