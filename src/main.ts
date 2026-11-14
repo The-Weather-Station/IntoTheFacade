@@ -106,12 +106,17 @@ function centerActiveDeck(animate = true) {
     frame.scrollTo({top:frame.scrollTop+card.getBoundingClientRect().top-frame.getBoundingClientRect().top-(frame.clientHeight-card.offsetHeight)/2,behavior:animate&&!reducedMotion?'smooth':'instant'});
   });
 }
+let deckSpacingFrame=0;
 new ResizeObserver(()=>{
-  const frame=$('#places'), first=frame.querySelector<HTMLElement>('.case-stack'), last=frame.querySelector<HTMLElement>('.case-stack:last-child');
-  frame.style.paddingTop=innerWidth>580&&first?Math.max(16,(frame.clientHeight-first.offsetHeight)/2)+'px':'';
-  frame.style.paddingBottom=innerWidth>580&&last?Math.max(16,(frame.clientHeight-last.offsetHeight)/2)+'px':'';
-  centerActiveDeck(false);
-}).observe($('#places'));
+  cancelAnimationFrame(deckSpacingFrame);
+  deckSpacingFrame=requestAnimationFrame(()=>{
+    const frame=$('#places'), first=frame.querySelector<HTMLElement>('.case-stack'), last=frame.querySelector<HTMLElement>('.case-stack:last-child');
+    frame.style.paddingTop=innerWidth>580&&first?Math.max(16,(frame.clientHeight-first.offsetHeight)/2)+'px':'';
+    frame.style.paddingBottom=innerWidth>580&&last?Math.max(16,(frame.clientHeight-last.offsetHeight)/2)+'px':'';
+    centerActiveDeck(false);
+  });
+// Padding changes must not retrigger the observer's content-box measurement.
+}).observe($('#places'),{box:'border-box'});
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
