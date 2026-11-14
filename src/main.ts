@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './tabletop.css';
 import { places, getPlace, filterPlaces, reviewed, registryUrl, parcelMapUrl, cityPortalUrl, type Place, type Source } from './data';
 import parcelSnapshot from './research/stockyard-parcels.json';
+import additionalParcels from './research/additional-parcels.json';
 import type { FeatureCollection } from 'geojson';
 import { icon } from './art';
 import { artUrl, buildingArt, mysteryCard } from './generated-art';
@@ -29,7 +30,10 @@ let mapMode: 'styled' | '2d' = 'styled';
 let roadPulseFrame = 0, roadPulseTimer: ReturnType<typeof setTimeout> | undefined, pendingRoadFocus = false;
 const markers = new globalThis.Map<string, Marker>();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const reviewLabel = new Date(`${reviewed}T12:00:00Z`).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).toUpperCase();
+const latestReview = places.map(p=>p.reviewed ?? reviewed).sort().at(-1)!;
+const dateLabel = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).toUpperCase();
+const reviewLabel = dateLabel(latestReview);
+const parcelCollection = {type:'FeatureCollection',features:[...parcelSnapshot.features,...additionalParcels.features]} as unknown as FeatureCollection;
 const claimCount = places.reduce((sum,p)=>sum+p.evidence.length,0);
 
 $('#app').innerHTML = `
@@ -37,21 +41,22 @@ $('#app').innerHTML = `
   <header class="masthead">
     <a class="brand" href="#${places[0].id}" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button><button class="nav-button" id="saved-nav" aria-pressed="false">${icon('bookmark')} Saved <span id="saved-count">${saved.length}</span></button></nav>
-    <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 003</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
+    <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 004</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
-  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">STOCKYARD AIRSOFT / CASE 01</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Google leaves it blank.<br>OSM marks a service road.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>THE STOCKYARDS / OKC</small><strong>Oklahoma City, OK</strong></span>${icon('chevron')}</button></section>
+  <section class="intro" aria-label="Introduction"><div><p class="eyebrow">OKLAHOMA COUNTY / THREE CASE FILES</p><h1>Dead business. <em>Live paperwork</em></h1></div><p class="intro-copy">Missing roads. Solvent trails.<br>Freight with a paper trail.</p><button class="region-button" id="region-button">${icon('pin')}<span><small>OKC + MIDWEST CITY</small><strong>Oklahoma County</strong></span>${icon('chevron')}</button></section>
   <main class="workspace">
     <aside class="discovery" aria-labelledby="discovery-title">
       <div class="panel-heading"><div><p class="eyebrow">CASE FILES</p><h2 id="discovery-title">Open cases.</h2></div><span class="count-box" aria-label="${places.length} research cases">${String(places.length).padStart(2,'0')}</span></div>
       <div class="search-wrap">${icon('search')}<input id="search" type="search" placeholder="Search the files…" aria-label="Search places" autocomplete="off"/><kbd>/</kbd></div>
       <div class="filters" role="group" aria-label="Filter by category"><button class="filter active" data-category="All" aria-pressed="true">All places</button>${[...new Set(places.map(p=>p.category))].map(c=>`<button class="filter" data-category="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
       <div class="results-meta"><span id="results-count" role="status"></span><span>REVIEWED LEADS</span></div>
+      <div class="deck-controls"><span>Pick up a card. Move it.</span><button id="reset-cards" type="button">Reset cards</button></div>
       <div id="places" class="places" tabindex="-1"></div>
-      <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>FILE 01 / STOCKYARDS</strong><p>${places.length} case · ${claimCount} evidence entries.<br>Two parcels. One former venue.</p></div></div>
+      <div class="index-footer"><span class="mini-cross">${icon('eye')}</span><div><strong>THE COUNTY FILES</strong><p>${places.length} cases · ${claimCount} evidence entries.<br>Every claim has a paper trail.</p></div></div>
     </aside>
     <section class="map-section" aria-label="Interactive location map" tabindex="-1">
       <div id="map" aria-label="Oklahoma City exploration map"></div>
-      <div class="map-top"><div class="map-tag"><span class="live-dot"></span> OKLAHOMA CITY <span class="divider">/</span> <span id="map-region-count">${places.length} CASE</span></div><button id="view-toggle" class="map-button view-toggle" aria-pressed="true">${icon('layers')}<span>Tilt view</span></button></div>
+      <div class="map-top"><div class="map-tag"><span class="live-dot"></span> OKLAHOMA COUNTY <span class="divider">/</span> <span id="map-region-count">${places.length} CASES</span></div><button id="view-toggle" class="map-button view-toggle" aria-pressed="true">${icon('layers')}<span>Tilt view</span></button></div>
       <div class="map-mode"><button id="map-switch" class="map-button" type="button">Use 2D map</button><span id="map-note" role="status"></span></div>
       <div class="map-coordinate" id="map-coordinate">AREA REFERENCE · LOADING</div>
       <div class="map-controls" role="group" aria-label="Map controls"><button class="map-button" id="zoom-in" aria-label="Zoom in">${icon('plus')}</button><button class="map-button" id="zoom-out" aria-label="Zoom out">${icon('minus')}</button><span></span><button class="map-button" id="fit-map" aria-label="Show all matching places">${icon('crosshair')}</button></div>
@@ -60,13 +65,14 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
-    <aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside>
+    <div class="dossier-dock"><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">INTO THE FACADE / FIELD GUIDE</span><button id="close-dialog" class="icon-button" aria-label="Close dialog">${icon('close')}</button></div><div id="dialog-content"></div></dialog>
 `;
 const cardMotion = createCardMotion();
+$('#reset-cards').addEventListener('click',()=>cardMotion.resetAll());
 
 function toast(message: string) {
   clearTimeout(toastTimer); $('#toast').textContent = message; $('#toast').classList.add('visible');
@@ -114,7 +120,7 @@ function renderList() {
   $('#saved-count').textContent = String(saved.length);
   const deckMarkup = visible.length ? (visible.some(p=>p.id==='stockyard-airsoft') ? mysteryCard() : '') + visible.map(p => `
     <article class="place-card ${p.id === selected.id ? 'selected' : ''}" data-card-key="${p.id}" data-place="${p.id}" style="--card-color:${placeColor(p.id)}">
-      <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-heading"><span class="card-number">${p.number}</span><span class="card-category">${p.category}</span></div><div class="card-art">${buildingArt()}<span class="card-year">${p.year}</span></div><div class="card-copy"><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} evidence entries</span><span>${p.id === selected.id ? 'ON THE TABLE' : 'OPEN DOSSIER'}</span></div></div></button>
+      <button class="place-select" data-select="${p.id}" aria-pressed="${p.id === selected.id}" aria-label="Open ${p.name} dossier"><div class="card-heading"><span class="card-number">${p.number}</span><span class="card-category">${p.category}</span></div><div class="card-art">${buildingArt(p.artName,p.name)}<span class="card-year">${p.year}</span></div><div class="card-copy"><h3>${p.name}${icon('arrow')}</h3><p>${p.subtitle}</p><div class="card-meta"><span>${icon('check')} ${p.evidence.length} evidence entries</span><span>${p.id === selected.id ? 'ON THE TABLE' : 'OPEN DOSSIER'}</span></div></div></button>
       <button class="card-save ${saved.includes(p.id) ? 'is-saved' : ''}" data-save="${p.id}" aria-pressed="${saved.includes(p.id)}" aria-label="${saved.includes(p.id) ? 'Unsave' : 'Save'} ${p.name}">${icon('bookmark')}</button>
     </article>`).join('') : `<div class="empty-state">${icon(savedOnly ? 'bookmark' : 'search')}<h3>${savedOnly ? 'Nothing filed.' : 'No places found.'}</h3><p>${savedOnly ? 'Saved case files appear here.' : 'Try the business name, address, owner, or parcel account.'}</p><button class="secondary-button" id="reset-filters">Explore all places ${icon('arrow')}</button></div>`;
   renderDeck(deckMarkup);
@@ -136,6 +142,7 @@ function toggleSave(id: string) {
   if(persisted) toast(adding ? 'Place saved to your collection.' : 'Place removed from your collection.');
 }
 function selectPlace(id: string, fly = false) {
+  stopRoadPulse(); pendingRoadFocus=false;
   selected = getPlace(id); tab = 'overview';
   if(location.hash !== `#${selected.id}`) history.pushState(null,'',`#${selected.id}`);
   renderList(); renderDossier(); updateMapSelection();
@@ -155,20 +162,20 @@ function renderDossier() {
   $('#dossier').dataset.tabView = tab;
   $('#dossier').innerHTML = `
     <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span><button id="dossier-save" class="icon-button ${isSaved?'is-saved':''}" aria-label="${isSaved?'Unsave':'Save'} ${p.name}" aria-pressed="${isSaved}">${icon('bookmark')}</button></div>
-    <div class="dossier-hero">${buildingArt()}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="county-building-photo">View source photo ↗</button></div>
+    <div class="dossier-hero">${buildingArt(p.artName,p.name)}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="${p.heroImageId ?? 'county-building-photo'}">View source photo ↗</button></div>
     <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${p.name}</h2><p>${icon('pin')} ${p.address}</p></div>
     <div class="dossier-tabs" role="tablist" aria-label="Dossier sections"><button role="tab" id="tab-overview" data-tab="overview" aria-controls="dossier-content" aria-selected="${tab==='overview'}" tabindex="${tab==='overview'?0:-1}" class="${tab==='overview'?'active':''}">Overview</button><button role="tab" id="tab-evidence" data-tab="evidence" aria-controls="dossier-content" aria-selected="${tab==='evidence'}" tabindex="${tab==='evidence'?0:-1}" class="${tab==='evidence'?'active':''}">Evidence <span>${p.evidence.length}</span></button><button role="tab" id="tab-notes" data-tab="notes" aria-controls="dossier-content" aria-selected="${tab==='notes'}" tabindex="${tab==='notes'?0:-1}" class="${tab==='notes'?'active':''}">Field notes</button></div>
     <div id="dossier-content" class="dossier-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
-    <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${reviewLabel}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
+    <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${dateLabel(p.reviewed ?? reviewed)}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
   const content = $('#dossier-content');
   if(tab === 'overview') content.innerHTML = `
-    <div class="case-status"><span class="live-dot"></span> BUILDING & OWNER IDENTIFIED <strong>Lumber storage documented</strong></div>
-    <p class="dossier-summary">${p.summary}</p>
-    <button id="view-submitted-images" class="image-callout">${icon('eye')} View ${p.images.length} evidence images ${icon('arrow')}</button>
-    <section class="road-brief"><p class="eyebrow">THE MISSING ROAD</p><h3>Maps disagree.</h3><p>The submitted Google view leaves this corridor blank. OSM maps three service-road segments; one is tagged private.</p><div><button id="trace-road">Trace the road ${icon('crosshair')}</button><button data-evidence="osm-road">Compare the records ${icon('arrow')}</button></div></section>
-    <div class="findings">${p.findings.filter(f=>['Property owner','Building match','Documented use'].includes(f.label)).map(f=>`<article class="finding finding-${f.state}"><span class="section-label">${f.label}</span><h3>${f.value}</h3><p>${f.detail}</p>${f.evidence.length ? `<button class="finding-evidence" data-evidence="${f.evidence[0]}">View evidence ${icon('arrow')}</button>` : ''}</article>`).join('')}</div>
+    <section class="case-summary" aria-label="Case summary"><p class="eyebrow">CASE SUMMARY</p><p class="dossier-summary">${p.summary}</p><div class="summary-sources">${(p.summarySources ?? []).map(i=>`<a href="${escapeHtml(p.sources[i].url!)}" target="_blank" rel="noopener noreferrer">${p.sources[i].publisher} ↗</a>`).join('')}</div></section>
+    <div class="case-status" data-tone="${p.statusTone ?? 'record'}"><span class="live-dot"></span> ${p.statusLabel ?? 'BUILDING & OWNER IDENTIFIED'} <strong>${p.statusTitle ?? 'Lumber storage documented'}</strong></div>
+    <button id="view-submitted-images" class="image-callout">${icon('eye')} View ${p.images.length} evidence ${p.images.length===1?'image':'images'} ${icon('arrow')}</button>
+    ${p.id==='stockyard-airsoft' ? `<section class="road-brief"><p class="eyebrow">THE MISSING ROAD</p><h3>Maps disagree.</h3><p>The submitted Google view leaves this corridor blank. OSM maps three service-road segments; one is tagged private.</p><div><button id="trace-road">Trace the road ${icon('crosshair')}</button><button data-evidence="osm-road">Compare the records ${icon('arrow')}</button></div></section>` : ''}
+    <div class="findings">${p.findings.filter(f=>p.id!=='stockyard-airsoft'||['Property owner','Building match','Documented use'].includes(f.label)).map(f=>`<article class="finding finding-${f.state}"><span class="section-label">${f.label}</span><h3>${f.value}</h3><p>${f.detail}</p>${f.evidence.length ? `<button class="finding-evidence" data-evidence="${f.evidence[0]}">View evidence ${icon('arrow')}</button>` : ''}</article>`).join('')}</div>
     <div class="interest"><span class="eyebrow">THE QUESTION</span><p>${p.interest}</p></div>
-    <button id="focus-place" class="primary-button">${icon('crosshair')} Show candidate parcels ${icon('arrow')}</button>`;
+    <button id="focus-place" class="primary-button">${icon('crosshair')} Show property on map ${icon('arrow')}</button>`;
   else if(tab === 'evidence') content.innerHTML = `${imageGallery(p)}<p class="evidence-intro">Records, maps and submitted images. Source links and dates are attached below.</p>${p.evidence.map((e,i)=>`<article class="evidence-item" id="evidence-${e.id}" tabindex="-1"><span class="evidence-number">${String(i+1).padStart(2,'0')}</span><div><span class="evidence-badge">${icon(e.sources.some(n=>p.sources[n].kind==='Official record')?'book':'info')} ${p.sources[e.sources[0]].kind}</span><h3>${e.title}</h3><p>${e.detail}</p>${imageAttachments(p,e.images)}${e.sources.map(n=>sourceMarkup(p.sources[n])).join('')}</div></article>`).join('')}
     <details class="remaining-questions"><summary>Unresolved items</summary><div>${p.unknowns.map(u=>`<p>${u}</p>`).join('')}<p>${p.locationNote}</p></div></details>
     <section class="next-steps"><span class="section-label">NEXT RECORDS TO CHECK</span>${p.nextSteps.map(s=>`<article><h3>${s.title}</h3><p>${s.detail}</p><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${s.label} ${icon('external')}</a></article>`).join('')}</section>`;
@@ -245,7 +252,7 @@ function traceRoad() {
 }
 function exportDossier(p: Place) {
   const note = readStorage<unknown>(`itf:note:${p.id}`,'');
-  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Road map comparison',roadSnapshot.provenance.interpretation,roadSnapshot.provenance.sourceUrl,'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified source-page permalink. See submitted images below when available.'}\nMethod: ${s.method}`;}).join('\n\n')}`),...exportImageEvidence(p),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Field notes',typeof note === 'string' ? note : ''].join('\n');
+  const text = [`# ${p.name}`,`Into The Facade · research in progress · reviewed ${p.reviewed ?? reviewed}`,'',p.address,p.summary,'','## Findings',...p.findings.map(f=>`- ${f.label}: ${f.value}\n  ${f.detail}`),'','## Geographic context',p.locationNote,`Area center: ${p.coordinates[1]}, ${p.coordinates[0]}`,`Parcel accounts: ${p.parcelAccounts.join(', ')}`,...(p.id==='stockyard-airsoft' ? [`County geometry retrieved: ${parcelSnapshot.provenance.retrievedAt}`,parcelSnapshot.provenance.queryUrl,'','## Road map comparison',roadSnapshot.provenance.interpretation,roadSnapshot.provenance.sourceUrl] : [`County geometry retrieved: ${additionalParcels.provenance.retrievedAt}`,additionalParcels.provenance.queryUrl]),'','## Evidence',...p.evidence.map(e=>`### ${e.title}\n${e.detail}\n${e.sources.map(n=>{const s=p.sources[n];return `Source: ${s.title} · ${s.publisher} · ${s.kind}\nDate: ${s.date}\nReviewed: ${s.reviewed}\n${s.url ?? 'Submitted screenshot; no verified source-page permalink. See submitted images below when available.'}\nMethod: ${s.method}`;}).join('\n\n')}`),...exportImageEvidence(p),'','## Unknowns',...p.unknowns.map(u=>`- ${u}`),'','## Next records',...p.nextSteps.map(s=>`- ${s.title}: ${s.detail}\n  ${s.url}`),'','## Field notes',typeof note === 'string' ? note : ''].join('\n');
   const url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`into-the-facade-${p.id}.md`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Dossier exported with sources and saved notes.');
 }
 function resetFilters() {query='';category='All';savedOnly=false;$<HTMLInputElement>('#search').value='';updateFilters();renderList();fitMap();}
@@ -263,12 +270,12 @@ function focusMap(place: Place, zoom: number) {
 function fitMap() {
   const shown=visiblePlaces(); if(!mapReady||!shown.length)return;
   const ids=new Set(shown.map(p=>p.id));
-  const points=parcelSnapshot.features.filter(f=>ids.has(f.properties.placeId)).flatMap(f=>f.geometry.coordinates.flat());
-  const coordinates=points.length?points:shown.map(p=>p.coordinates);
+  const points=parcelCollection.features.filter(f=>ids.has(f.properties?.placeId)).flatMap(f=>f.geometry.type==='Polygon'?f.geometry.coordinates.flat():[]);
+  const coordinates=[...points,...shown.map(p=>p.coordinates)];
   const lngs=coordinates.map(p=>p[0]),lats=coordinates.map(p=>p[1]);
   const bounds: MapBounds = [[Math.min(...lngs),Math.min(...lats)],[Math.max(...lngs),Math.max(...lats)]];
   if (compatMap) compatMap.fit(bounds);
-  else map?.fitBounds(bounds,{padding:{top:100,bottom:100,left:50,right:60},maxZoom:16,pitch:is3d?35:0,bearing:0,duration:reducedMotion?0:850});
+  else map?.fitBounds(bounds,{padding:{top:100,bottom:100,left:115,right:115},maxZoom:16,pitch:is3d?35:0,bearing:0,duration:reducedMotion?0:850});
 }
 function resetMap(mode: 'styled' | '2d') {
   // Invalidate callbacks before removing the old renderer. A slow import/load
@@ -304,7 +311,7 @@ async function initCompatMap() {
     const { createCompatMap } = await import('./compat-map');
     if(generation!==mapGeneration)return;
     compatMap=createCompatMap({
-      container:$('#map'),center:selected.coordinates,places,parcels:parcelSnapshot as unknown as FeatureCollection,roads:roadSnapshot as unknown as FeatureCollection,reducedMotion,
+      container:$('#map'),center:selected.coordinates,places,parcels:parcelCollection,roads:roadSnapshot as unknown as FeatureCollection,reducedMotion,
       select:id=>selectPlace(id,true),
       onTileStatus:unavailable=>{
         if(generation!==mapGeneration)return;
@@ -333,7 +340,7 @@ function initMap() {
       if(generation!==mapGeneration)return;
       try {
         clearTimeout(mapTimeout);
-        instance.addSource('county-parcels',{type:'geojson',data:parcelSnapshot as unknown as FeatureCollection});
+        instance.addSource('county-parcels',{type:'geojson',data:parcelCollection});
         instance.addLayer({id:'candidate-parcels',type:'fill',source:'county-parcels',paint:{'fill-color':'#d28a59','fill-opacity':0.18}});
         instance.addLayer({id:'parcel-outlines',type:'line',source:'county-parcels',paint:{'line-color':mapInk,'line-width':2.5,'line-dasharray':[3,2]}});
         instance.addSource('osm-roads',{type:'geojson',data:roadSnapshot as unknown as FeatureCollection});
@@ -351,15 +358,15 @@ function initMap() {
 }
 function showDialog(kind: 'about'|'sources'|'region') {
   const content = $('#dialog-content');
-  if(kind==='region') content.innerHTML=`<h2 id="dialog-title">STOCKYARDS / FILE 01</h2><p>This edition starts with the former Stockyard Airsoft address near Stockyards City. It is a research candidate, with abandonment and current access unverified.</p><button class="region-choice" id="choose-region">${icon('pin')}<span><strong>Oklahoma City, Oklahoma</strong><small>${places.length} case · ${claimCount} evidence entries</small></span>${icon('check')}</button><p class="dialog-footnote">The deck contains reviewed leads. It is not a live scan of abandoned properties.</p>`;
-  else if(kind==='about') content.innerHTML=`<h2 id="dialog-title">Into The Facade</h2><p>Into The Facade helps investigate overlooked buildings through public records. Start with a former business, identify the possible parcels, and trace the evidence for ownership and current use.</p><div class="dialog-callout"><strong>Closed business ≠ empty building.</strong><p>It does not establish an abandoned building. Ownership, occupancy, condition, and access are separate findings, each with its own evidence.</p></div><p class="dialog-footnote">This first case combines manually reviewed records with a dated county parcel-data snapshot. Illustrations are decorative. Saved places and notes remain in your browser.</p>`;
+  if(kind==='region') content.innerHTML=`<h2 id="dialog-title">OKLAHOMA COUNTY / THREE FILES</h2><p>Stockyard Airsoft, former Eagle Industries, and the Rhode Island Avenue warehouse. Three properties investigated through county records, environmental reports and court documents.</p><button class="region-choice" id="choose-region">${icon('pin')}<span><strong>Oklahoma City + Midwest City</strong><small>${places.length} cases · ${claimCount} evidence entries</small></span>${icon('check')}</button><p class="dialog-footnote">The deck contains reviewed leads. It is not a live scan of abandoned properties.</p>`;
+  else if(kind==='about') content.innerHTML=`<h2 id="dialog-title">Into The Facade</h2><p>Into The Facade helps investigate overlooked buildings through public records. Start with a former business, identify the possible parcels, and trace the evidence for ownership and current use.</p><div class="dialog-callout"><strong>Closed business ≠ empty building.</strong><p>It does not establish an abandoned building. Ownership, occupancy, condition, and access are separate findings, each with its own evidence.</p></div><p class="dialog-footnote">These three cases combine reviewed county records, environmental reports, court filings and dated parcel snapshots. Case history concerns the cited activity and date, not an accusation against a current owner or neighboring tenant. Illustrations are decorative. Saved places and notes remain in your browser.</p>`;
   else content.innerHTML=`<h2 id="dialog-title">Sources & methods</h2><p>Public-record research, with a source and date for each claim. This is a reviewed snapshot, not continuous monitoring.</p><div class="method-list">
     <div><span>01</span><p><strong>Start with a lead</strong>Former business listings and submitted observations provide names and addresses. Directory closure labels are kept as leads.</p></div>
     <div><span>02</span><p><strong>Match the property</strong>County assessor accounts and parcel boundaries identify possible matches. Shared addresses stay unresolved until the building is matched.</p></div>
     <div><span>03</span><p><strong>Separate the records</strong>Deeds concern property; state filings concern entities and trade names; city files concern permits and inspections. An LLC status or a closed permit is not a vacancy finding.</p></div>
     <div><span>04</span><p><strong>Keep the gaps visible</strong>Compare dated occupancy clues, identify conflicts, and record the next verification step. Missing records do not prove that nothing happened.</p></div></div>
     <div class="dialog-links"><a href="${parcelMapUrl}" target="_blank" rel="noopener noreferrer">County parcel map ${icon('external')}</a><a href="${registryUrl}" target="_blank" rel="noopener noreferrer">Official entity / trade-name search ${icon('external')}</a><a href="${cityPortalUrl}" target="_blank" rel="noopener noreferrer">City records portal ${icon('external')}</a></div>
-    <p class="dialog-footnote">Reviewed ${reviewLabel}. County geometry retrieved ${parcelSnapshot.provenance.retrievedAt.slice(0,10)}. Google Maps and MapQuest are public-facing proprietary services, not open datasets. ChamberofCommerce.org is a third-party guide; the Secretary of State is the registry. Automated reuse requires source-specific permission or licensing checks.</p>
+    <p class="dialog-footnote">Latest addition reviewed ${reviewLabel}. Each source keeps its own review date; county snapshots were retrieved November 13–14, 2026. Google Maps and MapQuest are public-facing proprietary services, not open datasets. ChamberofCommerce.org is a third-party guide; the Secretary of State is the registry. Automated reuse requires source-specific permission or licensing checks.</p>
     <p class="dialog-footnote">The styled basemap uses OpenFreeMap / OpenStreetMap; the 2D map uses OpenStreetMap image tiles. Both include attribution. Parcel overlays are county reference boundaries, not building outlines or a legal survey. The marker represents the candidate area. The highlighted service-road network is a reviewed OpenStreetMap snapshot, including a parking loop. A private tag belongs to one segment only. Generated card artwork is decorative; original source photographs are in Evidence. No live Overture, USGS, EPA, Google, or business-registry ingestion is running.</p>`;
   $<HTMLDialogElement>('#info-dialog').showModal();$('#choose-region')?.addEventListener('click',()=>{$<HTMLDialogElement>('#info-dialog').close();resetFilters();});
 }
@@ -368,7 +375,7 @@ $('#places').addEventListener('click',event=>{
   if(!button||button.closest('.is-leaving'))return;
   if(button.dataset.select)selectPlace(button.dataset.select,true);
   else if(button.dataset.save)toggleSave(button.dataset.save);
-  else if(button.hasAttribute('data-investigate-road')){showEvidence('osm-road',false);traceRoad();}
+  else if(button.hasAttribute('data-investigate-road')){selectPlace('stockyard-airsoft');showEvidence('osm-road',false);traceRoad();}
   else if(button.id==='reset-filters')resetFilters();
 });
 $('#search').addEventListener('input',()=>{query=$<HTMLInputElement>('#search').value;renderList();});

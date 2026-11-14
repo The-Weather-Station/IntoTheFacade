@@ -89,7 +89,7 @@ export function createCompatMap(options: {
     },
     highlightRoad(strength: number) { roadHighlightStrength=strength; roadHighlight.setStyle(roadHighlightStyle); },
     focus(point: [number, number], zoom: number) { map.setView(latLng(point), zoom, { animate: !options.reducedMotion }); },
-    fit(bounds: MapBounds) { map.fitBounds([latLng(bounds[0]), latLng(bounds[1])], { paddingTopLeft: [50, 130], paddingBottomRight: [60, 100], maxZoom: 16, animate: !options.reducedMotion }); },
+    fit(bounds: MapBounds) { map.fitBounds([latLng(bounds[0]), latLng(bounds[1])], { paddingTopLeft: [100, 130], paddingBottomRight: [100, 100], maxZoom: 16, animate: !options.reducedMotion }); },
     zoom(delta: number) { map.setZoom(map.getZoom() + delta, { animate: !options.reducedMotion }); },
     remove() { clearTimeout(tileTimer); resize.disconnect(); tiles.off(); map.stop(); map.remove(); },
   };

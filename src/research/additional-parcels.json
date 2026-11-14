@@ -1,0 +1,174 @@
+{
+  "provenance": {
+    "interpretation": "County reference parcels, not surveyed building footprints, suite boundaries, contamination extent or public access areas.",
+    "retrievedAt": "2026-11-14",
+    "queryUrl": "https://services8.arcgis.com/euhkr1dAJeQBIjV0/arcgis/rest/services/TaxParcelsPublics_view/FeatureServer/0/query?where=accountno%20IN%20%28%27R154131250%27%2C%27R026169800%27%29&outFields=accountno%2Cname1%2Clocation%2Cacres%2Cpin%2Cpropertyid&returnGeometry=true&outSR=4326&f=geojson",
+    "coordinateSystem": "EPSG:4326",
+    "publisher": "Oklahoma County Assessor"
+  },
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -97.3368636060507,
+              35.4355303694657
+            ],
+            [
+              -97.3379597876481,
+              35.4355183604196
+            ],
+            [
+              -97.3379562618587,
+              35.4365054979159
+            ],
+            [
+              -97.336862198421,
+              35.4360890900341
+            ],
+            [
+              -97.3368636060507,
+              35.4355303694657
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "acres": 2.271,
+        "placeId": "eagle-industries",
+        "owner": "Private ownership recorded",
+        "pin": "1226-15-413-1250",
+        "assessorUrl": "https://docs.oklahomacounty.org/AssessorWP5/AN-R.asp?PropertyID=7298",
+        "account": "R154131250",
+        "address": "10901 SE 29TH ST MIDWEST CITY"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -97.4826973875357,
+              35.4705117553309
+            ],
+            [
+              -97.4807788117419,
+              35.470496216166
+            ],
+            [
+              -97.4807787335066,
+              35.4704962176263
+            ],
+            [
+              -97.4807448809173,
+              35.4704981740736
+            ],
+            [
+              -97.480744404435,
+              35.4703388340196
+            ],
+            [
+              -97.480743247244,
+              35.4699608973423
+            ],
+            [
+              -97.480743071753,
+              35.469906007739
+            ],
+            [
+              -97.4807403048404,
+              35.4690048332585
+            ],
+            [
+              -97.4834665293894,
+              35.468867859256
+            ],
+            [
+              -97.4834622299363,
+              35.4695289471935
+            ],
+            [
+              -97.4834619520768,
+              35.4695716707422
+            ],
+            [
+              -97.4834519032254,
+              35.4695716270047
+            ],
+            [
+              -97.4833691932791,
+              35.4695712669785
+            ],
+            [
+              -97.4832865174871,
+              35.4695709070434
+            ],
+            [
+              -97.483203776694,
+              35.4695705467676
+            ],
+            [
+              -97.4831210975983,
+              35.4695701867029
+            ],
+            [
+              -97.483038331467,
+              35.4695698262014
+            ],
+            [
+              -97.4829556512711,
+              35.4695694660166
+            ],
+            [
+              -97.4828729413293,
+              35.4695691056446
+            ],
+            [
+              -97.4827902346935,
+              35.4695687452294
+            ],
+            [
+              -97.4827063866694,
+              35.4695683797814
+            ],
+            [
+              -97.4827041325599,
+              35.4699144627753
+            ],
+            [
+              -97.4827039532818,
+              35.469941987977
+            ],
+            [
+              -97.482703562801,
+              35.4699682774647
+            ],
+            [
+              -97.4826998806221,
+              35.4702161043243
+            ],
+            [
+              -97.4826973875357,
+              35.4705117553309
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "acres": 6.26,
+        "placeId": "rhode-island-warehouse",
+        "owner": "SETTCO INC",
+        "pin": "2738-02-616-9800",
+        "assessorUrl": "https://docs.oklahomacounty.org/AssessorWP5/AN-R.asp?PropertyID=163252",
+        "account": "R026169800",
+        "address": "301 N RHODE ISLAND AVE OKLAHOMA CITY"
+      },
+      "type": "Feature"
+    }
+  ]
+}

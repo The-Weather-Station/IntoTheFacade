@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { places, filterPlaces, getPlace, reviewed } from '../src/data.ts';
 const parcels = JSON.parse(readFileSync(new URL('../src/research/stockyard-parcels.json', import.meta.url), 'utf8'));
+const additionalParcels = JSON.parse(readFileSync(new URL('../src/research/additional-parcels.json', import.meta.url), 'utf8'));
 const roads = JSON.parse(readFileSync(new URL('../src/research/osm-road-corridor.json', import.meta.url), 'utf8'));
 
 test('published claims and findings retain valid, dated provenance', () => {
@@ -18,7 +19,7 @@ test('published claims and findings retain valid, dated provenance', () => {
         const source=p.sources[index];
         assert.ok(source, `${p.id}: broken source reference`);
         assert.ok(source.date && source.method);
-        assert.equal(source.reviewed,reviewed);
+        assert.equal(source.reviewed,p.reviewed ?? reviewed);
         if(source.url) assert.equal(new URL(source.url).protocol,'https:');
         else assert.equal(source.kind,'Submitted screenshot');
       }
@@ -29,13 +30,13 @@ test('published claims and findings retain valid, dated provenance', () => {
     }
   }
 });
-test('address matching preserves both county parcels and real closed polygons', () => {
+test('each case keeps its own county accounts and real closed parcel polygons', () => {
   assert.equal(parcels.provenance.coordinateSystem,'EPSG:4326');
   assert.ok(!Number.isNaN(Date.parse(parcels.provenance.retrievedAt)));
   for(const p of places) {
-    const matches=parcels.features.filter(f=>f.properties.placeId===p.id);
+    const matches=[...parcels.features,...additionalParcels.features].filter(f=>f.properties.placeId===p.id);
     assert.deepEqual(matches.map(f=>f.properties.account).sort(),[...p.parcelAccounts].sort());
-    assert.equal(matches.length,2);
+    assert.equal(matches.length,p.id==='stockyard-airsoft'?2:1);
     for(const f of matches) {
       assert.equal(f.geometry.type,'Polygon');
       assert.ok(f.properties.owner);
@@ -43,10 +44,28 @@ test('address matching preserves both county parcels and real closed polygons', 
       for(const ring of f.geometry.coordinates) {
         assert.ok(ring.length>=4);
         assert.deepEqual(ring[0],ring.at(-1));
-        for(const [x,y] of ring) { assert.ok(x>-97.57&&x<-97.55);assert.ok(y>35.44&&y<35.46); }
+        for(const [x,y] of ring) { assert.ok(x>-97.6&&x<-97.3);assert.ok(y>35.4&&y<35.5); }
       }
     }
   }
+});
+
+test('three cases keep occupancy, environmental evidence and criminal outcomes distinct', () => {
+  assert.equal(places.length,3);
+  const eagle=getPlace('eagle-industries'), warehouse=getPlace('rhode-island-warehouse');
+  assert.equal(eagle.category,'Environmental record');
+  assert.equal(warehouse.category,'Court record');
+  for(const place of [eagle,warehouse]) {
+    assert.equal(place.reviewed,'2026-11-14');
+    assert.ok(place.evidence.length>=5);
+    assert.ok(place.images.length);
+    assert.ok(place.summarySources?.every(i=>place.sources[i].url));
+    assert.ok(place.images.some(image=>image.id===place.heroImageId));
+  }
+  assert.ok(eagle.summary.toLowerCase().includes('unoccupied'));
+  assert.ok(warehouse.evidence.some(e=>e.sources.some(i=>warehouse.sources[i].url?.includes('2026-dockets'))));
+  assert.ok(warehouse.evidence.some(e=>e.sources.some(i=>warehouse.sources[i].url?.includes('loopnet.com'))));
+  assert.equal(warehouse.findings.find(f=>f.label==='Use / vacancy')!.state,'lead');
 });
 test('closed business and expired entity do not become a vacancy or access verdict', () => {
   const p=getPlace('stockyard-airsoft');
@@ -70,7 +89,7 @@ test('retired landmark fragments resolve to the research case', () => {
   assert.equal(getPlace('invalid').id,'stockyard-airsoft');
 });
 test('generated art ships as separate bitmap assets, outside the evidence collection', () => {
-  for (const name of ['missing-road-card','brick-building-art','worn-card-face','table-felt','occult-card-back']) {
+  for (const name of ['missing-road-card','brick-building-art','eagle-building-art','warehouse-building-art','worn-card-face','table-felt','occult-card-back']) {
     const bytes=readFileSync(new URL(`../public/art/${name}.webp`,import.meta.url));
     assert.equal(bytes.subarray(0,4).toString(),'RIFF');
     assert.equal(bytes.subarray(8,12).toString(),'WEBP');

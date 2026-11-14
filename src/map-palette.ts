@@ -3,6 +3,8 @@
 export const mapInk = '#302535';
 export const placeColors: Record<string, string> = {
   'stockyard-airsoft': '#d28a59',
+  'eagle-industries': '#b6bd70',
+  'rhode-island-warehouse': '#b58cac',
 };
 
 export function placeColor(id: string) { return placeColors[id] ?? '#e99746'; }

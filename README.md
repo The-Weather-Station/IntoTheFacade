@@ -2,7 +2,7 @@
 
 An initial Oklahoma City field atlas built with Vite, TypeScript, MapLibre GL JS, and a Leaflet 2D fallback.
 
-The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Five original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
+The visual direction is a worn pixel-art card table inspired by Dungeons & Degenerate Gamblers. Seven original generated raster assets supply the worn card faces, occult card back, felt, missing-road mystery card, and county-photo-based brick warehouse illustration. See [DESIGN.md](DESIGN.md) and [ARTWORK.md](ARTWORK.md). Generated artwork is separate from documentary evidence.
 
 ## Run
 
@@ -50,22 +50,22 @@ Open the preview server at `/IntoTheFacade/`. The map style, favicon, map worker
 
 ## Working features
 
-- One real research case: the former Stockyard Airsoft address, replacing the three landmark examples.
-- Fifteen evidence entries with source type, source date, review date, method, and explicit limitations.
-- Five original evidence images: three submitted screenshots, a county building photograph and a county sketch. Direct publisher links appear in the gallery, attached evidence, viewer and export; saved image copies are labeled separately. Contributor uploads without a supplied source-page URL are identified explicitly.
+- Three sourced cases: Stockyard Airsoft, former Eagle Industries, and the Rhode Island Avenue warehouse / Suite 109 case history.
+- Twenty-nine evidence entries with source type, source date, review date, method, and explicit limitations.
+- Seven original evidence images: three submitted screenshots, three county building photographs and a county sketch. Direct publisher links appear in the gallery, attached evidence, viewer and export; saved image copies are labeled separately. Contributor uploads without a supplied source-page URL are identified explicitly.
 - The missing-road card opens the OSM comparison, fits the road and pulses a gold halo for 5.4 seconds on either map renderer. Reduced-motion users get steady emphasis. On phones, selection brings the map into view. Filtering out the case and renderer changes cancel the pulse.
 - Separate findings for former venue, property owner, entity status, current use, building match, abandonment, and access.
-- Two real, address-matched county parcel polygons; no invented building blocks or heights.
+- Four real, address-matched county parcel polygons; no invented building blocks or heights.
 - Map/list/dossier selection; name, address, owner and parcel search; category/saved filters; flat/tilt views.
 - Browser-local saved places and field notes, with Markdown export of findings, provenance, unknowns, and next steps.
-- Responsive layouts, keyboard-operable controls, shareable `#stockyard-airsoft` fragment, and usable dossiers when the map cannot connect.
-- Staggered card entrances, gentle floating, pointer tilt and smooth exits; stable cards persist through map/filter updates. Dossier changes settle into place. Reduced-motion preferences and offscreen pausing are respected.
+- Responsive layouts, keyboard-operable controls, shareable case fragments, and usable dossiers when the map cannot connect.
+- Off-screen card slide-ins, subtle idle drift and free dragging across the table. Drag a grip or illustration, or focus the grip and use arrow keys (Shift for larger steps, Home to reset). Reset cards returns every card. Native-size text never scales or tilts; it stays still on hover/focus. Reduced-motion preferences disable automatic movement.
 
 ## Data and representations
 
 Read [DATA_PIPELINE.md](DATA_PIPELINE.md) for the source plan, matching rules, research log, unresolved dependencies, and next milestones.
 
-`src/data.ts` is the manually reviewed dossier. `src/research/stockyard-parcels.json` is a dated county snapshot. The map pin represents the combined parcel area, not an entrance or surveyed building footprint. `src/research/osm-road-corridor.json` preserves three entire OSM ways and provenance, including WEOKIE parking circulation. Only way 1325580486 is tagged private; untagged ways do not establish public access.
+`src/data.ts` and `src/additional-places.ts` contain the manually reviewed dossiers. Original Stockyard sources retain their November 13 review date; the new cases were reviewed November 14. `src/research/stockyard-parcels.json` is a dated county snapshot. The map pin represents the combined parcel area, not an entrance or surveyed building footprint. `src/research/osm-road-corridor.json` preserves three entire OSM ways and provenance, including WEOKIE parking circulation. Only way 1325580486 is tagged private; untagged ways do not establish public access.
 
 The county lists MID STATES PROPERTIES LLC as owner and MID-STATES WHOLESALE LUMBER as occupant. The red-brick building is visually matched to account R261068040 by the county photograph and sketch. Its inventory lists a 1963 two-story warehouse, 193,038 square feet; the March 18, 2025 photo documents lumber storage at the building. These established findings lead the dossier. The old airsoft tenancy, closure cause and current room-by-room use remain separate research questions. The reported road is present in OSM but absent from the submitted Google view and queried city street-centerline coverage. That difference does not prove physical removal or explain Google's mapping decision.
 
@@ -100,11 +100,13 @@ npm run build
 
 The tests cover claim/finding provenance, county account matching, polygon validity, explicit uncertainty, combined search/filters, retired fragments, generated asset integrity/size, original evidence-image hashes/dimensions/source links, and OSM way geometry/access-tag scope. Browser checks cover both map renderers, evidence navigation, the image viewer, road tracing, filters, and phone layout.
 
-For a development-only styled-map failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. The 2D map should automatically load, with both parcels and the dossier available. Remove the query parameter to load the styled map. Also check `/?map=2d`, switching both ways, zero-result searches, zoom/fit, marker selection, and phone layout. LibreWolf's actual WebGL-disabled configuration was reproduced and the fallback verified on November 13, 2026, without changing browser privacy settings.
+For a development-only styled-map failure check, visit `/?test-map-failure`. This test hook is excluded from the production build. The 2D map should automatically load, with all four parcels and the dossiers available. Remove the query parameter to load the styled map. Also check `/?map=2d`, switching both ways, zero-result searches, zoom/fit, marker selection, and phone layout. LibreWolf's actual WebGL-disabled configuration was reproduced and the fallback verified on November 13, 2026, without changing browser privacy settings.
 
 ## Main files
 
-- `src/data.ts`: reviewed case, separate findings, evidence, source metadata, and filters.
+- `src/data.ts` and `src/additional-places.ts`: three reviewed cases, findings, evidence, source metadata, and filters.
+- `src/research/additional-parcels.json`: Eagle and warehouse county parcel snapshots.
+- `MIDTERM_CASES.md`: the three-case demo script and research boundaries.
 - `src/research/stockyard-parcels.json`: reviewed county reference geometry and retrieval provenance.
 - `src/research/osm-road-corridor.json`: three complete OSM service-road ways, tags, versions and attribution.
 - `scripts/fetch-stockyard-parcels.mjs`: bounded county query that produces a review candidate.
@@ -113,7 +115,7 @@ For a development-only styled-map failure check, visit `/?test-map-failure`. Thi
 - `src/compat-map.ts`: image/SVG map for browsers that block WebGL.
 - `src/evidence-images.ts`: evidence gallery, accessible full-resolution viewer, and export metadata.
 - `public/evidence/stockyard-airsoft/`: three unmodified contributor screenshots plus the county photo and sketch.
-- `public/art/`: five optimized generated WebP assets; no game assets are distributed.
+- `public/art/`: seven optimized generated WebP assets; no game assets are distributed.
 - `src/generated-art.ts` and `src/generated-theme.css`: raster card artwork and current tabletop composition.
 - `src/card-motion.ts` and `src/card-motion.css`: dealt-card transitions, idle float, pointer response and visibility-aware cleanup.
 - `src/art.ts`: functional SVG icons; older procedural architectural art is no longer used.

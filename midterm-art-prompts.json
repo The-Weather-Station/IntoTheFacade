@@ -1,0 +1,18 @@
+{
+  "generated": "2026-11-14",
+  "method": "Built-in image_gen",
+  "prompts": [
+    {
+      "asset": "eagle-building-art.webp",
+      "prompt": "Create one wide landscape pixel-art illustration for an industrial Halloween mystery card website. Reference 1 is the real subject: former Eagle Industries white low single-story metal-clad workshop, slightly sloped blue-edged roof, slim tall windows, small shallow entrance canopy, shrubs, empty cracked concrete forecourt. Preserve the recognizable building silhouette and door/window arrangement. Reference 2 is the established website ART STYLE ONLY: crisp coarse pixel clusters, dithered shadows, muted rust orange dusk, ink plum shadows, olive moss, worn retro game print feeling reminiscent of Dungeons and Degenerate Gamblers. Render the white workshop in that matching illustrated style, atmospheric late autumn twilight. Landscape 16:9 artwork filling the frame, no card border, no lettering, no logos, no date stamps, no people, no invented crime scene, no toxic liquid/pollution glow, no wreckage. This is clearly generated interpretive artwork; original photo is kept separately as evidence.",
+      "referencePhoto": "https://docs.oklahomacounty.org/AssessorWP5/ShowImageDB.asp?Propertyid=7298",
+      "styleReference": "public/art/brick-building-art.webp"
+    },
+    {
+      "asset": "warehouse-building-art.webp",
+      "prompt": "Create one wide landscape pixel-art illustration for an industrial Halloween mystery card website. Reference 1 is the real subject: low long pale-gray metal warehouse complex with a row of closed loading-dock roll-up doors, raised concrete dock, shallow awnings, a ramp left of center, cracked empty paved forecourt, very low roofline. Preserve the recognizable industrial frontage, no invented suite number or signage. Reference 2 is the established website ART STYLE ONLY: crisp coarse pixel clusters, dithered shadows, muted rust-orange dusk, ink plum shadows, olive moss, worn retro game print feeling reminiscent of Dungeons and Degenerate Gamblers. Render the loading docks in that matching style under eerie late-autumn orange/purple twilight. Landscape16:9 art filling the frame, no card border, no lettering, no logos, no dates, no people, no drugs/guns/police or invented crime scene. The architecture is the subject, this is clearly generated interpretive art; original photo remains evidence.",
+      "referencePhoto": "https://docs.oklahomacounty.org/AssessorWP5/ShowImageDB.asp?Propertyid=163252",
+      "styleReference": "public/art/brick-building-art.webp"
+    }
+  ]
+}

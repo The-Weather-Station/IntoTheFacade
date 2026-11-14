@@ -1,4 +1,6 @@
-export type Category = 'Former business';
+import { additionalPlaces } from './additional-places.ts';
+
+export type Category = 'Former business' | 'Environmental record' | 'Court record';
 export type SourceKind = 'Official record' | 'Business website' | 'Directory lead' | 'Submitted screenshot' | 'Map dataset';
 export interface Evidence { id: string; title: string; detail: string; sources: number[]; images?: string[] }
 export interface EvidenceImage {
@@ -21,6 +23,8 @@ export interface Place {
   interest: string; tags: string[]; evidence: Evidence[]; sources: Source[];
   unknowns: string[]; findings: Finding[]; nextSteps: ResearchStep[];
   parcelAccounts: string[]; locationNote: string; images: EvidenceImage[];
+  reviewed?: string; statusLabel?: string; statusTitle?: string; statusTone?: 'hazard' | 'case';
+  summarySources?: number[]; artName?: string; heroImageId?: string;
 }
 export const reviewed = '2026-11-13';
 export const registryUrl = 'https://business.sos.ok.gov/corp/corpInquiryFind.aspx';
@@ -34,7 +38,8 @@ export const places: Place[] = [{
   // Combined county parcel bounds center; not a verified building or entrance pin.
   coordinates: [-97.56117721784465, 35.4512621621602],
   address: '2801 SW 15th St · Oklahoma City, OK 73108',
-  summary: 'The red-brick warehouse is matched to county account R261068040. The assessor names MID STATES PROPERTIES LLC as owner and MID-STATES WHOLESALE LUMBER as occupant; its March 2025 photo shows lumber storage. The road beside it appears in OSM but not in the submitted Google map view.',
+  summary: 'The former airsoft business is listed as closed. The brick warehouse is still tied to lumber storage: county records name MID STATES PROPERTIES LLC as owner and MID-STATES WHOLESALE LUMBER as occupant, supported by a March 2025 photo. The road beside it appears in OpenStreetMap but not in the submitted Google map view.',
+  summarySources: [3, 10, 13],
   interest: 'One road, different maps. Why does this service corridor appear in OpenStreetMap, yet disappear from the submitted Google view and the city’s street-centerline snapshot?',
   tags: ['Industrial site', 'Former airsoft venue', '1963 brick warehouse', '2701 SW 15th St', 'Missing road', 'Lumber storage'],
   parcelAccounts: ['R261068000', 'R261068040'],
@@ -107,7 +112,7 @@ export const places: Place[] = [{
     { title: 'Verify the property transfer', detail: 'Review book 12303, page 874, then check later deeds against the legal description.', label: 'Open deed reference', url: deedUrl },
     { title: 'Establish the closure history', detail: 'Check occupancy, fire, and code records using the business name and both street-number aliases.', label: 'Open city records', url: cityPortalUrl },
   ],
-}];
+}, ...additionalPlaces];
 export function filterPlaces(query: string, category: string, savedOnly: boolean, saved: string[]): Place[] {
   const term = query.toLocaleLowerCase().trim();
   return places.filter(p => (!savedOnly || saved.includes(p.id)) && (category === 'All' || p.category === category) && (!term || [p.name, p.address, p.category, ...p.tags, ...p.parcelAccounts, ...p.findings.map(f=>f.value)].join(' ').toLocaleLowerCase().includes(term)));
