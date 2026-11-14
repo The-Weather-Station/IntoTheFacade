@@ -17,9 +17,13 @@ import './card-motion.css';
 import './map-hazards.css';
 import './crime-alert.css';
 import './mobile.css';
+import './card-readability.css';
+import './sound-welcome.css';
 import { createCardMotion } from './card-motion';
 import { createIntroGuide } from './intro-guide';
 import { initBackgroundAudio } from './background-audio';
+import { initCaseAlarm } from './case-alarm';
+import { createMapCamera } from './map-camera';
 import { fieldProfiles } from './field-research';
 import { explorerNotes } from './explorer-notes';
 import { mapInk, placeColor } from './map-palette';
@@ -37,6 +41,7 @@ let query = '', category = 'All', tab = 'overview', is3d = true;
 let map: LibreMap | null = null, mapReady = false, toastTimer: ReturnType<typeof setTimeout>;
 let compatMap: CompatMap | null = null, mapGeneration = 0, mapTimeout: ReturnType<typeof setTimeout> | undefined;
 let mapMode: 'styled' | '2d' = 'styled';
+let mapCamera: ReturnType<typeof createMapCamera> | undefined;
 let roadPulseFrame = 0, roadPulseTimer: ReturnType<typeof setTimeout> | undefined, pendingRoadFocus = false;
 const markers = new globalThis.Map<string, Marker>();
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -78,17 +83,20 @@ $('#app').innerHTML = `
       <div id="map-status" class="map-status" role="status">${icon('globe')}<strong>Loading the map</strong><span>Loading geographic context…</span></div>
       <button class="mobile-index" id="mobile-index">${icon('list')} Browse places</button>
     </section>
+    <div id="map-camera-tools" class="map-camera-tools" hidden><div class="camera-buttons" role="group" aria-label="Map drag mode"><button type="button" data-camera="pan" aria-pressed="true">Pan map</button><button type="button" data-camera="orbit" aria-pressed="false">Rotate / tilt</button><span class="camera-readout"></span></div><p class="camera-hint"></p></div>
     <section id="mobile-site-hazards" class="mobile-site-hazards" aria-label="Selected site hazards" hidden></section>
     <div class="dossier-dock"><button class="deck-cycle deck-cycle-prev" type="button" data-cycle="-1" aria-label="Previous card in deck"><span aria-hidden="true">&#8249;</span></button><button class="deck-cycle deck-cycle-next" type="button" data-cycle="1" aria-label="Next card in deck"><span aria-hidden="true">&#8250;</span></button><div id="dossier-hand" class="dossier-hand"></div><div class="detail-underlay"></div><div class="detail-underlay two"></div><div class="detail-underlay three" hidden></div><aside id="dossier" class="dossier" aria-label="Selected place dossier"></aside></div>
   </main>
   <footer class="app-footer"><span>INTO THE FACADE <i>/</i> OKC RESEARCH EDITION</span><button id="sources-button">${icon('book')} Sources & methodology</button><span>RECORDS REVIEWED <b>${reviewLabel}</b></span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <aside id="sound-welcome" class="sound-welcome" aria-labelledby="sound-welcome-title"><div><h2 id="sound-welcome-title">Turn your sound on!</h2><p>Fun sounds and music!</p></div><button type="button" id="sound-welcome-play">Turn sound on &#9654;</button><button type="button" id="sound-welcome-close" aria-label="Dismiss sound reminder">${icon('close')}</button></aside>
   <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">INTO THE FACADE / FIELD GUIDE</span><button id="close-dialog" class="icon-button" aria-label="Close dialog">${icon('close')}</button></div><div id="dialog-content"></div></dialog>
 `;
 const cardMotion = createCardMotion();
 const caseDeck = createCaseDeck($('#dossier'), $('.dossier-dock'), cardMotion);
 const introGuide = createIntroGuide();
 initBackgroundAudio();
+const caseAlarm = initCaseAlarm(selected?.id);
 
 
 let turnDirection = -1;
@@ -186,6 +194,7 @@ function selectPlace(id: string, fly = false) {
   introGuide.dismiss();
   stopRoadPulse(); pendingRoadFocus=false;
   const oldId = selected?.id, next = getPlace(id);
+  caseAlarm.select(next.id);
   const transition = caseDeck.switchCase(oldId, next.id, () => {
     selected = next; tab = 'overview';
     if(location.hash !== `#${selected?.id}`) history.pushState(null,'',`#${selected?.id}`);
@@ -393,6 +402,7 @@ function resetMap(mode: 'styled' | '2d') {
   stopRoadPulse();
   const generation = ++mapGeneration;
   mapReady=false; mapMode=mode; clearTimeout(mapTimeout);
+  mapCamera?.destroy(); mapCamera=undefined;
   const oldMap=map; map=null;
   markers.forEach(marker=>marker.remove()); markers.clear();
   try { oldMap?.remove(); } catch { /* A failed WebGL constructor may leave partial DOM. */ }
@@ -441,7 +451,7 @@ function initMap() {
   const fallback=()=>{if(generation===mapGeneration)void initCompatMap();};
   try {
     if(import.meta.env.DEV && new URLSearchParams(location.search).has('test-map-failure')) { fallback(); return; }
-    const instance=new LibreMap({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:(selected?.coordinates ?? countyCenter),zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
+    const instance=new LibreMap({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:(selected?.coordinates ?? countyCenter),zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,touchZoomRotate:true,touchPitch:true,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
     map=instance;
     instance.addControl(new AttributionControl({compact:true,customAttribution:'<a href="https://assessor.oklahomacounty.org/" target="_blank" rel="noopener noreferrer">Parcel reference: Oklahoma County Assessor</a>'}),'bottom-right');
     mapTimeout=setTimeout(fallback,16000);
@@ -459,6 +469,8 @@ function initMap() {
         instance.addLayer({id:'osm-private-road',type:'line',source:'osm-roads',paint:{'line-color':['case',['==',['get','access'],'private'],'#e9c6d7','#00000000'],'line-width':2,'line-dasharray':[3,2]}});
         places.forEach(p=>{const el=createPlaceMarker(p,id=>selectPlace(id,true),id=>showEvidence(id));markers.set(p.id,new Marker({element:el,anchor:'bottom-left',offset:[-16,-8]}).setLngLat(p.coordinates).addTo(instance));});
         mapReady=true; $('#map').dataset.renderer='styled';
+        mapCamera=createMapCamera(instance,$('#map-camera-tools'));
+        instance.on('pitch',()=>{is3d=instance.getPitch()>.1;$('#view-toggle').setAttribute('aria-pressed',String(is3d));$('#view-toggle').innerHTML=`${icon('layers')}<span>${is3d?'Tilt view':'Flat view'}</span>`;});
         $('#map-status').classList.add('hidden'); renderList(); updateMapSelection(); if(selected)focusMap(selected,15.5);else fitMap();
         if(pendingRoadFocus)traceRoad();
       } catch { fallback(); }
@@ -490,7 +502,7 @@ $('#places').addEventListener('click',event=>{
 $('#search').addEventListener('input',()=>{query=$<HTMLInputElement>('#search').value;renderList();});
 document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category!;updateFilters();renderList();fitMap();}));
 $('#explore-nav').addEventListener('click',()=>{updateFilters();renderList();fitMap();});
-$('#view-toggle').addEventListener('click',()=>{if(!mapReady||!map)return;is3d=!is3d;$('#view-toggle').setAttribute('aria-pressed',String(is3d));$('#view-toggle').innerHTML=`${icon('layers')}<span>${is3d?'Tilt view':'Flat view'}</span>`;if(mapReady&&map){map.easeTo({pitch:is3d?52:0,bearing:is3d?-12:0,duration:reducedMotion?0:600});}});
+$('#view-toggle').addEventListener('click',()=>{if(!mapReady||!map)return;const tilted=!is3d;if(!tilted)mapCamera?.reset();map.easeTo({pitch:tilted?52:0,bearing:tilted?-12:0,duration:reducedMotion?0:600});});
 $('#zoom-in').addEventListener('click',()=>{if(compatMap)compatMap.zoom(1);else map?.zoomIn({duration:reducedMotion?0:250});});
 $('#zoom-out').addEventListener('click',()=>{if(compatMap)compatMap.zoom(-1);else map?.zoomOut({duration:reducedMotion?0:250});});
 $('#fit-map').addEventListener('click',fitMap);
@@ -505,7 +517,7 @@ $('#mobile-index').addEventListener('click',()=>$('.discovery').scrollIntoView({
 window.addEventListener('hashchange',()=>{
   const id=location.hash.slice(1);
   if(places.some(p=>p.id===id))selectPlace(id,false);
-  else if (!id) { caseDeck.cancel(); selected=undefined; pendingRoadFocus=false; stopRoadPulse(); renderList(); renderDossier(); updateMapSelection(); fitMap(); }
+  else if (!id) { caseAlarm.select(undefined); caseDeck.cancel(); selected=undefined; pendingRoadFocus=false; stopRoadPulse(); renderList(); renderDossier(); updateMapSelection(); fitMap(); }
 });
 window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open && !$<HTMLDialogElement>('#evidence-dialog').open){e.preventDefault();$('#search').focus();}});
 initEvidenceViewer(()=>selected);

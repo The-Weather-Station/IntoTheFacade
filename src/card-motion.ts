@@ -73,7 +73,7 @@ export function createCardMotion() {
   function pause(card: HTMLElement, paused: boolean) {
     const s = states.get(card); if (!s) return;
     s.paused = paused;
-    if (paused) { s.px = s.py = 0; s.vx = s.vy = s.rx = s.ry = s.rz = 0; paint(card, s); }
+    if (paused) { s.dealt = true; card.classList.remove('awaiting-deal'); s.px = s.py = 0; s.vx = s.vy = s.rx = s.ry = s.rz = 0; paint(card, s); }
   }
   function home(card: HTMLElement) {
     const s = states.get(card); if (!s) return;

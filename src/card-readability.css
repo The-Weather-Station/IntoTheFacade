@@ -1,0 +1,30 @@
+/* Keep the printed stock visible. Contrast follows the glyphs, not a filled panel. */
+.dossier,.underlay-select {
+  color:#24151f;
+  text-shadow:-1px 0 #fff0d9,1px 0 #fff0d9,0 -1px #fff0d9,0 1px #fff0d9;
+}
+.dossier[data-place] :is(.dossier-content,.dossier-title,.dossier-top>.eyebrow,.dossier-bottom),
+.dossier :is(.dossier-hero,.hero-label,.hero-source,.case-status,.road-brief,.evidence-gallery,.evidence-thumbnail,.evidence-thumbnail img,.evidence-image-link,.image-callout) {
+  background:transparent;
+}
+.dossier[data-place] :is(.dossier-content,.dossier-title) { border-color:transparent; }
+.dossier .road-brief { box-shadow:none; }
+.dossier.dossier :is(p,small,h2,h3,h4,.eyebrow,.section-label,.evidence-number,.case-status,.case-status strong,.source-reference small,.evidence-source-note,.explorer-meta,.local-note,.account-context,.contact-context,.dossier-bottom>span) { color:#24151f; }
+.dossier.dossier :is(a,summary,.hero-source,.evidence-image-link,.image-callout,.evidence-thumbnail) { color:#57223b; }
+.dossier :is(a,summary):hover { color:#7a1836; }
+.dossier-title h2,.underlay-select h3 {
+  -webkit-text-stroke:2px #ffefd5;
+  paint-order:stroke fill;
+  text-shadow:0 1px 0 #ffefd5;
+}
+.dossier button:focus-visible,.dossier a:focus-visible { outline:2px solid #57223b; outline-offset:3px; }
+/* Filled status/control chips retain their own contrasting ink. */
+.dossier .hazard-tag,.dossier .primary-button { text-shadow:none; }
+
+/* Native Firefox scrollbars plus Chromium/WebKit styling. */
+html,body,#app *,dialog,dialog * { scrollbar-width:auto; scrollbar-color:#ffd15c #302035; }
+::-webkit-scrollbar { width:13px; height:13px; }
+::-webkit-scrollbar-track { background:#302035; border:1px solid #806249; }
+::-webkit-scrollbar-thumb { background:#ffd15c; border:2px solid #302035; border-radius:3px; min-height:35px; }
+::-webkit-scrollbar-thumb:hover { background:#fff0a2; }
+::-webkit-scrollbar-corner { background:#302035; }

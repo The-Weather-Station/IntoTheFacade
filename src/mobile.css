@@ -1,6 +1,16 @@
 .mobile-intro-guide,.mobile-site-hazards,.welcome-mobile-copy { display:none; }
+.map-camera-tools { display:none; }
 
 @media(max-width:950px) {
+  .map-camera-tools:not([hidden]) { display:block; grid-column:1/-1; grid-row:2; margin-top:-12px; padding:8px 10px; border:1px solid #8c8056; background:#17241c; color:#ead7af; }
+  .camera-buttons { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .camera-buttons button { min-height:44px; padding:8px 12px; border:2px solid #b8a77a; color:#ead7af; font:18px var(--display); }
+  .camera-buttons button[aria-pressed="true"] { background:#edc266; border-color:#ffe3a4; color:#302035; box-shadow:2px 2px #090c0b; }
+  .camera-readout { margin-left:auto; font:9px var(--mono); }
+  .camera-hint { margin:7px 0 0; font-size:11px; line-height:1.5; }
+  #map .maplibregl-canvas-container,#map .maplibregl-canvas { touch-action:none; }
+  #map .camera-orbit { cursor:grab; }
+  #map .camera-orbit:active { cursor:grabbing; }
   /* Preserve the geography: detailed hazards live below the mobile map. */
   .location-marker .map-hazards { display:none; }
   .mobile-site-hazards:not([hidden]) { display:block; grid-column:1/-1; padding:12px; background:#ead9b9; color:#302535; border:2px solid #40333d; box-shadow:3px 3px #0c160f99; }
@@ -14,9 +24,9 @@
   .mobile-site-hazards .map-hazard-caption { display:none; }
 }
 @media(min-width:581px) and (max-width:950px) {
-  .workspace { grid-template-rows:360px auto auto; }
-  .mobile-site-hazards { grid-row:2; }
-  .discovery,.dossier-dock { grid-row:3; }
+  .workspace { grid-template-rows:360px auto auto auto; }
+  .mobile-site-hazards { grid-row:3; }
+  .discovery,.dossier-dock { grid-row:4; }
 }
 @media(max-width:580px) {
   .masthead { height:60px; padding-inline:14px; }
@@ -50,7 +60,8 @@
   .stack-caption .eyebrow,.stack-caption p,.case-stack .stack-caption .stack-state { display:none; }
   .deck-art-note { font-size:8px; margin:7px 0 0; }
   .map-section { order:1; height:370px; margin-top:0; }
-  .mobile-site-hazards { order:2; margin-top:-9px; }
+  .map-camera-tools { order:2; }
+  .mobile-site-hazards { order:3; margin-top:-9px; }
   .map-tag,.map-coordinate,.map-key,.map-caption { display:none; }
   .map-top { left:auto; right:14px; top:14px; }
   .map-mode { top:14px; left:14px; bottom:auto; height:auto; max-width:50%; align-content:start; }
@@ -63,7 +74,7 @@
   .map-marker:not(.selected) .marker-name { display:none; }
   .map-marker .marker-name { font-size:12px; max-width:170px; overflow:hidden; text-overflow:ellipsis; padding:5px 6px; }
   .maplibregl-ctrl-attrib,.leaflet-control-attribution { font-size:8px; line-height:1.5; }
-  .dossier-dock:not(.is-welcome) { order:3; margin:8px 14px 56px; width:calc(100% - 28px); height:calc(100svh - 48px); min-height:650px; scroll-margin-top:12px; }
+  .dossier-dock:not(.is-welcome) { order:4; margin:8px 14px 56px; width:calc(100% - 28px); height:calc(100svh - 48px); min-height:650px; scroll-margin-top:12px; }
   .dossier.card-motion { padding:12px; }
   .dossier-title h2 { font-size:27px; }
   .dossier-title { padding:8px 5px; }

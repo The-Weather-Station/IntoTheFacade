@@ -160,3 +160,20 @@ Phone onboarding uses a short intro plus a separate Start with MISSING ROAD!! bu
 At phone/tablet widths, large hazard tokens are removed from the map and rendered as compact, sourced controls beneath it. Tapping one opens and scrolls to the supporting record. The shared hazard-group renderer preserves the same classifications and citations in both map renderers and the mobile strip. Phone map controls share one top row, surplus overlays are hidden, and previous/next card controls stay visible.
 
 QA: first visit and drawing arrow; direct first-case open; active rail centering; 320px and 390px phone widths; 768px tablet layout; both styled and 2D maps; hazard-to-evidence navigation; alert-theme activation, tab changes, case switching and return home.
+
+
+## Alarm effect and exposed card stock
+
+`src/case-alarm.ts` plays the supplied ALARM.mp3 as an independent, non-looping sound when entering the Rhode Island case. It never changes the soundtrack. Same-case clicks, card changes and scrolling do not retrigger it; leaving the case or hiding the page stops only this effect. A browser-blocked direct-link attempt waits for a click/tap or activation key. The MP3 is attached lazily with preload=none and no awaited media work in rendering. The deployed file is `public/audio/organized-crime-alarm.mp3`, 122,309 bytes, 5.093875 seconds; original SHA-256: 55ff4c277bf0f0256476c60e7b74cb39e8f317fad23123a238baee1f905f6bfd.
+
+`src/card-readability.css` removes filled reading/title/footer/image-container panels so the underlying card art remains visible. Deep plum text uses a narrow cream halo; large titles receive a cream stroke to remain legible over bloodstains. Real evidence-image pixels are unchanged. Scrollbars use a bright gold thumb over a dark plum track, with a thicker native/custom width.
+
+Case arrivals animate the actual front and fanned cards to their existing CSS poses. There is no final clone replacement or angle correction; the floating spring resumes from rest. The development-only handoff diagnostic measured 0.000px on desktop and mobile case switches. Returning cards still travel behind the original case cover.
+
+Mobile and tablet maps have Pan map / Rotate / tilt controls beneath the map. Rotate / tilt enables a one-finger drag for bearing and pitch while preserving native two-finger zoom, rotation and pitch. Pitch stays within the renderer's supported range (and a 70-degree ceiling). A second pointer yields to native multi-touch until all fingers lift. Pan, flat view and renderer changes release captured pointers and restore panning. The control is hidden in the 2D fallback. Arrow keys offer equivalent camera movement in orbit mode.
+
+QA: production build and 17 tests; simultaneous music/alarm playback, no repeat on tab/same-case selection, effect stop on case exit; desktop and 390px mobile card contrast and gold scrollbars; actual camera drag and keyboard rotation/pitch at mobile width; switching styled/2D renderers. Pointer lifecycle, pinch handoff and angle limits are covered by map-camera tests. No physical phone multi-touch session was available.
+
+The couch attention card now uses `public/art/organized-crime-card-blood.webp`, edited with the built-in image generation tool. It adds a theatrical blood pool behind the couch; the earlier artwork is retained. The edit prompt and source are recorded in `couch-blood-art-prompt.json`. Decorative imagery remains separate from evidence photographs and factual claims.
+
+A large welcome notice appears once per page load: “Turn your sound on! Fun sounds and music!” Its explicit play action enables the soundtrack, and it disappears only after playback begins or the visitor dismisses it. Closing the notice does not itself trigger music. Returning home does not reopen it; reloading does. Audio remains lazy and independent of map/app loading.

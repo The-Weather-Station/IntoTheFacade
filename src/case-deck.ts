@@ -6,7 +6,7 @@ import { deckViews } from './deck-order';
 export const covers: Record<string, { asset: string; title: string; context: string; alt: string }> = {
   'stockyard-airsoft': { asset: 'missing-road-card', title: 'MISSING ROAD!!', context: 'One road. Two maps.', alt: 'Illustrated MISSING ROAD!! card with a vanishing road and occult eye' },
   'eagle-industries': { asset: 'illegal-dumping-card', title: 'ILLEGAL DUMPING!!', context: 'The shop closed. The solvent stayed.', alt: 'Illustrated ILLEGAL DUMPING!! card: Eagle Industries with theatrical toxic spills; not a photograph of site conditions' },
-  'rhode-island-warehouse': { asset: 'organized-crime-card', title: 'ORGANIZED CRIME!!!', context: 'Suite 109 · the 2025 shipping case.', alt: 'Illustrated ORGANIZED CRIME!!! card: marijuana spilling from a cut couch; dramatization of the historical case, not evidence photography' },
+  'rhode-island-warehouse': { asset: 'organized-crime-card-blood', title: 'ORGANIZED CRIME!!!', context: 'Suite 109 · the 2025 shipping case.', alt: 'Illustrated ORGANIZED CRIME!!! card: marijuana spilling from a cut couch with a theatrical blood pool behind it; decorative dramatization, not evidence photography' },
 };
 export function caseStack(p: Place, active: boolean) {
   const c = covers[p.id];
@@ -28,6 +28,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   let turnAnimation: Animation | undefined;
   let shuffleNode: HTMLElement | undefined, shuffleTarget: HTMLElement | undefined;
   const flights = new Set<{ node: HTMLElement; animation: Animation }>();
+  const arrivals = new Set<Animation>();
   const returningStacks = new Set<HTMLElement>();
   const indexFrame = document.querySelector<HTMLElement>('.discovery')!;
   function capture(): Face {
@@ -51,10 +52,32 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     shuffleTarget = undefined;
     delete dock.dataset.shufflePhase;
     for (const f of flights) { f.animation.cancel(); f.node.remove(); }
+    for (const animation of arrivals) animation.cancel();
+    arrivals.clear();
     for (const stack of returningStacks) stack.classList.remove('cards-returning');
     returningStacks.clear(); indexFrame.classList.remove('deck-index-in-transit');
-    flights.clear(); busy = false; dock.classList.remove('deck-in-transit');
+    flights.clear(); busy = false; dock.classList.remove('deck-in-transit','deck-receiving');
+    front.inert = false;
     front.style.visibility = ''; motion.pause(front, false);
+  }
+  function dealFrom(source: DOMRect) {
+    // Animate the actual reading surfaces. They finish on their exact CSS poses,
+    // so there is no scaled/rotated clone to swap out at the landing frame.
+    const cards = [...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])'),front];
+    const parent = dock.getBoundingClientRect();
+    return cards.map((card,index)=>{
+      const home = getComputedStyle(card).transform;
+      const centerX = parent.left + dock.clientLeft + card.offsetLeft - dock.scrollLeft + card.offsetWidth / 2;
+      const centerY = parent.top + dock.clientTop + card.offsetTop - dock.scrollTop + card.offsetHeight / 2;
+      const x = source.left + source.width / 2 - centerX;
+      const y = source.top + source.height / 2 - centerY;
+      const start = `translate3d(${x}px,${y}px,0) rotate(${-7+index*3}deg) scale(${source.width/card.offsetWidth},${source.height/card.offsetHeight})`;
+      const animation = card.animate([{transform:start},{transform:home}],{
+        duration:950,delay:180+index*75,easing:'cubic-bezier(.16,.8,.2,1)',fill:'both',
+      });
+      arrivals.add(animation);
+      return animation.finished.then(()=>{},()=>{});
+    });
   }
   function fly(face: Face, from: DOMRect, to: DOMRect, index: number, incoming: boolean, delay: number) {
     const node = document.createElement('div'); node.className = 'case-flight'; node.inert = true; node.setAttribute('aria-hidden', 'true');
@@ -78,7 +101,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     busy = true; motion.pause(front, true);
     update(); const incoming = capture();
     if (reduced.matches || oldId === id) { busy = false; motion.pause(front, false); return Promise.resolve(); }
-    dock.classList.add('deck-in-transit'); front.style.visibility = 'hidden';
+    dock.classList.add('deck-in-transit','deck-receiving'); front.inert = true;
     // Mobile has a vertical table: keep the same deal motion local to its hand.
     const narrow = innerWidth < 951;
     const source = narrow ? new DOMRect(incoming.rect.left - 70, incoming.rect.top + 50, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);
@@ -96,15 +119,27 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
         jobs.push(job); returnJobs.push(job);
       }
     }
-    for (let i = incoming.backs.length; i >= 0; i--) jobs.push(fly(incoming, source, incoming.rect, i, true, 220 + (incoming.backs.length - i) * 90));
+    jobs.push(...dealFrom(source));
     void Promise.all(returnJobs).then(() => {
       if (stamp !== revision || !returning) return;
       returning.classList.remove('cards-returning'); returningStacks.delete(returning);
     });
     return Promise.all(jobs).then(() => {
       if (stamp !== revision) return;
+      const cards = [...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])'),front];
+      const before = import.meta.env.DEV ? cards.map(card=>card.getBoundingClientRect()) : [];
+      for (const animation of arrivals) animation.cancel();
+      arrivals.clear();
       indexFrame.classList.remove('deck-index-in-transit');
-      busy = false; front.style.visibility = ''; dock.classList.remove('deck-in-transit'); motion.pause(front, false);
+      busy = false; front.inert = false; front.style.visibility = ''; dock.classList.remove('deck-in-transit','deck-receiving');
+      if (import.meta.env.DEV) {
+        const delta = cards.reduce((max,card,i)=>{
+          const after=card.getBoundingClientRect(),prior=before[i];
+          return Math.max(max,Math.abs(after.left-prior.left),Math.abs(after.top-prior.top),Math.abs(after.width-prior.width),Math.abs(after.height-prior.height));
+        },0);
+        console.debug(`[card-deck] Landing handoff shift: ${delta.toFixed(3)}px`);
+      }
+      motion.pause(front, false);
     });
   }
   function turn(previous: Face, oldView: string, view: string, direction = -1) {

@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Check data and application behavior
-        run: node --test tests/data.test.ts tests/deck-order.test.ts
+        run: node --test tests/data.test.ts tests/deck-order.test.ts tests/map-camera.test.ts
       - name: Build for the actual site path
         env:
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}

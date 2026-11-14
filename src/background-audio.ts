@@ -7,6 +7,7 @@ export function initBackgroundAudio() {
   const toggle = panel.querySelector<HTMLButtonElement>('button')!;
   const volume = panel.querySelector<HTMLInputElement>('input')!;
   const status = panel.querySelector<HTMLElement>('[role=status]')!;
+  const welcome = document.querySelector<HTMLElement>('#sound-welcome')!;
   let enabled = true, started = false, starting = false, scrollAttempted = false, playAttempt = 0;
   const startup = new AbortController();
   try {
@@ -50,9 +51,15 @@ export function initBackgroundAudio() {
     remember();
   });
   volume.addEventListener('input', () => { audio.volume = Number(volume.value)/100; remember(); });
+  document.querySelector('#sound-welcome-close')!.addEventListener('click', () => { welcome.hidden = true; });
+  document.querySelector('#sound-welcome-play')!.addEventListener('click', () => {
+    enabled = true;
+    if (audio.volume === 0) { audio.volume = .16; volume.value = '16'; }
+    play(); remember();
+  });
   const options = {passive:true, capture:true, signal:startup.signal};
   function startFromInput(event: Event) {
-    if (!started && enabled && !(event.target instanceof Element && event.target.closest('#soundtrack-control'))) play();
+    if (!started && enabled && !(event.target instanceof Element && event.target.closest('#soundtrack-control,#sound-welcome'))) play();
   }
   function startFromScroll(event: Event) {
     if (scrollAttempted || document.hidden) return;
@@ -76,7 +83,7 @@ export function initBackgroundAudio() {
   });
   window.addEventListener('pagehide', () => audio.pause());
   audio.addEventListener('waiting', () => { status.textContent = 'Buffering music'; });
-  audio.addEventListener('playing', () => { status.textContent = 'Music playing'; paint(); });
+  audio.addEventListener('playing', () => { welcome.hidden = true; status.textContent = 'Music playing'; paint(); });
   audio.addEventListener('error', () => { starting = false; status.textContent = 'Music unavailable; the site remains usable'; paint(); });
   paint();
 }

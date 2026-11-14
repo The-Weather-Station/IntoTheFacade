@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "use_case": "precise-object-edit",
+  "source": "public/art/organized-crime-card.webp",
+  "output": "public/art/organized-crime-card-blood.webp",
+  "prompt": "Use case: precise-object-edit. Edit target: the attached ORGANIZED CRIME!!! worn portrait card artwork. Make exactly one change: add a clearly visible dark crimson pool of theatrical blood on the warehouse floor BEHIND the couch, extending visibly along the rear/right side of the couch and peeking out from behind it. Give the pool a wet irregular edge and a few reflected highlights in the existing industrial horror palette and pixelated illustration style. Keep the same couch, cut hole and marijuana spill, warehouse, lamp, crates, composition, exact ORGANIZED CRIME!!! title typography, border, existing wear, palette, and portrait dimensions. Do not move or enlarge the couch. Do not obscure the marijuana in the foreground. No people, bodies, injuries, new text, or new emblems. Preserve everything except this added floor blood pool."
+}

@@ -1,0 +1,16 @@
+.sound-welcome { position:fixed; z-index:11000; left:50%; bottom:max(24px,env(safe-area-inset-bottom)); width:min(650px,calc(100% - 32px)); transform:translateX(-50%); display:flex; align-items:center; gap:25px; padding:24px 54px 24px 28px; border:3px solid #ffd15c; outline:3px solid #21182a; background:#1d2a20; color:#ffdf95; box-shadow:7px 8px #0b100ee0,0 0 38px #ffd15c38; animation:sound-welcome-deal .45s cubic-bezier(.16,.8,.2,1) both; }
+.sound-welcome[hidden] { display:none; }
+.sound-welcome h2 { font:36px/1.05 var(--display); margin:0 0 9px; }
+.sound-welcome p { font:23px/1.15 var(--display); margin:0; color:#f5e7cb; }
+#sound-welcome-play { flex-shrink:0; padding:12px 15px; min-height:44px; border:2px solid #ffe9ab; background:#edc266; color:#302035; font:21px/1.1 var(--display); box-shadow:3px 3px #0c1511; }
+#sound-welcome-play:hover { background:#ffdf95; }
+#sound-welcome-close { position:absolute; right:5px; top:5px; display:grid; place-items:center; width:44px; height:44px; }
+.sound-welcome button:focus-visible { outline:3px solid #fff2c9; outline-offset:3px; }
+@keyframes sound-welcome-deal { from { opacity:0; translate:0 35px; } to { opacity:1; translate:0 0; } }
+@media(max-width:580px) {
+  .sound-welcome { bottom:max(12px,env(safe-area-inset-bottom)); gap:12px; flex-wrap:wrap; padding:17px 46px 17px 18px; }
+  .sound-welcome h2 { font-size:29px; margin-bottom:5px; }
+  .sound-welcome p { font-size:22px; }
+  #sound-welcome-play { font-size:19px; padding:9px 13px; }
+}
+@media(prefers-reduced-motion:reduce) { .sound-welcome { animation:none; } }
