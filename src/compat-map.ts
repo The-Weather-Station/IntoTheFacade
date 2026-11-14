@@ -2,7 +2,8 @@ import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { FeatureCollection } from 'geojson';
 import type { Place } from './data';
-import { mapInk, placeColor } from './map-palette';
+import { mapInk } from './map-palette';
+import { createPlaceMarker, setMarkerSelected } from './map-marker';
 
 export type MapBounds = [[number, number], [number, number]];
 const latLng = (point: readonly number[]): L.LatLngTuple => [point[1], point[0]];
@@ -16,6 +17,7 @@ export function createCompatMap(options: {
   roads: FeatureCollection;
   reducedMotion: boolean;
   select: (id: string) => void;
+  showEvidence: (id: string) => void;
   onTileStatus: (unavailable: boolean) => void;
 }) {
   const map = L.map(options.container, {
@@ -53,22 +55,15 @@ export function createCompatMap(options: {
     style: feature => ({color: feature?.properties?.access === 'private' ? '#7e315d' : '#7954a1', weight: 5, opacity: .9, dashArray: feature?.properties?.access === 'private' ? '8 5' : undefined}),
     interactive: false,
   }).addTo(map);
-  const markers = new Map<string, { marker: L.Marker; button: HTMLButtonElement }>();
+  const markers = new Map<string, { marker: L.Marker; root: HTMLElement }>();
   options.places.forEach(place => {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'map-marker';
-    button.style.setProperty('--place-color', placeColor(place.id));
-    button.setAttribute('aria-label', `Select ${place.name}`);
-    const number = document.createElement('span'); number.className = 'marker-square'; number.textContent = place.number;
-    const name = document.createElement('span'); name.className = 'marker-name'; name.textContent = place.name;
-    button.append(number, name);
-    L.DomEvent.disableClickPropagation(button);
-    button.addEventListener('click', () => options.select(place.id));
+    const root = createPlaceMarker(place,options.select,options.showEvidence);
+    L.DomEvent.disableClickPropagation(root);
     const marker = L.marker(latLng(place.coordinates), {
-      icon: L.divIcon({ className: 'compat-marker', html: button, iconSize: [33, 44], iconAnchor: [16, 44] }),
+      icon: L.divIcon({ className: 'compat-marker', html: root, iconSize: [33, 44], iconAnchor: [16, 44] }),
       keyboard: false, // The native button provides a single keyboard focus stop.
     });
-    markers.set(place.id, { marker, button });
+    markers.set(place.id, { marker, root });
   });
   const resize = new ResizeObserver(() => map.invalidateSize({ animate: false, pan: false }));
   resize.observe(options.container);
@@ -80,11 +75,10 @@ export function createCompatMap(options: {
       const roadCollection: FeatureCollection = { ...options.roads, features: options.roads.features.filter(feature => ids.has(feature.properties?.placeId)) };
       roadHighlight.clearLayers().addData(roadCollection);
       roads.clearLayers().addData(roadCollection);
-      markers.forEach(({ marker, button }, id) => {
+      markers.forEach(({ marker, root }, id) => {
         if (ids.has(id)) { if (!map.hasLayer(marker)) marker.addTo(map); }
         else marker.remove();
-        button.classList.toggle('selected', id === selectedId);
-        button.setAttribute('aria-pressed', String(id === selectedId));
+        setMarkerSelected(root,id === selectedId); marker.setZIndexOffset(id === selectedId ? 1000 : 0);
       });
     },
     highlightRoad(strength: number) { roadHighlightStrength=strength; roadHighlight.setStyle(roadHighlightStyle); },

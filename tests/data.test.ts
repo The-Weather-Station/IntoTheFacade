@@ -1,10 +1,23 @@
 import { fieldProfiles } from '../src/field-research.ts';
 import { explorerNotes } from '../src/explorer-notes.ts';
+import { caseHazards } from '../src/hazards.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { places, filterPlaces, getPlace, reviewed } from '../src/data.ts';
+
+test('every map hazard has supporting evidence in its own case', () => {
+  for (const [placeId,hazards] of Object.entries(caseHazards)) {
+    const place=places.find(p=>p.id===placeId);
+    assert.ok(place,`Missing case: ${placeId}`);
+    assert.equal(new Set(hazards.map(h=>h.kind)).size,hazards.length);
+    for (const hazard of hazards) {
+      assert.ok(hazard.detail.length && hazard.evidence.length);
+      for (const evidenceId of hazard.evidence) assert.ok(place.evidence.some(e=>e.id===evidenceId),`${placeId}: missing ${evidenceId}`);
+    }
+  }
+});
 const parcels = JSON.parse(readFileSync(new URL('../src/research/stockyard-parcels.json', import.meta.url), 'utf8'));
 const additionalParcels = JSON.parse(readFileSync(new URL('../src/research/additional-parcels.json', import.meta.url), 'utf8'));
 const roads = JSON.parse(readFileSync(new URL('../src/research/osm-road-corridor.json', import.meta.url), 'utf8'));

@@ -12,12 +12,14 @@ import { caseStack, createCaseDeck } from './case-deck';
 import roadSnapshot from './research/osm-road-corridor.json';
 import './generated-theme.css';
 import './card-motion.css';
+import './map-hazards.css';
 import { createCardMotion } from './card-motion';
 import { createIntroGuide } from './intro-guide';
 import { initBackgroundAudio } from './background-audio';
 import { fieldProfiles } from './field-research';
 import { explorerNotes } from './explorer-notes';
 import { mapInk, placeColor } from './map-palette';
+import { createPlaceMarker, setMarkerSelected } from './map-marker';
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
 
@@ -165,8 +167,7 @@ function renderList() {
   renderDeck(deckMarkup);
   markers.forEach((marker, id) => {
     marker.getElement().style.display = visible.some(p => p.id === id) ? '' : 'none';
-    marker.getElement().classList.toggle('selected', id === selected?.id);
-    marker.getElement().setAttribute('aria-pressed', String(id === selected?.id));
+    setMarkerSelected(marker.getElement(),id === selected?.id);
   });
   compatMap?.update(visible, selected?.id ?? '');
   if (mapReady && map) {
@@ -391,7 +392,7 @@ async function initCompatMap() {
     if(generation!==mapGeneration)return;
     compatMap=createCompatMap({
       container:$('#map'),center:(selected?.coordinates ?? countyCenter),places,parcels:parcelCollection,roads:roadSnapshot as unknown as FeatureCollection,reducedMotion,
-      select:id=>selectPlace(id,true),
+      select:id=>selectPlace(id,true), showEvidence:id=>showEvidence(id),
       onTileStatus:unavailable=>{
         if(generation!==mapGeneration)return;
         $('#map-note').textContent=unavailable?'Some street tiles could not load. Parcel outlines remain available.':'2D map active';
@@ -399,7 +400,7 @@ async function initCompatMap() {
     });
     mapReady=true; $('#map').dataset.renderer='2d';
     $('#map-status').classList.add('hidden'); $('#map-note').textContent='2D map active';
-    renderList(); updateMapSelection(); fitMap();
+    renderList(); updateMapSelection(); if(selected)focusMap(selected,15.5);else fitMap();
     if(pendingRoadFocus)traceRoad();
   } catch {
     if(generation===mapGeneration)mapFailure();
@@ -426,9 +427,9 @@ function initMap() {
         instance.addLayer({id:'osm-road-highlight',type:'line',source:'osm-roads',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffe079','line-width':10,'line-opacity':0,'line-opacity-transition':{duration:0},'line-width-transition':{duration:0}}});
         instance.addLayer({id:'osm-service-roads',type:'line',source:'osm-roads',paint:{'line-color':'#7954a1','line-width':5,'line-opacity':.9}});
         instance.addLayer({id:'osm-private-road',type:'line',source:'osm-roads',paint:{'line-color':['case',['==',['get','access'],'private'],'#e9c6d7','#00000000'],'line-width':2,'line-dasharray':[3,2]}});
-        places.forEach(p=>{const el=document.createElement('button');el.className='map-marker';el.style.setProperty('--place-color',placeColor(p.id));el.setAttribute('aria-label','Select '+p.name);el.innerHTML='<span class="marker-square">'+p.number+'</span><span class="marker-name">'+p.name+'</span>';el.addEventListener('click',()=>selectPlace(p.id,true));markers.set(p.id,new Marker({element:el,anchor:'bottom-left',offset:[-16,-8]}).setLngLat(p.coordinates).addTo(instance));});
+        places.forEach(p=>{const el=createPlaceMarker(p,id=>selectPlace(id,true),id=>showEvidence(id));markers.set(p.id,new Marker({element:el,anchor:'bottom-left',offset:[-16,-8]}).setLngLat(p.coordinates).addTo(instance));});
         mapReady=true; $('#map').dataset.renderer='styled';
-        $('#map-status').classList.add('hidden'); renderList(); updateMapSelection(); fitMap();
+        $('#map-status').classList.add('hidden'); renderList(); updateMapSelection(); if(selected)focusMap(selected,15.5);else fitMap();
         if(pendingRoadFocus)traceRoad();
       } catch { fallback(); }
     });
