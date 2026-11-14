@@ -233,7 +233,7 @@ function renderDossier() {
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
   const previousFace = caseDeck.capture();
   const sheets = [
-    {id:'overview',title:'Overview',body:`<p>${p.summary}</p><strong>${p.statusTitle ?? 'Lumber storage documented'}</strong>`},
+    {id:'overview',title:'Overview',body:`<h4>Recon Summary</h4><p>${p.summary}</p><strong>${p.statusTitle ?? 'Lumber storage documented'}</strong>`},
     {id:'evidence',title:'Evidence',body:`<p>${p.evidence.length} records · ${p.images.length} original images</p>${p.evidence.slice(0,3).map(e=>`<section><h4>${e.title}</h4><p>${e.detail}</p></section>`).join('')}`},
     {id:'notes',title:'Field notes',body:`<p>${explorerNotes[p.id]?.length ? 'Anonymous explorer · first-person account' : 'No explorer accounts submitted for this site yet.'}</p><small>EXPLORER ACCOUNTS / READ ONLY</small>`},
   ].filter(sheet=>sheet.id!==tab).reverse();
@@ -253,8 +253,8 @@ function renderDossier() {
     <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${dateLabel(p.reviewed ?? reviewed)}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
   const content = $('#dossier-content');
   if(tab === 'overview') content.innerHTML = `
+    <section class="case-summary" aria-label="Recon Summary"><p class="eyebrow">Recon Summary</p><p class="dossier-summary">${p.summary}</p><div class="summary-sources">${(p.summarySources ?? []).map(i=>`<a href="${escapeHtml(p.sources[i].url!)}" target="_blank" rel="noopener noreferrer">${p.sources[i].publisher} ↗</a>`).join('')}</div></section>
     ${fieldBrief(p)}
-    <section class="case-summary" aria-label="Case summary"><p class="eyebrow">CASE SUMMARY</p><p class="dossier-summary">${p.summary}</p><div class="summary-sources">${(p.summarySources ?? []).map(i=>`<a href="${escapeHtml(p.sources[i].url!)}" target="_blank" rel="noopener noreferrer">${p.sources[i].publisher} ↗</a>`).join('')}</div></section>
     <div class="case-status" data-tone="${p.statusTone ?? 'record'}"><span class="live-dot"></span> ${p.statusLabel ?? 'BUILDING & OWNER IDENTIFIED'} <strong>${p.statusTitle ?? 'Lumber storage documented'}</strong></div>
     <button id="view-submitted-images" class="image-callout">${icon('eye')} View ${p.images.length} evidence ${p.images.length===1?'image':'images'} ${icon('arrow')}</button>
     ${p.id==='stockyard-airsoft' ? `<section class="road-brief"><p class="eyebrow">THE MISSING ROAD</p><h3>Maps disagree.</h3><p>The submitted Google view leaves this corridor blank. OSM maps three service-road segments; one is tagged private.</p><div><button id="trace-road">Trace the road ${icon('crosshair')}</button><button data-evidence="osm-road">Compare the records ${icon('arrow')}</button></div></section>` : ''}
@@ -338,7 +338,7 @@ function exportDossier(p: Place) {
 function resetFilters() {query='';category='All';$<HTMLInputElement>('#search').value='';updateFilters();renderList();fitMap();}
 function updateFilters() {
   document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(b=>{b.classList.toggle('active',b.dataset.category===category);b.setAttribute('aria-pressed',String(b.dataset.category===category));});
-  $('#discovery-title').textContent = 'Scout files.';
+  $('#discovery-title').textContent = 'Location Recon';
 }
 function focusMap(place: Place, zoom: number) {
   if (!mapReady) return;
