@@ -163,9 +163,9 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     Object.assign(copy.style, { width:'100%', height:'100%', minHeight:'0', maxHeight:'none' });
     node.append(copy); dock.append(node);
     shuffleNode = node; shuffleTarget = target; target.style.visibility = 'hidden';
-    // Keep the full exit visible on the table when the hand sits at the viewport edge.
-    const exitSide = direction > 0 && front.getBoundingClientRect().right + front.offsetWidth + 170 > innerWidth ? -1 : direction;
-    const clear = `translate3d(${exitSide * (front.offsetWidth + 170)}px,-18px,0) rotate(${exitSide * 9}deg)`;
+    // Honor the chosen direction even at the viewport edge; lower the card's
+    // layer only after it has fully exited, then return it behind the stack.
+    const clear = `translate3d(${direction * (front.offsetWidth + 170)}px,-18px,0) rotate(${direction * 9}deg)`;
     const home = getComputedStyle(target).transform;
     node.style.zIndex = '20'; dock.dataset.shufflePhase = 'out';
     turnAnimation = node.animate([{transform:'none'}, {transform:clear}], {
