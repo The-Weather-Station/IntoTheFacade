@@ -1,0 +1,7 @@
+{
+  "tool": "Built-in image_gen",
+  "asset": "public/art/header-siren.webp",
+  "reference": "public/art/organized-alert-card.webp",
+  "prompt": "Use case: background-extraction / stylized-concept.\nAsset type: transparent website animation sprite.\nReference image: the existing ALERT card, used ONLY for the red industrial warning beacons at the upper left and right.\nCreate ONE isolated industrial red glass rotating warning beacon, closely matching those red dome siren bulbs: chunky dark rusted metal base, small hazard-stripe plinth with bolts, deep crimson ribbed glass dome, worn 1990s pixel-game illustration with coarse pixel shading, dark burgundy outlines and tarnished amber highlights.\nShow the lamp upright, front view slightly from above, whole object including the mounting base. Fill most of a square image with a little clear margin.\nIMPORTANT: render it SWITCHED OFF, with dark red glass and a visible unlit reflector inside, no bright bulb hotspot, NO light rays or glow baked into the surrounding area; the website will animate its light separately.\nUse a genuinely transparent alpha background. No card frame, no scene, no person, no symbols, no writing, no duplicate lamp. Preserve the reference's gritty pixel-art character.",
+  "processing": "Resized to 384 x 384 and encoded as WebP with alpha preserved for the header animation."
+}

@@ -68,7 +68,6 @@ h1, h2, h3 { font-family: var(--display); font-weight: 500; }
 .panel-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; }
 .panel-heading .eyebrow { color: #baa78f; font-size: 8px; }
 .panel-heading h2 { font-size: 29px; line-height: 1; margin: 5px 0 0; }
-.count-box { margin-left: auto; width: 37px; height: 37px; border: 3px solid #1d1826; outline: 1px solid #89765f; background: #6e6753; display: grid; place-items: center; font: 23px var(--display); box-shadow: 3px 3px #1d1826; }
 .search-wrap { display: flex; align-items: center; gap: 8px; padding: 0 10px; min-height: 38px; border: 2px solid #14111d; background: #251e2a; box-shadow: inset 2px 2px #16121f; }
 .search-wrap>.icon { color: #b4a58e; width: 16px; }
 .search-wrap input { width: 100%; min-width: 0; color: #fff0d5; background: none; border: 0; font-size: 11px; padding: 8px 0; }

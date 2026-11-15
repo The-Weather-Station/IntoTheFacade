@@ -52,7 +52,6 @@
   .panel-heading { margin-bottom:9px; align-items:center; }
   .panel-heading .eyebrow,.results-meta,.deck-controls,.index-footer { display:none; }
   .panel-heading h2 { font-size:27px; }
-  .count-box { font-size:22px; width:35px; height:35px; }
   .search-wrap { min-height:40px; }
   .search-wrap input { font-size:14px; }
   .filters { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; gap:5px; margin:8px 0 4px; padding-bottom:3px; }
