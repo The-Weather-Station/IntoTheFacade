@@ -363,10 +363,8 @@ function traceRoad() {
   const bounds: MapBounds=[[Math.min(...xs),Math.min(...ys)],[Math.max(...xs),Math.max(...ys)]];
   if(compatMap)compatMap.fit(bounds);
   else {
-    is3d=false;
-    $('#view-toggle').setAttribute('aria-pressed','false');
-    $('#view-toggle').innerHTML=icon('layers')+'<span>Flat view</span>';
-    map?.fitBounds(bounds,{padding:80,maxZoom:16,pitch:0,bearing:0,duration:reducedMotion?0:700});
+    // Highlight the road without flattening the default tilted camera.
+    map?.fitBounds(bounds,{padding:80,maxZoom:16,pitch:is3d?52:0,bearing:is3d?-12:0,duration:reducedMotion?0:700});
   }
   pulseRoad();
   toast('Service road highlighted. Dashed section: OSM private tag.');
@@ -523,5 +521,8 @@ window.addEventListener('hashchange',()=>{
 window.addEventListener('keydown',e=>{if(e.key==='/' && !['INPUT','TEXTAREA'].includes((e.target as HTMLElement).tagName) && !$<HTMLDialogElement>('#info-dialog').open && !$<HTMLDialogElement>('#evidence-dialog').open){e.preventDefault();$('#search').focus();}});
 initEvidenceViewer(()=>selected);
 renderList();renderDossier();updateMapSelection();centerActiveDeck(false);
-if(new URLSearchParams(location.search).get('map')==='2d'||readStorage<string>('itf:map-renderer','styled')==='2d')void initCompatMap();
+// Mobile visits start with the styled, tilted map; explicit 2D links and the
+// automatic compatibility fallback remain available when needed.
+const preferStored2d = innerWidth >= 951 && readStorage<string>('itf:map-renderer','styled') === '2d';
+if(new URLSearchParams(location.search).get('map')==='2d'||preferStored2d)void initCompatMap();
 else initMap();
