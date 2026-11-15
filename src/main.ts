@@ -255,6 +255,7 @@ function renderDossier() {
   $('.dossier-dock').classList.remove('is-welcome');
   $('#dossier').setAttribute('aria-label', 'Selected place dossier');
   const p = selected;
+  const warehouseAlert = p.id === 'rhode-island-warehouse' && tab === 'alert';
   const mobileHazards=$('#mobile-site-hazards');
   mobileHazards.innerHTML='<p class="eyebrow">SITE HAZARDS <span>Tap a record</span></p>';
   const hazardGroup=createHazardGroup(p,showEvidence); hazardGroup.hidden=false; mobileHazards.append(hazardGroup); mobileHazards.hidden=false;
@@ -288,7 +289,7 @@ function renderDossier() {
   $('#dossier').innerHTML = `
     <div class="dossier-top"><span class="eyebrow">LOCATION DOSSIER <span>/ ${p.number}</span></span></div>
     <div class="dossier-hero">${buildingArt(p.artName,p.name)}<span class="hero-label">GENERATED ART · COUNTY PHOTO REFERENCE</span><button class="hero-source" data-image="${p.heroImageId ?? 'county-building-photo'}">View source photo ↗</button></div>
-    <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${p.name}</h2><p>${icon('pin')} ${p.address}</p></div>
+    <div class="dossier-title"><p class="eyebrow rust">${p.category} <span>•</span> ${p.year}</p><h2>${warehouseAlert ? 'POLICE ACTIVITY! ARRESTS MADE!' : p.name}</h2>${warehouseAlert ? '' : `<p>${icon('pin')} ${p.address}</p>`}</div>
     ${p.id==='stockyard-airsoft' ? `<button type="button" class="hazard-tag" data-evidence="building-inventory" aria-label="Structural hazards: Likely. View county condition evidence." title="Research inference from the county condition rating; not an engineering finding."><strong>STRUCTURAL HAZARDS</strong><span>Likely</span><small>County condition: Poor · View record ↗</small></button>` : ''}
     <div id="dossier-content" class="dossier-content" role="tabpanel" aria-labelledby="tab-${tab}" tabindex="0"></div>
     <div class="dossier-bottom"><span><span class="live-dot"></span> REVIEWED ${dateLabel(p.reviewed ?? reviewed)}</span><button id="export-dossier" class="text-button" aria-label="Download ${p.name} dossier">${icon('download')} Export</button></div>`;
