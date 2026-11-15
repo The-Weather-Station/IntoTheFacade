@@ -3,6 +3,7 @@ import type { Place } from './data';
 import type { createCardMotion } from './card-motion';
 import { deckViews } from './deck-order';
 import { createCardSounds } from './card-sounds';
+import { preloadCardStock, cardStockReady } from './card-stock';
 
 export const covers: Record<string, { asset: string; title: string; context: string; alt: string }> = {
   'stockyard-airsoft': { asset: 'missing-road-card', title: 'MISSING ROAD!!', context: 'One road. Two maps.', alt: 'Illustrated MISSING ROAD!! card with a vanishing road and occult eye' },
@@ -26,6 +27,7 @@ type Face = { element: HTMLElement; rect: DOMRect; backs: string[] };
 export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: ReturnType<typeof createCardMotion>) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const sounds = createCardSounds();
+  preloadCardStock();
   let revision = 0, busy = false;
   let turnAnimation: Animation | undefined;
   let shuffleNode: HTMLElement | undefined, shuffleTarget: HTMLElement | undefined;
@@ -98,15 +100,20 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     const flight = { node, animation }; flights.add(flight);
     return animation.finished.catch(() => {}).then(() => { node.remove(); flights.delete(flight); });
   }
-  function switchCase(oldId: string | undefined, id: string, update: () => void): Promise<void> {
+  async function switchCase(oldId: string | undefined, id: string, update: () => void): Promise<void> {
     cancel(); const stamp = revision, outgoing = capture();
     if (oldId !== id) motion.home(front);
     busy = true; motion.pause(front, true);
-    update(); const incoming = capture();
-    if (reduced.matches || oldId === id) { busy = false; motion.pause(front, false); return Promise.resolve(); }
+    update();
+    if (reduced.matches || oldId === id) { busy = false; motion.pause(front, false); return; }
+    dock.classList.add('deck-in-transit'); front.inert = true; front.style.visibility = 'hidden';
+    const stockReady = await cardStockReady(id);
+    if (stamp !== revision) return;
+    if (!stockReady) { cancel(); return; }
+    const incoming = capture();
     if (oldId) sounds.play('return');
     sounds.play('deal');
-    dock.classList.add('deck-in-transit','deck-receiving'); front.inert = true;
+    dock.classList.add('deck-receiving'); front.style.visibility = '';
     // Mobile has a vertical table: keep the same deal motion local to its hand.
     const narrow = innerWidth < 951;
     const source = narrow ? new DOMRect(incoming.rect.left - 70, incoming.rect.top + 50, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);

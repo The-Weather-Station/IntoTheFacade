@@ -8,6 +8,7 @@ import additionalParcels from './research/additional-parcels.json';
 import type { FeatureCollection } from 'geojson';
 import { icon } from './art';
 import { artUrl, buildingArt } from './generated-art';
+import { cardStockName } from './card-stock';
 import { caseStack, createCaseDeck } from './case-deck';
 import { deckViews, nextDeckView } from './deck-order';
 import { crimeAlert } from './crime-alert';
@@ -258,7 +259,7 @@ function renderDossier() {
   mobileHazards.innerHTML='<p class="eyebrow">SITE HAZARDS <span>Tap a record</span></p>';
   const hazardGroup=createHazardGroup(p,showEvidence); hazardGroup.hidden=false; mobileHazards.append(hazardGroup); mobileHazards.hidden=false;
   const views = deckViews(p.id);
-  const cardFace = `url("${artUrl(p.id==='rhode-island-warehouse' ? 'crime-card-face' : 'worn-card-face')}")`;
+  const cardFace = `url("${artUrl(cardStockName(p.id))}")`;
   $('.dossier-dock').classList.toggle('crime-deck',p.id==='rhode-island-warehouse');
   document.body.classList.toggle('case-alert-active',p.id==='rhode-island-warehouse');
   const previousId = $('#dossier').dataset.place, previousTab = $('#dossier').dataset.tabView ?? '';
