@@ -2,6 +2,12 @@
 .map-camera-tools { display:none; }
 
 @media(max-width:950px) {
+  /* Full-height edge targets keep side taps usable without covering the copy.
+     Center the visible arrows on the card, below the separate tab row. */
+  .deck-cycle { top:42px; bottom:0; width:44px; height:auto; touch-action:pan-y; }
+  .deck-cycle-prev { left:-25px; }
+  .deck-cycle-next { right:-25px; }
+  .deck-cycle span { top:50%; bottom:auto; left:0; right:0; min-height:44px; padding:5px 0; transform:translateY(-50%); display:grid; place-items:center; opacity:1; font-size:29px; }
   .map-camera-tools:not([hidden]) { display:block; grid-column:1/-1; grid-row:2; margin-top:-12px; padding:8px 10px; border:1px solid #8c8056; background:#17241c; color:#ead7af; }
   .camera-buttons { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .camera-buttons button { min-height:44px; padding:8px 12px; border:2px solid #b8a77a; color:#ead7af; font:18px var(--display); }
@@ -75,7 +81,8 @@
   .map-marker .marker-name { font-size:12px; max-width:170px; overflow:hidden; text-overflow:ellipsis; padding:5px 6px; }
   .maplibregl-ctrl-attrib,.leaflet-control-attribution { font-size:8px; line-height:1.5; }
   .dossier-dock:not(.is-welcome) { order:4; margin:8px 14px 56px; width:calc(100% - 28px); height:calc(100svh - 48px); min-height:650px; scroll-margin-top:12px; }
-  .dossier.card-motion { padding:12px; }
+  /* Transit copies use the same paper and padding as the interactive card. */
+  .dossier,.dossier.card-motion { padding:12px; }
   .dossier-title h2 { font-size:27px; }
   .dossier-title { padding:8px 5px; }
   .dossier-title>p:last-child { font-size:10px; line-height:1.5; }
@@ -83,10 +90,6 @@
   .dossier-content { padding:12px 9px 18px; }
   .dossier-content .case-summary .dossier-summary { font-size:13px; line-height:1.7; }
   .dossier-hero { height:86px; }
-  .deck-cycle { top:auto; bottom:-43px; width:44px; height:36px; }
-  .deck-cycle-prev { left:0; }
-  .deck-cycle-next { right:0; }
-  .deck-cycle span { inset:0; opacity:1; padding:5px 0; font-size:25px; }
   .is-welcome .deck-cycle { display:none; }
 }
 @media(max-width:350px) {
