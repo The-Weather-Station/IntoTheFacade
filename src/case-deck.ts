@@ -2,6 +2,7 @@ import { artUrl } from './generated-art';
 import type { Place } from './data';
 import type { createCardMotion } from './card-motion';
 import { deckViews } from './deck-order';
+import { createCardSounds } from './card-sounds';
 
 export const covers: Record<string, { asset: string; title: string; context: string; alt: string }> = {
   'stockyard-airsoft': { asset: 'missing-road-card', title: 'MISSING ROAD!!', context: 'One road. Two maps.', alt: 'Illustrated MISSING ROAD!! card with a vanishing road and occult eye' },
@@ -24,6 +25,7 @@ type Face = { element: HTMLElement; rect: DOMRect; backs: string[] };
 // only interactive reading surface, so no scaled copy can retain focus or IDs.
 export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: ReturnType<typeof createCardMotion>) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const sounds = createCardSounds();
   let revision = 0, busy = false;
   let turnAnimation: Animation | undefined;
   let shuffleNode: HTMLElement | undefined, shuffleTarget: HTMLElement | undefined;
@@ -46,6 +48,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
   }
   function cancel() {
     revision++;
+    sounds.stop();
     turnAnimation?.cancel(); turnAnimation = undefined;
     shuffleNode?.remove(); shuffleNode = undefined;
     if (shuffleTarget) shuffleTarget.style.visibility = '';
@@ -101,6 +104,8 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     busy = true; motion.pause(front, true);
     update(); const incoming = capture();
     if (reduced.matches || oldId === id) { busy = false; motion.pause(front, false); return Promise.resolve(); }
+    if (oldId) sounds.play('return');
+    sounds.play('deal');
     dock.classList.add('deck-in-transit','deck-receiving'); front.inert = true;
     // Mobile has a vertical table: keep the same deal motion local to its hand.
     const narrow = innerWidth < 951;
@@ -149,6 +154,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     motion.home(front); motion.pause(front, true);
     const target = dock.querySelector<HTMLElement>(`.detail-underlay:has([data-sheet="${oldView}"])`);
     if (!target) { motion.pause(front, false); return; }
+    sounds.play('shuffle');
     // Keep the old face opaque until it has cleared the entire fanned hand.
     // Only then lower it to its actual destination layer and slide it home.
     const node = document.createElement('div');
