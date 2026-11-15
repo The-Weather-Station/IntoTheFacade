@@ -10,6 +10,8 @@ The visual direction is a worn pixel-art card table inspired by Dungeons & Degen
 
 ## Run
 
+The November 14 stability/performance pass and its measured results are documented in [PERFORMANCE.md](PERFORMANCE.md). Run `npm test` for the full regression suite. Theme fonts are self-hosted with licenses and provenance in `public/fonts/`.
+
 Use Node.js 24 (the version used for this demo), then:
 
 ```sh

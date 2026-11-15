@@ -67,14 +67,19 @@ export function createCompatMap(options: {
   });
   const resize = new ResizeObserver(() => map.invalidateSize({ animate: false, pan: false }));
   resize.observe(options.container);
+  let geometryKey = '';
   return {
     update(visible: Place[], selectedId: string) {
       const ids = new Set(visible.map(place => place.id));
-      const collection: FeatureCollection = { ...options.parcels, features: options.parcels.features.filter(feature => ids.has(feature.properties?.placeId)) };
-      parcels.clearLayers().addData(collection);
-      const roadCollection: FeatureCollection = { ...options.roads, features: options.roads.features.filter(feature => ids.has(feature.properties?.placeId)) };
-      roadHighlight.clearLayers().addData(roadCollection);
-      roads.clearLayers().addData(roadCollection);
+      const nextKey = [...ids].sort().join('|');
+      if (nextKey !== geometryKey) {
+        geometryKey = nextKey;
+        const collection: FeatureCollection = { ...options.parcels, features: options.parcels.features.filter(feature => ids.has(feature.properties?.placeId)) };
+        parcels.clearLayers().addData(collection);
+        const roadCollection: FeatureCollection = { ...options.roads, features: options.roads.features.filter(feature => ids.has(feature.properties?.placeId)) };
+        roadHighlight.clearLayers().addData(roadCollection);
+        roads.clearLayers().addData(roadCollection);
+      }
       markers.forEach(({ marker, root }, id) => {
         if (ids.has(id)) { if (!map.hasLayer(marker)) marker.addTo(map); }
         else marker.remove();

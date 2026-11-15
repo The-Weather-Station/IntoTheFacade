@@ -10,12 +10,13 @@
 .map-section { position:sticky; top:18px; height:calc(100svh - 200px); min-height:650px; }
 .dossier-dock { position:sticky; top:18px; height:calc(100svh - 190px); min-height:640px; z-index:3; padding-top:42px; margin-inline:24px; pointer-events:auto; }
 .dossier.card-motion { z-index:3; height:100%; pointer-events:auto; min-height:0; max-height:none; }
-.card-motion { position:relative; left:auto; top:auto; translate:none; rotate:none; scale:none; filter:none; transition:none; animation:none; will-change:transform; }
+.card-motion { position:relative; left:auto; top:auto; translate:none; rotate:none; scale:none; filter:none; transition:none; animation:none; }
+.card-motion.motion-active { will-change:transform; }
 .card-motion.awaiting-deal { opacity:0; }
 .deck-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 8px; font:8px/1.4 var(--mono); color:#cdbb91; }
 .filters { flex-wrap:wrap; }
 .case-stack { position:relative; margin:0 0 35px; padding:8px 7px 4px; }
-.stack-visual { position:relative; width:100%; aspect-ratio:2/3; transform:none; transform-origin:50% 55%; will-change:transform; }
+.stack-visual { position:relative; width:100%; aspect-ratio:2/3; transform:none; transform-origin:50% 55%; }
 .stack-back { position:absolute; inset:5% 6% 4%; background:url('/art/occult-card-back.webp') center/100% 100% no-repeat; transform:translate(calc(var(--stack-i) * 4px),calc(var(--stack-i) * -4px)) rotate(calc(var(--stack-i) * 3deg)); filter:drop-shadow(2px 3px 1px #080e0ccc); transition:transform .6s cubic-bezier(.2,.75,.2,1); }
 .case-stack.selected .stack-back,.case-stack.cards-returning .stack-back { visibility:hidden; }
 .discovery.deck-index-in-transit { z-index:10020; }

@@ -1,6 +1,6 @@
 // No src, fetch, decoding or audio network request until a visitor interacts.
 // HTML media streams independently of the app/map; no rendering awaits play().
-export function initBackgroundAudio() {
+export function initBackgroundAudio(source = import.meta.env.BASE_URL + 'audio/dark-doom-jazz.mp3') {
   const audio = document.createElement('audio');
   audio.id = 'site-soundtrack'; audio.preload = 'none'; audio.loop = true;
   const panel = document.querySelector<HTMLElement>('#soundtrack-control')!;
@@ -12,9 +12,9 @@ export function initBackgroundAudio() {
   welcome.hidden = false;
   window.addEventListener('pageshow', event => {
     // Back/forward and mobile page restoration can reuse the dismissed DOM.
-    if (event.persisted) welcome.hidden = false;
+    if (event.persisted) { welcome.hidden = false; if (resumePending && enabled) play(); }
   });
-  let enabled = true, started = false, starting = false, scrollAttempted = false, playAttempt = 0;
+  let enabled = true, started = false, starting = false, scrollAttempted = false, playAttempt = 0, resumePending = false;
   const startup = new AbortController();
   try {
     enabled = localStorage.getItem('itf:music-enabled') !== 'false';
@@ -37,11 +37,12 @@ export function initBackgroundAudio() {
     if (document.hidden || starting || !audio.paused) return;
     const attempt = ++playAttempt;
     starting = true;
-    if (!audio.getAttribute('src')) audio.src = import.meta.env.BASE_URL + 'audio/dark-doom-jazz.mp3';
+    if (!audio.getAttribute('src')) audio.src = source;
     status.textContent = 'Loading music'; paint();
     void audio.play().then(() => {
       if (attempt !== playAttempt) return;
       starting = false; started = true; startup.abort();
+      resumePending = true;
       if (!enabled || document.hidden) audio.pause();
       status.textContent = audio.paused ? 'Music paused' : 'Music playing'; paint();
     }).catch(error => {
@@ -52,7 +53,7 @@ export function initBackgroundAudio() {
     });
   }
   toggle.addEventListener('click', () => {
-    if (!audio.paused || starting) { enabled = false; ++playAttempt; starting = false; startup.abort(); audio.pause(); status.textContent = 'Music paused'; paint(); }
+    if (!audio.paused || starting) { enabled = false; resumePending = false; ++playAttempt; starting = false; startup.abort(); audio.pause(); status.textContent = 'Music paused'; paint(); }
     else { enabled = true; play(); }
     remember();
   });
@@ -84,11 +85,16 @@ export function initBackgroundAudio() {
   document.addEventListener('keydown', event => {
     if (['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End'].includes(event.key)) startFromInput(event);
   }, options);
+  function suspend() {
+    resumePending ||= enabled && (starting || !audio.paused);
+    ++playAttempt; starting = false; audio.pause();
+    status.textContent = 'Music paused while tab is hidden'; paint();
+  }
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { audio.pause(); status.textContent = 'Music paused while tab is hidden'; paint(); }
-    else if (started && enabled) play();
+    if (document.hidden) suspend();
+    else if (resumePending && enabled) play();
   });
-  window.addEventListener('pagehide', () => audio.pause());
+  window.addEventListener('pagehide', suspend);
   audio.addEventListener('waiting', () => { status.textContent = 'Buffering music'; });
   // Automatic playback must not dismiss the reminder before it can be read.
   audio.addEventListener('playing', () => { status.textContent = 'Music playing'; paint(); });

@@ -1,4 +1,4 @@
-import { Map as LibreMap, Marker, AttributionControl, setWorkerUrl } from 'maplibre-gl';
+import type { Map as LibreMap, Marker } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './tabletop.css';
@@ -33,7 +33,6 @@ import { createPlaceMarker, createHazardGroup, setMarkerSelected } from './map-m
 import type { CompatMap, MapBounds } from './compat-map';
 import { imageGallery, imageAttachments, exportImageEvidence, initEvidenceViewer } from './evidence-images';
 
-setWorkerUrl(workerUrl);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
 function readStorage<T>(key: string, fallback: T): T { try { return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; } }
@@ -311,8 +310,8 @@ function renderDossier() {
   $('#focus-place')?.addEventListener('click',()=> {if(mapReady) {focusMap(p,16); if(innerWidth<850) $('.map-section').scrollIntoView({behavior:reducedMotion?'instant':'smooth'});} else toast('Map unavailable. The dossier and its sources are still accessible.');});
   document.querySelectorAll<HTMLButtonElement>('[data-evidence]').forEach(button=>button.addEventListener('click',()=>showEvidence(button.dataset.evidence!)));
   document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(button=>{
-    button.addEventListener('click',()=>{tab=button.dataset.tab!;renderDossier();$(`#tab-${tab}`).focus();});
-    button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();tab=nextDeckView(p.id,tab,event.key==='ArrowRight'?1:-1);renderDossier();$(`#tab-${tab}`).focus();}});
+    button.addEventListener('click',()=>{turnDirection=views.indexOf(button.dataset.tab!)>views.indexOf(tab)?1:-1;tab=button.dataset.tab!;renderDossier();$(`#tab-${tab}`).focus({preventScroll:true});});
+    button.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();turnDirection=event.key==='ArrowRight'?1:-1;tab=nextDeckView(p.id,tab,turnDirection);renderDossier();$(`#tab-${tab}`).focus({preventScroll:true});}});
   });
   $('#export-dossier').addEventListener('click',()=>exportDossier(p));
   cardMotion.revealDossier($('#dossier'));
@@ -445,15 +444,19 @@ async function initCompatMap() {
     if(generation===mapGeneration)mapFailure();
   }
 }
-function initMap() {
+async function initMap() {
   const generation=resetMap('styled');
   const fallback=()=>{if(generation===mapGeneration)void initCompatMap();};
   try {
     if(import.meta.env.DEV && new URLSearchParams(location.search).has('test-map-failure')) { fallback(); return; }
-    const instance=new LibreMap({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:(selected?.coordinates ?? countyCenter),zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,touchZoomRotate:true,touchPitch:true,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
+    mapTimeout=setTimeout(fallback,16000);
+    // The dossier UI can render and accept input while the 3D engine downloads.
+    const { Map: MapLibre, Marker: MapMarker, AttributionControl, setWorkerUrl } = await import('maplibre-gl');
+    if(generation!==mapGeneration)return;
+    setWorkerUrl(workerUrl);
+    const instance=new MapLibre({container:'map',style:import.meta.env.BASE_URL+'styles/board.json',center:(selected?.coordinates ?? countyCenter),zoom:14.7,pitch:is3d?42:0,bearing:is3d?-12:0,touchZoomRotate:true,touchPitch:true,attributionControl:false,canvasContextAttributes:{antialias:true},renderWorldCopies:false});
     map=instance;
     instance.addControl(new AttributionControl({compact:true,customAttribution:'<a href="https://assessor.oklahomacounty.org/" target="_blank" rel="noopener noreferrer">Parcel reference: Oklahoma County Assessor</a>'}),'bottom-right');
-    mapTimeout=setTimeout(fallback,16000);
     instance.on('webglcontextlost',fallback);
     instance.on('load',()=>{
       if(generation!==mapGeneration)return;
@@ -466,7 +469,7 @@ function initMap() {
         instance.addLayer({id:'osm-road-highlight',type:'line',source:'osm-roads',layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#ffe079','line-width':10,'line-opacity':0,'line-opacity-transition':{duration:0},'line-width-transition':{duration:0}}});
         instance.addLayer({id:'osm-service-roads',type:'line',source:'osm-roads',paint:{'line-color':'#7954a1','line-width':5,'line-opacity':.9}});
         instance.addLayer({id:'osm-private-road',type:'line',source:'osm-roads',paint:{'line-color':['case',['==',['get','access'],'private'],'#e9c6d7','#00000000'],'line-width':2,'line-dasharray':[3,2]}});
-        places.forEach(p=>{const el=createPlaceMarker(p,id=>selectPlace(id,true),id=>showEvidence(id));markers.set(p.id,new Marker({element:el,anchor:'bottom-left',offset:[-16,-8]}).setLngLat(p.coordinates).addTo(instance));});
+        places.forEach(p=>{const el=createPlaceMarker(p,id=>selectPlace(id,true),id=>showEvidence(id));markers.set(p.id,new MapMarker({element:el,anchor:'bottom-left',offset:[-16,-8]}).setLngLat(p.coordinates).addTo(instance));});
         mapReady=true; $('#map').dataset.renderer='styled';
         mapCamera=createMapCamera(instance,$('#map-camera-tools'));
         instance.on('pitch',()=>{is3d=instance.getPitch()>.1;$('#view-toggle').setAttribute('aria-pressed',String(is3d));$('#view-toggle').innerHTML=`${icon('layers')}<span>${is3d?'Tilt view':'Flat view'}</span>`;});

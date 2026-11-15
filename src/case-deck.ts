@@ -21,7 +21,7 @@ export function caseStack(p: Place, active: boolean) {
   </article>`;
 }
 
-type Face = { element: HTMLElement; rect: DOMRect; backs: string[] };
+type Face = { element: HTMLElement; rect: DOMRect; backs: string[]; scrollTop: number };
 // Transit copies are inert and short-lived. The real, full-size dossier is the
 // only interactive reading surface, so no scaled copy can retain focus or IDs.
 export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: ReturnType<typeof createCardMotion>) {
@@ -41,9 +41,8 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     node.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
     node.classList.remove('card-motion', 'awaiting-deal');
     node.style.transform = 'none'; node.style.visibility = 'visible'; node.style.margin = '0';
-    const reading = node.querySelector<HTMLElement>('.dossier-content');
-    if (reading) reading.scrollTop = front.querySelector<HTMLElement>('.dossier-content')?.scrollTop ?? 0;
-    return { element: node, rect: front.getBoundingClientRect(), backs:[...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])')].map(card=>card.innerHTML) };
+    const scrollTop = front.querySelector<HTMLElement>('.dossier-content')?.scrollTop ?? 0;
+    return { element: node, rect: front.getBoundingClientRect(), scrollTop, backs:[...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])')].map(card=>card.innerHTML) };
   }
   function anchor(id: string) {
     return document.querySelector<HTMLElement>(`[data-card-key="${id}"] .case-cover`)?.getBoundingClientRect() ?? new DOMRect(-240, 200, 180, 270);
@@ -111,6 +110,9 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     copy.style.width = '100%'; copy.style.height = '100%'; copy.style.minHeight = '0';
     if (index > 0) copy.innerHTML = face.backs[face.backs.length - index] ?? '';
     node.append(copy); document.body.append(node);
+    // Detached nodes cannot retain scroll offsets; restore only after layout.
+    const reading = copy.querySelector<HTMLElement>('.dossier-content');
+    if (reading) reading.scrollTop = face.scrollTop;
     const transform = (r: DOMRect, rotation: number) => `translate3d(${r.left}px,${r.top}px,0) rotate(${rotation}deg) scale(${r.width / face.rect.width},${r.height / face.rect.height})`;
     const twist = (index - 1) * 3;
     const animation = node.animate([
@@ -196,6 +198,8 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     const copy = previous.element;
     Object.assign(copy.style, { width:'100%', height:'100%', minHeight:'0', maxHeight:'none' });
     node.append(copy); dock.append(node);
+    const reading = copy.querySelector<HTMLElement>('.dossier-content');
+    if (reading) reading.scrollTop = previous.scrollTop;
     shuffleNode = node; shuffleTarget = target; target.style.visibility = 'hidden';
     // Honor the chosen direction even at the viewport edge; lower the card's
     // layer only after it has fully exited, then return it behind the stack.
@@ -229,5 +233,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     layoutWidth = innerWidth; cancel();
   });
   reduced.addEventListener('change', cancel);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
+  window.addEventListener('pagehide', cancel);
   return { capture, switchCase, turn, cancel };
 }
