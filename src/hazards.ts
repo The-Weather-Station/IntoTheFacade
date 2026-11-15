@@ -1,9 +1,10 @@
 export type HazardCertainty = 'Confirmed' | 'Likely' | 'Potential';
-export type HazardKind = 'structural' | 'chemical' | 'vapor' | 'loading';
+export type HazardKind = 'structural' | 'chemical' | 'vapor' | 'loading' | 'criminal';
 export interface SiteHazard {
   kind: HazardKind;
   label: string;
   certainty: HazardCertainty;
+  timeframe?: 'Historical';
   detail: string;
   evidence: string[];
 }
@@ -20,6 +21,7 @@ export const caseHazards: Record<string, SiteHazard[]> = {
     {kind:'vapor',label:'Vapor intrusion',certainty:'Potential',detail:'EPA identifies potential vapor intrusion into homes or businesses. The reviewed records do not establish a current indoor-air concentration.',evidence:['urbex-eagle-exposure']},
   ],
   'rhode-island-warehouse': [
+    {kind:'criminal',label:'Criminal case',certainty:'Confirmed',timeframe:'Historical',detail:'The 2025 Suite 109 shipping case includes reported arrests, marijuana and firearm seizures, with a later sentencing record for one defendant. This is documented case history, not evidence of current criminal activity or danger from current occupants.',evidence:['warehouse-case','warehouse-seizure','warehouse-disposition']},
     {kind:'loading',label:'Loading / dock edges',certainty:'Potential',detail:'The broker advertises loading docks and a drive-in ramp. Falls at dock edges and vehicle movement are general loading-area concerns, not findings from a site safety inspection.',evidence:['urbex-warehouse-viewing']},
   ],
 };
