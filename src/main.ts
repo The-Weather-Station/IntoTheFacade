@@ -196,15 +196,12 @@ function selectPlace(id: string, fly = false) {
   stopRoadPulse(); pendingRoadFocus=false;
   const oldId = selected?.id, next = getPlace(id);
   caseAlarm.select(next.id);
-  const transition = caseDeck.switchCase(oldId, next.id, () => {
+  void caseDeck.switchCase(oldId, next.id, () => {
     selected = next; tab = 'overview';
     if(location.hash !== `#${selected?.id}`) history.pushState(null,'',`#${selected?.id}`);
     renderList(); renderDossier(); updateMapSelection(); centerActiveDeck();
   });
   if(fly) focusMap(next, 15.5);
-  if(innerWidth < 850) void transition.then(()=> {
-    if(selected?.id===next.id) $('.dossier-dock').scrollIntoView({behavior:reducedMotion?'instant':'smooth',block:'start'});
-  });
 }
 
 function updateMapSelection() {

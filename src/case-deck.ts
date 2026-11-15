@@ -65,11 +65,31 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     front.inert = false;
     front.style.visibility = ''; motion.pause(front, false);
   }
+  async function revealMobileHand(stamp: number) {
+    dock.scrollIntoView({ behavior: reduced.matches ? 'instant' : 'smooth', block: 'start' });
+    if (reduced.matches) return;
+    // Deal after the reading surface arrives on screen, not while it is still
+    // below the map. Watch actual scroll movement rather than guessing a delay.
+    await new Promise<void>(resolve => {
+      let lastTop = NaN, stableFrames = 0;
+      const started = performance.now();
+      const check = (now: number) => {
+        if (stamp !== revision) { resolve(); return; }
+        const top = dock.getBoundingClientRect().top;
+        stableFrames = Math.abs(top - lastTop) < .5 ? stableFrames + 1 : 0;
+        lastTop = top;
+        if ((stableFrames >= 4 && top < innerHeight * .4) || now - started > 1800) { resolve(); return; }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+    });
+  }
   function dealFrom(source: DOMRect) {
     // Animate the actual reading surfaces. They finish on their exact CSS poses,
     // so there is no scaled/rotated clone to swap out at the landing frame.
     const cards = [...dock.querySelectorAll<HTMLElement>('.detail-underlay:not([hidden])'),front];
     const parent = dock.getBoundingClientRect();
+    const narrow = innerWidth < 951;
     return cards.map((card,index)=>{
       const home = getComputedStyle(card).transform;
       const centerX = parent.left + dock.clientLeft + card.offsetLeft - dock.scrollLeft + card.offsetWidth / 2;
@@ -78,7 +98,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
       const y = source.top + source.height / 2 - centerY;
       const start = `translate3d(${x}px,${y}px,0) rotate(${-7+index*3}deg) scale(${source.width/card.offsetWidth},${source.height/card.offsetHeight})`;
       const animation = card.animate([{transform:start},{transform:home}],{
-        duration:950,delay:180+index*75,easing:'cubic-bezier(.16,.8,.2,1)',fill:'both',
+        duration:narrow ? 1450 : 950,delay:180+index*(narrow ? 110 : 75),easing:narrow ? 'cubic-bezier(.25,.55,.25,1)' : 'cubic-bezier(.16,.8,.2,1)',fill:'both',
       });
       arrivals.add(animation);
       return animation.finished.then(()=>{},()=>{});
@@ -96,7 +116,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     const animation = node.animate([
       { transform: transform(from, incoming ? twist - 5 : twist), opacity: 1 },
       { transform: transform(to, incoming ? twist * .4 : twist - 5), opacity: 1 },
-    ], { duration: incoming ? 850 : 620, delay, easing: incoming ? 'cubic-bezier(.18,.76,.2,1)' : 'cubic-bezier(.5,0,.55,1)', fill: 'both' });
+    ], { duration: incoming ? 850 : innerWidth < 951 ? 850 : 620, delay, easing: incoming ? 'cubic-bezier(.18,.76,.2,1)' : 'cubic-bezier(.5,0,.55,1)', fill: 'both' });
     const flight = { node, animation }; flights.add(flight);
     return animation.finished.catch(() => {}).then(() => { node.remove(); flights.delete(flight); });
   }
@@ -105,18 +125,25 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     if (oldId !== id) motion.home(front);
     busy = true; motion.pause(front, true);
     update();
-    if (reduced.matches || oldId === id) { busy = false; motion.pause(front, false); return; }
+    const narrow = innerWidth < 951;
+    if (reduced.matches || oldId === id) {
+      busy = false; motion.pause(front, false);
+      if (narrow) await revealMobileHand(stamp);
+      return;
+    }
     dock.classList.add('deck-in-transit'); front.inert = true; front.style.visibility = 'hidden';
     const stockReady = await cardStockReady(id);
     if (stamp !== revision) return;
     if (!stockReady) { cancel(); return; }
+    if (narrow) await revealMobileHand(stamp);
+    if (stamp !== revision) return;
     const incoming = capture();
+    if (narrow) outgoing.rect = new DOMRect(incoming.rect.left, incoming.rect.top, outgoing.rect.width, outgoing.rect.height);
     if (oldId) sounds.play('return');
     sounds.play('deal');
     dock.classList.add('deck-receiving'); front.style.visibility = '';
     // Mobile has a vertical table: keep the same deal motion local to its hand.
-    const narrow = innerWidth < 951;
-    const source = narrow ? new DOMRect(incoming.rect.left - 70, incoming.rect.top + 50, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);
+    const source = narrow ? new DOMRect(incoming.rect.left - 100, incoming.rect.top + 60, incoming.rect.width * .7, incoming.rect.height * .7) : anchor(id);
     const destination = narrow ? new DOMRect(outgoing.rect.left - 90, outgoing.rect.top + 60, outgoing.rect.width * .6, outgoing.rect.height * .6) : anchor(oldId ?? id);
     // Keep the real covers above the flights, including while the index scrolls.
     // A fixed duplicate cover would visibly separate from its moving original.
@@ -172,11 +199,12 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
     shuffleNode = node; shuffleTarget = target; target.style.visibility = 'hidden';
     // Honor the chosen direction even at the viewport edge; lower the card's
     // layer only after it has fully exited, then return it behind the stack.
-    const clear = `translate3d(${direction * (front.offsetWidth + 170)}px,-18px,0) rotate(${direction * 9}deg)`;
+    const narrow = innerWidth < 951;
+    const clear = `translate3d(${direction * (front.offsetWidth + (narrow ? 64 : 170))}px,-18px,0) rotate(${direction * 9}deg)`;
     const home = getComputedStyle(target).transform;
     node.style.zIndex = '20'; dock.dataset.shufflePhase = 'out';
     turnAnimation = node.animate([{transform:'none'}, {transform:clear}], {
-      duration:420, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards',
+      duration:narrow ? 760 : 420, easing:'cubic-bezier(.4,0,.2,1)', fill:'forwards',
     });
     void turnAnimation.finished.then(async () => {
       if (stamp !== revision) return;
@@ -184,7 +212,7 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
       dock.dataset.shufflePhase = 'behind';
       turnAnimation!.cancel();
       turnAnimation = node.animate([{transform:clear}, {transform:home}], {
-        duration:520, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards',
+        duration:narrow ? 860 : 520, easing:'cubic-bezier(.2,.7,.2,1)', fill:'forwards',
       });
       await turnAnimation.finished;
       if (stamp !== revision) return;
@@ -193,7 +221,13 @@ export function createCaseDeck(front: HTMLElement, dock: HTMLElement, motion: Re
       delete dock.dataset.shufflePhase; motion.pause(front, false);
     }).catch(() => {});
   }
-  window.addEventListener('resize', cancel);
+  // Mobile browser chrome changes viewport height during scrolling. That must
+  // not cancel a deal; only a new layout width invalidates the card geometry.
+  let layoutWidth = innerWidth;
+  window.addEventListener('resize', () => {
+    if (innerWidth === layoutWidth) return;
+    layoutWidth = innerWidth; cancel();
+  });
   reduced.addEventListener('change', cancel);
   return { capture, switchCase, turn, cancel };
 }
