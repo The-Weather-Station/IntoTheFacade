@@ -57,7 +57,10 @@ $('#app').innerHTML = `
   <header class="masthead">
     <a class="brand" href="#" aria-label="Into The Facade home"><span class="brand-mark"><img src="${artUrl('occult-card-back')}" alt="" width="48" height="72"></span><span>INTO THE FACADE<span class="brand-sub">Every building has baggage.</span></span></a>
     <nav class="main-nav" aria-label="Main navigation"><button class="nav-button active" id="explore-nav" aria-pressed="true">${icon('compass')} Explore</button></nav>
-    <div id="soundtrack-control" class="soundtrack"><button type="button" aria-label="Play background music" aria-pressed="false">&#9654; <span class="music-label">DARK DOOM JAZZ</span></button><label><span class="sr-only">Music volume</span><input type="range" min="0" max="100" value="16" aria-label="Music volume"></label><span class="sr-only" role="status" aria-live="polite">Music starts after your first interaction</span></div>
+    <div id="soundtrack-control" class="soundtrack-group">
+      <div class="soundtrack"><button type="button" aria-label="Play background music" aria-pressed="false">&#9654; <span class="music-label">DARK DOOM JAZZ</span></button><label><span class="sr-only">Music volume</span><input type="range" min="0" max="100" value="16" aria-label="Music volume"></label><span class="sr-only" role="status" aria-live="polite">Music starts after your first interaction</span></div>
+      <a class="soundtrack-source" href="https://www.youtube.com/watch?v=q0e5m6Ae3MY&amp;list=RDq0e5m6Ae3MY&amp;start_radio=1" target="_blank" rel="noopener noreferrer" aria-label="Listen to DARK DOOM JAZZ on YouTube (opens in a new tab)" title="Original music on YouTube (opens in a new tab)">${icon('external')}</a>
+    </div>
     <div class="header-right"><span class="edition"><span class="live-dot"></span> RESEARCH EDITION 005</span><button class="text-button" id="about-button">About this project ${icon('external')}</button></div>
   </header>
   <div class="case-alert-banner" aria-hidden="true"><strong>ALERT!!!!</strong><span>SUITE 109 / CASE FILE</span><strong>ALERT!!!!</strong></div>

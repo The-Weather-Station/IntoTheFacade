@@ -92,5 +92,7 @@
   .is-welcome .deck-cycle { display:none; }
 }
 @media(max-width:350px) {
+  .masthead { gap:6px; padding-inline:10px; }
+  .brand { font-size:17px; gap:6px; }
   .dossier-dock.crime-deck .dossier-tabs button { font-size:11px; }
 }
